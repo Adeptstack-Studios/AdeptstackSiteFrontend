@@ -17,8 +17,8 @@
           <i class='bx bx-lock-alt'></i>
 
           <div class="text-danger">
-            @if (userForm.controls['password'].touched && userForm.controls['password'].errors?.['minlength']) {
-              <span>This is required</span>
+            @if (userForm.controls['password'].touched && (userForm.controls['password'].errors?.['minlength'] || userForm.controls['password'].errors?.['required'])) {
+              <span>Password of length 8 required. </span>
             }
           </div>
         </div>

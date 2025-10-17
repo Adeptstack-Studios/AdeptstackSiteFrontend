@@ -1,6 +1,6 @@
 import {Component, inject} from '@angular/core';
 import {AuthorizationService} from '../services/authorization';
-import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {LoginRequest} from '../models/login-request';
 import {LocalStorageService} from '../services/local-storage-service';
 import {Router} from '@angular/router';
@@ -24,8 +24,8 @@ export class Login {
   }
 
   userForm: FormGroup = new FormGroup({
-    username: new FormControl(''),
-    password: new FormControl('')
+    username: new FormControl('', Validators.required),
+    password: new FormControl('', [Validators.required, Validators.minLength(8)])
   });
 
   login() {
@@ -33,7 +33,6 @@ export class Login {
     const formValue = this.userForm.value;
 
     if (formValue.username == "" || formValue.password == "") {
-      alert('Please enter both username and password');
       return;
     }
 
