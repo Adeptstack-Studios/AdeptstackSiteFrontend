@@ -16,4 +16,8 @@ export class AuthorizationService {
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(API_URL, request );
   }
+
+  adminPanel(): Observable<any> {
+    return this.http.get<any>(API_URL);
+  }
 }
