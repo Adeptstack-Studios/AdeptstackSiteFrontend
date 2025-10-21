@@ -3,11 +3,11 @@ import {AuthorizationService} from '../services/authorization';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {LoginRequest} from '../models/login-request';
 import {LocalStorageService} from '../services/local-storage-service';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -43,7 +43,17 @@ export class Login {
       next: (response) => {
         console.log("received: " + response.token);
         this.localStorageService.set("auth-key", response.token);
-        this.router.navigateByUrl("");
+
+        this.authService.adminPanel().subscribe({
+          next: (response) => {
+            console.log("received: " + response.response);
+            this.router.navigateByUrl("/");
+          }, error: (error) => {
+            console.log("error: " + error.message);
+            this.localStorageService.remove("auth-key");
+          }
+        })
+
       }, error: (error) => {
         console.log("error: " + error);
         this.localStorageService.remove("auth-key");
