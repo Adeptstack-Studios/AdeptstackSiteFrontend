@@ -7,6 +7,7 @@ import {AdminPanelResponse} from '../models/admin-panel-response';
 import {SignupRequest} from '../models/signup-request';
 import {SignupResponse} from '../models/signup-response';
 import {LocalStorageService} from './local-storage-service';
+import {User} from '../models/user';
 
 const API_URL = 'http://localhost:8080/api/auth/login';
 const API_URL1 = 'http://localhost:8080/api/auth/panel';
@@ -29,5 +30,9 @@ export class AuthorizationService {
 
   adminPanel(): Observable<AdminPanelResponse> {
     return this.http.get<AdminPanelResponse>(API_URL1);
+  }
+
+  me(): Observable<User> {
+    return this.http.get<User>('http://localhost:8080/api/auth/me');
   }
 }
