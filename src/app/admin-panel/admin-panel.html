@@ -1,3 +1,15 @@
-<p>admin-panel works!!!</p>
-
-<p>create, edit, delete and search news as well as changelogs</p>
+<header class="header">
+  <div class="header-left">
+    <h1>Admin Panel</h1>
+  </div>
+  <div class="header-right" *ngIf="currentUser as user">
+    <div class="user-menu">
+      <button type="button" class="user-button" (click)="toggleMenu()">
+        {{ user.username }}
+      </button>
+      <div class="dropdown" *ngIf="isMenuOpen">
+        <button type="button" class="dropdown-item" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</header>

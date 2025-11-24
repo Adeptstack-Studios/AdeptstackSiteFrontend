@@ -10,8 +10,9 @@ import {LocalStorageService} from './local-storage-service';
 import {User} from '../models/user';
 
 const API_URL = 'http://localhost:8080/api/auth/login';
-const API_URL1 = 'http://localhost:8080/api/auth/panel';
+const API_URL1 = 'http://localhost:8080/api/auth/verifyLogin';
 const API_URL2 = 'http://localhost:8080/api/auth/register';
+const API_URL3 = 'http://localhost:8080/api/auth/me';
 
 @Injectable({
   providedIn: 'root'
@@ -28,11 +29,11 @@ export class AuthorizationService {
     return this.http.post<SignupResponse>(API_URL2, request );
   }
 
-  adminPanel(): Observable<AdminPanelResponse> {
+  verifyLogin(): Observable<AdminPanelResponse> {
     return this.http.get<AdminPanelResponse>(API_URL1);
   }
 
   me(): Observable<User> {
-    return this.http.get<User>('http://localhost:8080/api/auth/me');
+    return this.http.get<User>(API_URL3);
   }
 }

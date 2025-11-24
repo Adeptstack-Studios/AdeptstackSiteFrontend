@@ -44,7 +44,7 @@ export class Login {
         console.log("received: " + response.token);
         this.localStorageService.set("auth-key", response.token);
 
-        this.authService.adminPanel().subscribe({
+        this.authService.verifyLogin().subscribe({
           next: (response) => {
             console.log("received: " + response.response);
             this.router.navigateByUrl("/");
