@@ -63,3 +63,37 @@
 .dropdown-item:hover {
   background: #f3f4f6;
 }
+
+/* Admin layout with sidebar */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+.sidebar {
+  background: #111827; /* slate-900 */
+  color: #e5e7eb; /* gray-200 */
+  padding: 16px 12px;
+}
+
+.sidebar a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+}
+
+.sidebar a:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.sidebar a.active {
+  background: #374151; /* slate-700 */
+}
+
+.content {
+  background: #f9fafb; /* gray-50 */
+  min-height: calc(100vh - 56px);
+}

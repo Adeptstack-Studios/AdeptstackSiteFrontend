@@ -3,11 +3,11 @@ import {AuthorizationService} from '../services/authorization';
 import {User} from '../models/user';
 import {CommonModule} from '@angular/common';
 import {LocalStorageService} from '../services/local-storage-service';
-import {Router} from '@angular/router';
+import {Router, RouterLink, RouterLinkActive, RouterOutlet} from '@angular/router';
 
 @Component({
   selector: 'app-admin-panel',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './admin-panel.html',
   styleUrl: './admin-panel.css'
 })
