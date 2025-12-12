@@ -1,4 +1,79 @@
 <div class="admin-page">
-  <h2>News Verwaltung</h2>
-  <p>Hier kannst du News verwalten. (Platzhalter)</p>
+  <div class="news-list">
+    @if (news) {
+      @for (item of news; track $index) {
+        <app-news-card [item]="item" class="news-item"/>
+      }
+    } @else {
+      <p>No news yet</p>
+    }
+  </div>
+
+  <div class="news-create">
+    <form [formGroup]="newsForm" (ngSubmit)="onSubmit()">
+      <h1>Create</h1>
+      <div class="input-box">
+        <input type="text" formControlName="title" placeholder="Title">
+        <i class='bx bx-envelope'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['title'].touched && newsForm.controls['title'].errors?.['required']) {
+            <span>This is required</span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="description" placeholder="Description">
+        <i class='bx bx-lock-alt'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['description'].touched && newsForm.controls['description'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="textarea-box">
+        <textarea formControlName="content" placeholder="Content" >
+        </textarea>
+        <i class='bx bx-lock-alt'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['content'].touched && newsForm.controls['content'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="imageUrl" placeholder="Cover Image Url">
+        <i class='bx bx-lock-alt'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['imageUrl'].touched && newsForm.controls['imageUrl'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="category" placeholder="Category">
+        <i class='bx bx-lock-alt'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['category'].touched && newsForm.controls['category'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="publishedAt" placeholder="Published At">
+        <i class='bx bx-lock-alt'></i>
+        <div class="text-danger">
+          @if (newsForm.controls['publishedAt'].touched && newsForm.controls['publishedAt'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <button class="btn" type="submit">Submit</button>
+    </form>
+  </div>
 </div>

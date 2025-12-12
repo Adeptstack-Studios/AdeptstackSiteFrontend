@@ -1,2 +1,154 @@
-/* Styles for Admin News page (optional) */
-.admin-page { padding: 16px; }
+/* --- Layout Grundstruktur --- */
+.admin-page {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  background: #f5f6fa;
+  padding: 20px 40px;
+  box-sizing: border-box;
+}
+
+/* --- News List (linke Seite) --- */
+.news-list {
+  width: 80%;
+  padding-right: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.news-item {
+  height: 340px;
+}
+
+.news-list p {
+  color: #666;
+  font-style: italic;
+}
+
+/* --- Create Form (rechte Seite) --- */
+.news-create {
+  width: 400px;
+  background: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.06);
+}
+
+.news-create h1 {
+  margin-bottom: 15px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #222;
+}
+
+/* --- Form Boxes (nur Container, nicht Input selbst) --- */
+.input-box,
+.textarea-box {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.input-box i,
+.textarea-box i {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+textarea {
+  resize: vertical;
+  max-height: 300px;
+}
+
+
+.textarea-box i {
+  top: 12px;
+}
+
+.text-danger span {
+  display: block;
+  margin-top: 6px;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+/* --- Allgemeines Input-Styling --- */
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 12px 0px 12px 12px;  /* Platz für Icon rechts */
+  margin-right: 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover */
+input[type="text"]:hover,
+textarea:hover {
+  border-color: #999;
+}
+
+/* Fokus */
+input[type="text"]:focus,
+textarea:focus {
+  border-color: #1e2a38;
+  box-shadow: 0 0 0 2px rgba(30, 42, 56, 0.15);
+}
+
+/* --- Icons im Input --- */
+.input-box i,
+.textarea-box i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+/* --- Textarea Anpassung --- */
+textarea {
+  resize: vertical;
+  min-height: 120px;
+  padding-top: 12px;
+}
+
+/* --- Fehlerzustand --- */
+.text-danger span {
+  color: #c0392b;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+}
+
+
+/* --- Submit Button --- */
+.btn {
+  margin-top: 15px;
+  padding: 10px 22px;
+  font-size: 15px;
+  background: #1e2a38;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  background: #273445;
+}
