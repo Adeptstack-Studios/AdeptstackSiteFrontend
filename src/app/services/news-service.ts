@@ -15,15 +15,15 @@ export class NewsService {
   }
 
   create(n: News): Observable<HttpResponse<News>> {
-    return this.http.post<News>(environment.news, n, { observe: 'response' });
+    return this.http.post<News>(environment.newsCreate, n, { observe: 'response' });
   }
 
   update(n: News): Observable<HttpResponse<News>> {
-    return this.http.put<News>(environment.news + "/" + n.id, n, { observe: 'response' });
+    return this.http.put<News>(environment.newsUpdate + "/" + n.id, n, { observe: 'response' });
   }
 
   deleteById(id: number): Observable<HttpResponse<News>> {
-    return this.http.delete<News>(environment.news + "/" + id, { observe: 'response' });
+    return this.http.delete<News>(environment.newsDelete + "/" + id, { observe: 'response' });
   }
 
   searchTitle(query: string): Observable<HttpResponse<News[]>> {
@@ -31,10 +31,10 @@ export class NewsService {
   }
 
   getById(id: number): Observable<HttpResponse<News>> {
-    return this.http.get<News>(environment.news + "/" + id, { observe: 'response' });
+    return this.http.get<News>(environment.newsGet + "/" + id, { observe: 'response' });
   }
 
   getAll(): Observable<HttpResponse<News[]>> {
-    return this.http.get<News[]>(environment.news, { observe: 'response' });
+    return this.http.get<News[]>(environment.newsGet, { observe: 'response' });
   }
 }

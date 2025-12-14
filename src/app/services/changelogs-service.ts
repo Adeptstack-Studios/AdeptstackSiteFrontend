@@ -15,15 +15,15 @@ export class ChangelogsService {
   }
 
   create(c: Changelogs): Observable<HttpResponse<Changelogs>> {
-    return this.http.post<Changelogs>(environment.changelogs, c, { observe: 'response' });
+    return this.http.post<Changelogs>(environment.changelogsCreate, c, { observe: 'response' });
   }
 
   update(c: Changelogs): Observable<HttpResponse<Changelogs>> {
-    return this.http.put<Changelogs>(environment.changelogs + "/" + c.id, c, { observe: 'response' });
+    return this.http.put<Changelogs>(environment.changelogsUpdate + "/" + c.id, c, { observe: 'response' });
   }
 
   deleteById(id: number): Observable<HttpResponse<Changelogs>> {
-    return this.http.delete<Changelogs>(environment.changelogs + "/" + id, { observe: 'response' });
+    return this.http.delete<Changelogs>(environment.changelogsDelete + "/" + id, { observe: 'response' });
   }
 
   search(query: string): Observable<HttpResponse<Changelogs[]>> {
@@ -31,10 +31,10 @@ export class ChangelogsService {
   }
 
   getById(id: number): Observable<HttpResponse<Changelogs>> {
-    return this.http.get<Changelogs>(environment.changelogs + "/" + id, { observe: 'response' });
+    return this.http.get<Changelogs>(environment.changelogsGet + "/" + id, { observe: 'response' });
   }
 
   getAll(): Observable<HttpResponse<Changelogs[]>> {
-    return this.http.get<Changelogs[]>(environment.changelogs, { observe: 'response' });
+    return this.http.get<Changelogs[]>(environment.changelogsGet, { observe: 'response' });
   }
 }
