@@ -4,5 +4,8 @@ export class Changelogs {
   description?: string;
   imageUrl?: string;
   content?: string;
+  channel?: string;
+  app?: string;
+  version?: string;
   publishedAt?: Date;
 }
