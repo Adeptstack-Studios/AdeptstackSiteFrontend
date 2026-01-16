@@ -5,12 +5,14 @@ import {DatePipe} from '@angular/common';
 import {Warning} from '../warning/warning';
 import {NewsService} from '../services/news-service';
 import {ChangelogsService} from '../services/changelogs-service';
+import {MarkdownComponent} from 'ngx-markdown';
 
 @Component({
   selector: 'app-post-modal',
   imports: [
     DatePipe,
-    Warning
+    Warning,
+    MarkdownComponent
   ],
   templateUrl: './post-modal.html',
   styleUrl: './post-modal.css',

@@ -6,8 +6,7 @@
     </div>
 
     <div class="popup-body">
-      <h3>Content</h3>
-      <p class="content-text">{{ post?.content }}</p>
+      <markdown [data]="post?.content"></markdown>
     </div>
 
     <div class="popup-footer">
