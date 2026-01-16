@@ -1,0 +1,25 @@
+<div class="overlay" (click)="onCloseModal()">
+  <div class="popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h2>{{ post?.title }}</h2>
+      <p class="subtitle">{{ post?.description }}</p>
+    </div>
+
+    <div class="popup-body">
+      <h3>Content</h3>
+      <p class="content-text">{{ post?.content }}</p>
+    </div>
+
+    <div class="popup-footer">
+      <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
+
+      <div class="actions">
+        <button class="btn btn-edit" (click)="edit()">Edit</button>
+        <button class="btn btn-delete" (click)="delete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+@if (isOpened) {
+  <app-warning (delete)="isDelete($event)"></app-warning>
+}
