@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {DatePipe} from "@angular/common";
 import {News} from '../models/news';
 
@@ -12,4 +12,9 @@ import {News} from '../models/news';
 })
 export class NewsCard {
   @Input() item?: News;
+  @Output() postClicked = new EventEmitter<News>();
+
+  onPostClicked() {
+     this.postClicked.emit(this.item);
+   }
 }

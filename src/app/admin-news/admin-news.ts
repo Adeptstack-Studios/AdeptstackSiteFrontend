@@ -4,6 +4,7 @@ import {News} from '../models/news';
 import {NewsService} from '../services/news-service';
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {NewsCard} from '../news-card/news-card';
+import {PostModal} from '../post-modal/post-modal';
 
 @Component({
   selector: 'app-admin-news',
@@ -12,7 +13,8 @@ import {NewsCard} from '../news-card/news-card';
   imports: [
     FormsModule,
     ReactiveFormsModule,
-    NewsCard
+    NewsCard,
+    PostModal
   ],
   styleUrl: './admin-news.css'
 })
@@ -20,6 +22,8 @@ export class AdminNews {
   auth: AuthorizationService;
   newsService: NewsService;
   news: News[] | null = [];
+  isPopupOpen = false;
+  popupNews?: News;
 
   newsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -64,5 +68,15 @@ export class AdminNews {
     else {
       this.newsForm?.markAllAsTouched();
     }
+  }
+
+  protected onPostClicked(post: News) {
+    this.popupNews = post;
+    this.isPopupOpen = !this.isPopupOpen;
+  }
+
+  closeModal() {
+    this.isPopupOpen = false;
+    this.update();
   }
 }
