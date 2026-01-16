@@ -1,0 +1,103 @@
+/* --- Basis Overlay (wie gehabt) --- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+/* --- Das Confirmation Modal --- */
+.popup.confirmation-modal {
+  background: white;
+  width: 100%;
+  max-width: 400px; /* Kleiner als der Blog-Post! */
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  text-align: center; /* Zentrierter Text ist hier besser */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px; /* Abstand zwischen den Elementen */
+}
+
+/* --- Das Icon --- */
+.icon-box {
+  font-size: 3rem; /* Großes Icon */
+  margin-bottom: 5px;
+  /* Optional: Ein kreisrunder Hintergrund */
+  background: #fef2f2;
+  color: #dc2626;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* --- Typografie --- */
+.popup h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.popup p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.5;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+/* --- Buttons Layout --- */
+.actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn {
+  flex: 1; /* Beide Buttons sind gleich breit */
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* --- Button Varianten --- */
+
+/* Abbrechen: Neutral / Grau */
+.btn-cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel:hover {
+  background-color: #e5e7eb;
+}
+
+/* Löschen: Gefahr / Rot */
+.btn-delete {
+  background-color: #dc2626;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #b91c1c; /* Dunkleres Rot beim Hover */
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); /* Roter Schein */
+}
