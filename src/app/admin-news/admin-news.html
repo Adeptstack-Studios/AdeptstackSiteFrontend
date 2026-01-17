@@ -67,7 +67,12 @@
         </div>
       </div>
 
-      <button class="btn" type="submit">Submit</button>
+      <div class="btn-box">
+        <button class="btn" type="submit">Submit</button>
+        @if (isEdit) {
+          <button class="btn2" (click)="cancelEdit()">Cancel</button>
+        }
+      </div>
     </form>
   </div>
 </div>

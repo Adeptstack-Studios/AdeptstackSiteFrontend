@@ -2,7 +2,7 @@ import {Component, inject} from '@angular/core';
 import {AuthorizationService} from '../services/authorization';
 import {News} from '../models/news';
 import {NewsService} from '../services/news-service';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {NewsCard} from '../news-card/news-card';
 import {PostModal} from '../post-modal/post-modal';
 
@@ -21,9 +21,11 @@ import {PostModal} from '../post-modal/post-modal';
 export class AdminNews {
   auth: AuthorizationService;
   newsService: NewsService;
+  fb: FormBuilder;
   news: News[] | null = [];
   isPopupOpen = false;
   popupNews?: News;
+  isEdit = false;
   today: Date = new Date();
 
   newsForm: FormGroup = new FormGroup({
@@ -38,6 +40,7 @@ export class AdminNews {
   constructor() {
     this.auth = inject(AuthorizationService);
     this.newsService = inject(NewsService);
+    this.fb = inject(FormBuilder);
 
     this.update()
   }
@@ -53,22 +56,46 @@ export class AdminNews {
   }
 
   onSubmit() {
-    if (this.newsForm.valid) {
-      const formValue = this.newsForm.value;
-      const news: News = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
+    if (!this.isEdit) {
+      if (this.newsForm.valid) {
+        const formValue = this.newsForm.value;
+        const news: News = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
 
-      this.newsService.create(news).subscribe({
-        next: (response) => {
-          console.log("received: " + response.body);
-          this.update();
-        }, error: (error) => {
-          console.log("error: " + error.message);
-        }
-      });
+        this.newsService.create(news).subscribe({
+          next: (response) => {
+            console.log("received: " + response.body);
+            this.clearForm();
+            this.update();
+          }, error: (error) => {
+            console.log("error: " + error.message);
+          }
+        });
+      }
+      else {
+        this.newsForm?.markAllAsTouched();
+      }
     }
     else {
-      this.newsForm?.markAllAsTouched();
+      if (this.newsForm.valid) {
+        const formValue = this.newsForm.value;
+        const news: News = {id: this.popupNews?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
+
+        this.newsService.update(news).subscribe({
+          next: (response) => {
+            console.log("received: " + response.body);
+            this.isEdit = false;
+            this.clearForm();
+            this.update();
+          }, error: (error) => {
+            console.log("error: " + error.message);
+          }
+        });
+      }
     }
+  }
+
+  clearForm() {
+    this.newsForm.reset();
   }
 
   protected onPostClicked(post: News) {
@@ -82,6 +109,23 @@ export class AdminNews {
   }
 
   onEditPost(id: number) {
+    this.isPopupOpen = false;
 
+    if (this.popupNews?.id == id) {
+      this.isEdit = true;
+
+      this.newsForm = this.fb.group({
+        title: new FormControl(this.popupNews?.title, Validators.required),
+        description: new FormControl(this.popupNews?.description, Validators.required),
+        content: new FormControl(this.popupNews?.content, Validators.required),
+        imageUrl: new FormControl(this.popupNews?.imageUrl, Validators.required),
+        category: new FormControl(this.popupNews?.category, Validators.required),
+        publishedAt: new FormControl(this.popupNews?.publishedAt, Validators.required)
+      });
+    }
+  }
+
+  cancelEdit() {
+    this.isEdit = false;
   }
 }
