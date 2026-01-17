@@ -1,5 +1,5 @@
 .news-item {
-  width: 320px;            /* feste Breite */
+  width: 320px;
   background: #fff;
   border-radius: 10px;
   overflow: hidden;
@@ -16,10 +16,9 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.10);
 }
 
-/* --- Bild oben (16:9) --- */
 .img-container {
   width: 100%;
-  aspect-ratio: 16 / 9;     /* 16:9 garantieren */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #ddd;
 }
@@ -30,7 +29,6 @@
   object-fit: cover;
 }
 
-/* --- Inhalt unten --- */
 .info-container {
   padding: 15px 18px 20px;
   display: flex;
@@ -39,7 +37,6 @@
   gap: 6px;
 }
 
-/* Title */
 .info-container p:nth-child(1) {
   font-size: 18px;
   font-weight: 600;
@@ -47,28 +44,24 @@
   margin-bottom: 4px;
 }
 
-/* Description */
 .info-container p:nth-child(2) {
   font-size: 14px;
   color: #555;
   line-height: 1.4;
 }
 
-/* Category + PublishedAt row */
 .meta-row {
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
 }
 
-/* Category left */
 .meta-left {
   font-size: 13px;
   color: #34495e;
   font-weight: 500;
 }
 
-/* PublishedAt right */
 .meta-right {
   font-size: 13px;
   color: #7f8c8d;

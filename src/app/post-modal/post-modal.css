@@ -1,32 +1,28 @@
-/* --- Overlay (Basis wie besprochen) --- */
 .overlay {
   position: fixed;
-  inset: 0; /* Modernes shorthand für top/right/bottom/left: 0 */
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); /* Schicker Blur-Effekt */
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 20px; /* Abstand zum Rand auf Handys */
+  padding: 20px;
 }
 
-/* --- Das Popup Fenster --- */
 .popup {
   background: white;
   width: 100%;
-  max-width: 600px; /* Nicht breiter als 600px */
+  max-width: 600px;
   border-radius: 12px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.2);
   display: flex;
-  flex-direction: column; /* Wichtig für Header/Footer Aufbau */
+  flex-direction: column;
 
-  /* DER TRICK FÜR SCROLLEN: */
-  max-height: 90vh; /* Maximal 90% der Bildschirmhöhe */
-  overflow: hidden; /* Verhindert, dass Ecken beim Scrollen eckig werden */
+  max-height: 90vh;
+  overflow: hidden;
 }
 
-/* --- 1. Header Bereich --- */
 .popup-header {
   padding: 20px 25px;
   border-bottom: 1px solid #eee;
@@ -45,12 +41,14 @@
   font-size: 0.95rem;
 }
 
-/* --- 2. Scrollbarer Inhalt (Body) --- */
 .popup-body {
   padding: 25px;
-  overflow-y: auto; /* Scrollbar erscheint nur hier drin! */
+  overflow-y: auto;
   color: #444;
   line-height: 1.6;
+
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .popup-body h3 {
@@ -61,10 +59,9 @@
   color: #888;
 }
 
-/* --- 3. Footer Bereich --- */
 .popup-footer {
   padding: 15px 25px;
-  background: #f9f9f9; /* Leicht grauer Footer zur Abgrenzung */
+  background: #f9f9f9;
   border-top: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -76,7 +73,6 @@
   color: #999;
 }
 
-/* --- Buttons --- */
 .actions {
   display: flex;
   gap: 10px;
@@ -105,13 +101,27 @@
   color: #dc2626;
 }
 
+markdown {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 markdown ::ng-deep {
 
-  img {
+  markdown ::ng-deep img {
+    display: block;
+
     max-width: 100%;
+    width: auto;
     height: auto;
+
+    max-height: 400px;
+    object-fit: contain;
+
     border-radius: 8px;
-    margin: 1rem 0;
+    margin: 1.5rem auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   }
 
   p {

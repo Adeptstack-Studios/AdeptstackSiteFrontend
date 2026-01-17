@@ -65,7 +65,7 @@
 }
 
 .btn {
-  flex: 1; /* Beide Buttons sind gleich breit */
+  flex: 1;
   padding: 12px 20px;
   border: none;
   border-radius: 8px;
@@ -79,9 +79,6 @@
   transform: scale(0.97);
 }
 
-/* --- Button Varianten --- */
-
-/* Abbrechen: Neutral / Grau */
 .btn-cancel {
   background-color: #f3f4f6;
   color: #374151;
@@ -91,13 +88,12 @@
   background-color: #e5e7eb;
 }
 
-/* Löschen: Gefahr / Rot */
 .btn-delete {
   background-color: #dc2626;
   color: white;
 }
 
 .btn-delete:hover {
-  background-color: #b91c1c; /* Dunkleres Rot beim Hover */
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); /* Roter Schein */
+  background-color: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
