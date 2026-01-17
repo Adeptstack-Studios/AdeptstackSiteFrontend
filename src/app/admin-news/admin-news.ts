@@ -24,6 +24,7 @@ export class AdminNews {
   news: News[] | null = [];
   isPopupOpen = false;
   popupNews?: News;
+  today: Date = new Date();
 
   newsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -78,5 +79,9 @@ export class AdminNews {
   closeModal() {
     this.isPopupOpen = false;
     this.update();
+  }
+
+  onEditPost(id: number) {
+
   }
 }

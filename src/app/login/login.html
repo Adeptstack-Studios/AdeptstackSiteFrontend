@@ -1,38 +1,36 @@
 <div class="parent">
   <div class="container">
     <form [formGroup]="userForm">
-      <h1>Login</h1>
+
+      <div class="logo-container">
+        <img ngSrc="img/adeptstack.png" alt="logo" class="logo-img" height="100" width="100">
+      </div>
+
+      <h1>Welcome back!</h1>
+
       <div class="input-box">
-        <input type="email" formControlName="username" placeholder="username">
-        <i class='bx bx-envelope'></i>
-
-        <div class="text-danger">
-          @if (userForm.controls['username'].touched && userForm.controls['username'].errors?.['required']) {
-            <span>This is required</span>
-          }
-        </div>
-
-        <div class="input-box">
-          <input type="password" formControlName="password" placeholder="Password">
-          <i class='bx bx-lock-alt'></i>
-
-          <div class="text-danger">
-            @if (userForm.controls['password'].touched && (userForm.controls['password'].errors?.['minlength'] || userForm.controls['password'].errors?.['required'])) {
-              <span>Password of length 8 required. </span>
-            }
-          </div>
-        </div>
-
+        <input type="email" formControlName="username" placeholder="Username">
+        <i class='bx bx-user'></i> </div>
+      <div class="text-danger">
+        @if (userForm.get('username')?.touched && userForm.get('username')?.errors?.['required']) {
+          <span>Username is required</span>
+        }
       </div>
-      <div class="remember">
-        <label for="#">
-          <input type="checkbox"> Remember me
-        </label>
-        <a href="#">Forgot password?</a>
+
+      <div class="input-box">
+        <input type="password" formControlName="password" placeholder="Password">
+        <i class='bx bx-lock-alt'></i>
       </div>
-      <button class="btn" (click)="login()">Login</button>
-      <div class="register">
-        <p>Don't have an account? <br> <a routerLink="/register">Register</a></p>
+      <div class="text-danger">
+        @if (userForm.get('password')?.touched && (userForm.get('password')?.errors?.['minlength'] || userForm.get('password')?.errors?.['required'])) {
+          <span>Password of length 8 required</span>
+        }
+      </div>
+
+      <button type="submit" class="btn" (click)="login()">Sign In</button>
+
+      <div class="register-link">
+        <p>No Account? <a routerLink="/register">Sign Up</a></p>
       </div>
     </form>
   </div>

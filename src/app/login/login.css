@@ -1,113 +1,166 @@
+/* --- 1. Layout & Hintergrund --- */
 .parent {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+  font-family: 'Nunito', sans-serif;
 }
 
-img {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  object-fit: cover;
-  z-index: -1;
-}
-
+/* --- 2. Die "Karte" (Container) --- */
 .container {
-  width: 400px;
-  color: #fff;
-  padding: 30px 40px;
-  border-radius: 15px;
-  background: rgba(5, 5, 5, .7);
+  background: white;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* --- 3. Eingabefelder & Icons --- */
 .input-box {
   position: relative;
   width: 100%;
-  height: 100%;
-  margin: 30px 0;
+  height: 45px;
+  margin-top: 20px;
 }
 
 .input-box input {
   width: 100%;
   height: 100%;
-  background: transparent;
+  background: #f3f4f6;
   border: none;
   outline: none;
-  border-radius: 5px;
-  color: #fff;
-  border: 2px solid #fff;
-  font-size: 16px;
-  padding: 10px;
+  border-radius: 40px;
+
+  padding: 0 45px 0 20px;
+
+  font-size: 1rem;
+  color: #333;
+  font-family: inherit;
+  transition: all 0.3s ease;
+
+  box-sizing: border-box;
 }
 
+/* Effekt beim Reinklicken */
+.input-box input:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px #74ebd5;
+}
+
+/* Das Icon im Input */
 .input-box i {
   position: absolute;
   right: 20px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 20px;
+  color: #888;
 }
 
-.remember {
+/* --- 4. Fehlermeldungen --- */
+.text-danger {
+  min-height: 20px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-left: 15px;
+  margin-top: 5px;
+}
+
+/* --- 5. Checkbox & Links --- */
+.remember-forgot {
   display: flex;
   justify-content: space-between;
-  font-size: 15px;
-  margin: -10px 0 15px;
+  align-items: center;
+  font-size: 0.9rem;
+  margin: 10px 0 25px;
+  color: #666;
 }
 
-.remember a {
-  border-bottom: 2px solid transparent;
-  color: #fff;
+.remember-forgot label input {
+  margin-right: 5px;
+  accent-color: #333;
 }
 
-.remember a:hover {
-  /* border-bottom: 2px solid #fff; */
-  color: #000dff;
+.remember-forgot a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 700;
 }
 
+.remember-forgot a:hover {
+  text-decoration: underline;
+}
+
+/* --- 6. Der Login Button --- */
 .btn {
   width: 100%;
-  height: 40px;
-  background: #04fff0;
-  color: #000;
+  height: 45px;
+  background: #333;
   border: none;
-  outline: none;
-  border-radius: 20px;
-  box-shadow: 0 0 20px #04fff0;
-  font-size: 15px;
-  font-weight: 600;
-  transition: 1s;
-  margin-top: 20px;
+  border-radius: 40px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  transition: transform 0.2s, background 0.3s;
 }
 
 .btn:hover {
-  background: transparent;
-  border: 2px solid #04fff0;
-  color: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #04fff0;
+  background: #000;
+  transform: translateY(-2px);
 }
 
-.register {
-  font-size: 14px;
-  margin-top: 20px;
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* --- 7. Register Footer --- */
+.register-link {
   text-align: center;
+  margin-top: 25px;
+  font-size: 0.9rem;
+  color: #666;
 }
 
-.register p a {
-  font-weight: 600;
-  color: #fff;
-  font-size: 18px;
+.register-link a {
+  color: #333;
+  font-weight: 800;
+  text-decoration: none;
 }
 
-.register p a:hover {
-  color: #000dff;
+.register-link a:hover {
+  text-decoration: underline;
 }
 
-.text-danger {
-  color: red;
-  font-size: 12px;
+/*Image*/
+.logo-container {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.logo-img {
+  max-width: 150px;
+  max-height: 80px;
+  width: auto;
+  height: auto;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
 }

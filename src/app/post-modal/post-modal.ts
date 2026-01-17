@@ -22,9 +22,9 @@ export class PostModal {
   @Input() post?: News | Changelogs;
   @Input() isNews: boolean = true;
   @Output() closeModal = new EventEmitter<void>();
+  @Output() onEditPost = new EventEmitter<number>();
   newsService: NewsService;
   changelogsService: ChangelogsService;
-  id: number = -1;
 
   constructor() {
     this.newsService = inject(NewsService);
@@ -38,7 +38,7 @@ export class PostModal {
   }
 
   edit() {
-
+    this.onEditPost.emit(<number>this.post?.id);
   }
 
   delete() {

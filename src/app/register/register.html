@@ -1,36 +1,35 @@
-<div class="signup-card">
-  <h1>
+<div class="parent">
+
+  <div class="signup-card">
+
     @if (msg) {
-      {{msg}}
+      <div class="msg-box">{{msg}}</div>
     }
-  </h1>
 
-  <div class="card-title">
-    <h1>Create Account</h1>
-    <span>Already have an account? <a routerLink="/login">Sign In</a></span>
-  </div>
-
-  <form class="form-group" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-
-    <input type="username" name="username" placeholder="Username" formControlName="username">
-    <div class="text-danger">
-      @if (signupForm.controls['username'].touched && signupForm.controls['username'].errors?.['required']) {
-        <span>This is required</span>
-      }
+    <div class="card-title">
+      <h1>Create Account</h1>
+      <span>You already have an Account? <a routerLink="/login">Sign In</a></span>
     </div>
 
-    <input type="password" name="password" placeholder="Password" formControlName="password">
-    <div class="text-danger">
-      @if (signupForm.controls['password'].touched && (signupForm.controls['password'].errors?.['minlength'] || signupForm.controls['password'].errors?.['required'])) {
-        <span>Password of length 8 required. </span>
-      }
-    </div>
+    <form class="form-group" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
 
-    <input type="submit" [disabled]="!signupForm.valid" value="Signup">
-  </form>
+      <input type="text" placeholder="Username" formControlName="username" class="input-field">
+      <div class="text-danger">
+        @if (signupForm.controls['username'].touched && signupForm.controls['username'].errors?.['required']) {
+          <span>Username is required</span>
+        }
+      </div>
 
-  <div class="card-terms">
-    <input type="checkbox"> <span>I have read and agree to the <a href="">Terms of Service</a></span>
+      <input type="password" placeholder="Password" formControlName="password" class="input-field">
+      <div class="text-danger">
+        @if (signupForm.controls['password'].touched && (signupForm.controls['password'].errors?.['minlength'] || signupForm.controls['password'].errors?.['required'])) {
+          <span>Password of length 8 required</span>
+        }
+      </div>
+
+      <input type="submit" [disabled]="!signupForm.valid" value="Sign Up" class="btn-submit">
+
+    </form>
+
   </div>
-
 </div>

@@ -14,7 +14,6 @@
       <h1>Create</h1>
       <div class="input-box">
         <input type="text" formControlName="title" placeholder="Title">
-        <i class='bx bx-envelope'></i>
         <div class="text-danger">
           @if (newsForm.controls['title'].touched && newsForm.controls['title'].errors?.['required']) {
             <span>This is required</span>
@@ -24,7 +23,6 @@
 
       <div class="input-box">
         <input type="text" formControlName="description" placeholder="Description">
-        <i class='bx bx-lock-alt'></i>
         <div class="text-danger">
           @if (newsForm.controls['description'].touched && newsForm.controls['description'].errors?.['required']) {
             <span>This is required. </span>
@@ -35,7 +33,6 @@
       <div class="textarea-box">
         <textarea formControlName="content" placeholder="Content" >
         </textarea>
-        <i class='bx bx-lock-alt'></i>
         <div class="text-danger">
           @if (newsForm.controls['content'].touched && newsForm.controls['content'].errors?.['required']) {
             <span>This is required. </span>
@@ -45,7 +42,6 @@
 
       <div class="input-box">
         <input type="text" formControlName="imageUrl" placeholder="Cover Image Url">
-        <i class='bx bx-lock-alt'></i>
         <div class="text-danger">
           @if (newsForm.controls['imageUrl'].touched && newsForm.controls['imageUrl'].errors?.['required']) {
             <span>This is required. </span>
@@ -55,7 +51,6 @@
 
       <div class="input-box">
         <input type="text" formControlName="category" placeholder="Category">
-        <i class='bx bx-lock-alt'></i>
         <div class="text-danger">
           @if (newsForm.controls['category'].touched && newsForm.controls['category'].errors?.['required']) {
             <span>This is required. </span>
@@ -65,7 +60,6 @@
 
       <div class="input-box">
         <input type="text" formControlName="publishedAt" placeholder="Published At">
-        <i class='bx bx-lock-alt'></i>
         <div class="text-danger">
           @if (newsForm.controls['publishedAt'].touched && newsForm.controls['publishedAt'].errors?.['required']) {
             <span>This is required. </span>
@@ -79,5 +73,5 @@
 </div>
 
 @if (isPopupOpen) {
-<app-post-modal [post]="popupNews" (closeModal)="closeModal()" [isNews]="true" />
+<app-post-modal [post]="popupNews" (closeModal)="closeModal()" (onEditPost)="onEditPost($event)" [isNews]="true" />
 }

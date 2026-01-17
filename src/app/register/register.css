@@ -1,66 +1,145 @@
-* {
-  box-sizing: border-box;
+/* --- 1. Globales Layout (Identisch zum Login) --- */
+.parent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+  font-family: 'Nunito', sans-serif;
+  padding: 20px; /* Damit es auf Handys nicht am Rand klebt */
 }
 
-:host {
-  height: 100vh;
+/* --- 2. Die Karte --- */
+.signup-card {
+  background: white;
+  width: 100%;
+  max-width: 450px; /* Etwas breiter als Login */
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  text-align: center; /* Zentriert Überschriften & Texte */
+}
+
+/* --- 3. Überschriften & Text --- */
+.card-title h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.card-title span {
+  font-size: 0.95rem;
+  color: #666;
+  display: block;
+  margin-bottom: 30px; /* Abstand zum Formular */
+}
+
+.card-title a, .card-terms a {
+  color: #333;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card-title a:hover, .card-terms a:hover {
+  text-decoration: underline;
+}
+
+/* --- 4. Eingabefelder (Inputs) --- */
+.input-field {
+  width: 100%;
+  height: 45px;
+  background: #f3f4f6;
+  border: none;
+  outline: none;
+  border-radius: 40px; /* Pillen-Form */
+  padding: 0 20px; /* Textabstand links */
+  font-size: 1rem;
+  color: #333;
+  font-family: inherit;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+  box-sizing: border-box; /* Wichtig, damit Padding die Breite nicht sprengt */
+}
+
+.input-field:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px #74ebd5; /* Fokus-Ring */
+}
+
+/* --- 5. Fehlermeldungen --- */
+.text-danger {
+  min-height: 20px;
+  color: #ef4444;
+  font-size: 0.85rem;
+  text-align: left; /* Fehler linksbündig lesen sich besser */
+  padding-left: 15px;
+  margin-top: 5px;
+}
+
+/* --- 6. Submit Button --- */
+.btn-submit {
+  width: 100%;
+  height: 45px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  transition: transform 0.2s, background 0.3s, opacity 0.3s;
+  -webkit-appearance: none; /* Fix für iOS Safari Buttons */
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #000;
+  transform: translateY(-2px);
+}
+
+.btn-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Deaktivierter Button (wenn Formular ungültig) */
+.btn-submit:disabled {
+  background: #9ca3af; /* Helles Grau */
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.7;
+}
+
+/* --- 7. Checkbox & Footer --- */
+.card-terms {
+  margin-top: 25px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.card-terms label {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* background-color: rgba(253, 101, 133, 1); */
+  gap: 8px; /* Abstand Checkbox zu Text */
+  cursor: pointer;
 }
 
-.signup-card {
-  border-radius: 10px;
-  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.3);
-  width: 40%;
-  /* height: 200%; */
-  background-color: #ffffff;
-  padding: 10px 30px;
+.card-terms input[type="checkbox"] {
+  accent-color: #333; /* Färbt die Checkbox dunkel */
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
-.card-title {
+/* --- Optional: Message Box ganz oben --- */
+.msg-box {
+  background: #d1fae5;
+  color: #065f46;
   padding: 10px;
-}
-
-.card-title h1 {
-  font-size: 26px;
-  font-weight: bold;
-}
-
-.form-group input {
-  margin: 5px 0;
-  width: 100%;
-  background-color: #e2e2e2;
-  border: none;
-  outline: none;
-  padding: 12px 20px;
-  border-radius: 4px;
-}
-
-.form-group input[type="submit"] {
-  background-color: #4796ff;
-  color: #ffffff;
-  font-size: 16px;
-  outline: none;
-  border-radius: 5px;
-  border: none;
-  padding: 8px 15px;
-  width: 100%;
-}
-
-.card-terms {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-}
-
-.card-terms span {
-  margin: 5px;
-  font-size: 13px;
-}
-
-.text-danger{
-  color: red;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
 }

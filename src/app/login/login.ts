@@ -4,10 +4,11 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {LoginRequest} from '../models/login-request';
 import {LocalStorageService} from '../services/local-storage-service';
 import {Router, RouterLink} from '@angular/router';
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, NgOptimizedImage],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
