@@ -26,6 +26,7 @@ export class AdminNews {
   isPopupOpen = false;
   popupNews?: News;
   isEdit = false;
+  modeString: string = "Create";
   today: Date = new Date();
 
   newsForm: FormGroup = new FormGroup({
@@ -53,6 +54,13 @@ export class AdminNews {
         console.log("error: " + error.message);
       }
     });
+
+    if (this.isEdit) {
+      this.modeString = "Edit";
+    }
+    else {
+      this.modeString = "Create";
+    }
   }
 
   onSubmit() {
@@ -113,6 +121,7 @@ export class AdminNews {
 
     if (this.popupNews?.id == id) {
       this.isEdit = true;
+      this.modeString = "Edit";
 
       this.newsForm = this.fb.group({
         title: new FormControl(this.popupNews?.title, Validators.required),
@@ -127,5 +136,7 @@ export class AdminNews {
 
   cancelEdit() {
     this.isEdit = false;
+    this.modeString = "Create";
+    this.clearForm();
   }
 }
