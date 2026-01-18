@@ -1,11 +1,22 @@
 <div class="admin-page">
   <div class="news-list">
+
+    <div class="list-header">
+      <h2>Alle News</h2>
+      <div class="search-box">
+        <i class='bx bx-search'></i>
+        <input type="text" placeholder="Search" (input)="onSearch($event)">
+      </div>
+    </div>
+
     @if (news) {
-      @for (item of news; track $index) {
-        <app-news-card [item]="item" class="news-item" (postClicked)="onPostClicked($event)"/>
-      }
+      <div class="news-grid">
+        @for (item of news; track $index) {
+          <app-news-card [item]="item" class="news-item" (postClicked)="onPostClicked($event)"/>
+        }
+      </div>
     } @else {
-      <p>No news yet</p>
+      <div class="empty-state"><p>No news yet...</p></div>
     }
   </div>
 

@@ -139,4 +139,16 @@ export class AdminNews {
     this.modeString = "Create";
     this.clearForm();
   }
+
+  onSearch(event: any) {
+    this.cancelEdit()
+
+    this.newsService.searchTitle(event.target.value.toLowerCase()).subscribe({
+      next: (response) => {
+        this.news = response.body;
+      }, error: (error) => {
+        console.log("error: " + error.message);
+      }
+    });
+  }
 }

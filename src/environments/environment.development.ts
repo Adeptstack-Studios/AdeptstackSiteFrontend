@@ -9,11 +9,11 @@ export const environment = {
   newsCreate: 'http://localhost:8080/api/news/create',
   newsUpdate: 'http://localhost:8080/api/news/update',
   newsDelete: 'http://localhost:8080/api/news/delete',
-  searchNews: 'http://localhost:8080/api/news/search?name=',
+  searchNews: 'http://localhost:8080/api/news/search?title=',
 
   changelogsGet: 'http://localhost:8080/api/changelogs/get',
   changelogsCreate: 'http://localhost:8080/api/changelogs/create',
   changelogsUpdate: 'http://localhost:8080/api/changelogs/update',
   changelogsDelete: 'http://localhost:8080/api/changelogs/delete',
-  searchChangelogs: 'http://localhost:8080/api/changelogs/search?name=',
+  searchChangelogs: 'http://localhost:8080/api/changelogs/search?title=',
 };
