@@ -11,9 +11,13 @@ export const environment = {
   newsDelete: 'http://localhost:8080/api/news/delete',
   searchNews: 'http://localhost:8080/api/news/search?title=',
 
-  changelogsGet: 'http://localhost:8080/api/changelogs/get',
+  changelogsGetAll: 'http://localhost:8080/api/changelogs/get',
+  changelogsGetById: 'http://localhost:8080/api/changelogs/get/',
+  changelogsGetByApp: 'http://localhost:8080/api/changelogs/getBy?app=',
+  changelogsGetLatestByAppByChannel: 'http://localhost:8080/api/changelogs/getLatestBy?app=',
   changelogsCreate: 'http://localhost:8080/api/changelogs/create',
   changelogsUpdate: 'http://localhost:8080/api/changelogs/update',
   changelogsDelete: 'http://localhost:8080/api/changelogs/delete',
-  searchChangelogs: 'http://localhost:8080/api/changelogs/search?title=',
+  searchChangelogs: 'http://localhost:8080/api/changelogs/searchBy?title=',
+  searchByChangelogs: 'http://localhost:8080/api/changelogs/searchBy?app=',
 };

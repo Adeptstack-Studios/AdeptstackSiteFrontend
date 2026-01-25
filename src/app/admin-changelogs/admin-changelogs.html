@@ -1,4 +1,111 @@
 <div class="admin-page">
-  <h2>Changelogs Verwaltung</h2>
-  <p>Hier kannst du Changelogs verwalten. (Platzhalter)</p>
+  <div class="changelog-list">
+
+    <div class="list-header">
+      <h2>Alle News</h2>
+      <div class="search-box">
+        <i class='bx bx-search'></i>
+        <input type="text" placeholder="Search" (input)="onSearch($event)">
+      </div>
+    </div>
+
+    @if (changelogs) {
+      <div class="changelog-grid">
+        @for (item of changelogs; track $index) {
+          <app-changelog-card [item]="item" class="changelog-item" (postClicked)="onPostClicked($event)"/>
+        }
+      </div>
+    } @else {
+      <div class="empty-state"><p>No changelog yet...</p></div>
+    }
+  </div>
+
+  <div class="changelog-create">
+    <form [formGroup]="changelogForm" (ngSubmit)="onSubmit()">
+      <h1>{{modeString}}</h1>
+      <div class="input-box">
+        <input type="text" formControlName="title" placeholder="Title">
+        <div class="text-danger">
+          @if (changelogForm.controls['title'].touched && changelogForm.controls['title'].errors?.['required']) {
+            <span>This is required</span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="description" placeholder="Description">
+        <div class="text-danger">
+          @if (changelogForm.controls['description'].touched && changelogForm.controls['description'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="textarea-box">
+        <textarea formControlName="content" placeholder="Content" >
+        </textarea>
+        <div class="text-danger">
+          @if (changelogForm.controls['content'].touched && changelogForm.controls['content'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="imageUrl" placeholder="Cover Image Url">
+        <div class="text-danger">
+          @if (changelogForm.controls['imageUrl'].touched && changelogForm.controls['imageUrl'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="app" placeholder="App Name">
+        <div class="text-danger">
+          @if (changelogForm.controls['app'].touched && changelogForm.controls['app'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="channel" placeholder="Release Channel">
+        <div class="text-danger">
+          @if (changelogForm.controls['channel'].touched && changelogForm.controls['channel'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="version" placeholder="Version">
+        <div class="text-danger">
+          @if (changelogForm.controls['version'].touched && changelogForm.controls['version'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="publishedAt" placeholder="Published At">
+        <div class="text-danger">
+          @if (changelogForm.controls['publishedAt'].touched && changelogForm.controls['publishedAt'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+
+      <div class="btn-box">
+        <button class="btn" type="submit">Submit</button>
+        @if (isEdit) {
+          <div class="btn2" (click)="cancelEdit()">Cancel</div>
+        }
+      </div>
+    </form>
+  </div>
 </div>
+
+@if (isPopupOpen) {
+  <app-post-modal [post]="popupChangelog" (closeModal)="closeModal()" (onEditPost)="onEditPost($event)" [isNews]="true" />
+}

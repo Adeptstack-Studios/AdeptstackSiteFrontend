@@ -30,11 +30,23 @@ export class ChangelogsService {
     return this.http.get<Changelogs[]>(environment.searchChangelogs + query, { observe: 'response' });
   }
 
+  searchBy(app: string, query: string): Observable<HttpResponse<Changelogs[]>> {
+    return this.http.get<Changelogs[]>(environment.searchByChangelogs + app + "&title=" + query, { observe: 'response' });
+  }
+
   getById(id: number): Observable<HttpResponse<Changelogs>> {
-    return this.http.get<Changelogs>(environment.changelogsGet + "/" + id, { observe: 'response' });
+    return this.http.get<Changelogs>(environment.changelogsGetById + id, { observe: 'response' });
   }
 
   getAll(): Observable<HttpResponse<Changelogs[]>> {
-    return this.http.get<Changelogs[]>(environment.changelogsGet, { observe: 'response' });
+    return this.http.get<Changelogs[]>(environment.changelogsGetAll, { observe: 'response' });
+  }
+
+  getAllByApp(app: string): Observable<HttpResponse<Changelogs[]>> {
+    return this.http.get<Changelogs[]>(environment.changelogsGetByApp + app, { observe: 'response' });
+  }
+
+  getLatestByAppByChannel(app: string, channel: string): Observable<HttpResponse<Changelogs>> {
+    return this.http.get<Changelogs>(environment.changelogsGetLatestByAppByChannel + app + "&channel=" + channel, { observe: 'response' });
   }
 }

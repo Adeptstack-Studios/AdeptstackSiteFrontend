@@ -1,0 +1,19 @@
+<button class="changelog-item" (click)="onPostClicked()">
+  <div class="changelog-item">
+    <div class="img-container">
+      <img [src]="item?.imageUrl" alt="cover">
+    </div>
+
+    <div class="info-container">
+      <p>{{ item?.title }}</p>
+      <p>{{ item?.description }}</p>
+
+      <div class="meta-row">
+        <span class="meta-left">{{ item?.app }}</span>
+        <span class="meta-left">{{ item?.channel }}</span>
+        <span class="meta-left">{{ item?.version }}</span>
+        <span class="meta-right">{{ item?.publishedAt | date }}</span>
+      </div>
+    </div>
+  </div>
+</button>
