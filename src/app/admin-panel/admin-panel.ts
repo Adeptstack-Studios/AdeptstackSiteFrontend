@@ -25,10 +25,6 @@ export class AdminPanel {
 
     this.auth.me().subscribe({
       next: (response) => {
-        console.log("received: " + response.id);
-        console.log("received: " + response.username);
-        console.log("received: " + response.role);
-
         this.currentUser = response;
       }, error: (error) => {
         console.log("error: " + error.message);

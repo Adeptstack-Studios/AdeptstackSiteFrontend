@@ -8,7 +8,7 @@ import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, NgOptimizedImage],
+  imports: [ReactiveFormsModule, NgOptimizedImage],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -42,12 +42,10 @@ export class Login {
 
     this.authService.login(this.request).subscribe({
       next: (response) => {
-        console.log("received: " + response.token);
         this.localStorageService.set("auth-key", response.token);
 
         this.authService.verifyLogin().subscribe({
           next: (response) => {
-            console.log("received: " + response.response);
             this.router.navigateByUrl("/news");
           }, error: (error) => {
             console.log("error: " + error.message);

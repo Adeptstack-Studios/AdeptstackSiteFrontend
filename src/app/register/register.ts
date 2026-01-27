@@ -37,7 +37,6 @@ export class Register {
 
       this.authService.register(this.request).subscribe({
         next: (response) => {
-          console.log("received: " + response.response);
           this.msg = response.response;
         }, error: (error) => {
           console.log("error: " + error.message);

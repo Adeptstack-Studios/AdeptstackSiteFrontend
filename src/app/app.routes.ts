@@ -9,7 +9,7 @@ import {AdminChangelogs} from './admin-changelogs/admin-changelogs';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: Login },
-  { path: 'register', component: Register },
+  { path: 'register', component: Register, canMatch: [AuthGuard], canActivate: [AuthGuard] },
   {
     path: '',
     component: AdminPanel,

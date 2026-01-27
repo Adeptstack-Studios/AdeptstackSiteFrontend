@@ -27,7 +27,6 @@ export class AuthGuard implements CanActivate, CanActivateChild, CanMatch {
 
   private checkAuth(): Observable<boolean | UrlTree> | boolean | UrlTree {
     const token = this.storage.get('auth-key');
-    console.log('Auth Key:: ' + token);
 
     if (!token) {
       return this.router.createUrlTree(['/login']);
