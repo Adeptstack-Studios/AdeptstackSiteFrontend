@@ -220,3 +220,50 @@ textarea.ng-invalid.ng-touched {
 }
 
 .btn2:hover { background: #273445; color: white; }
+
+/*File Upload*/
+.upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #555;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.upload-btn:hover {
+  border-color: #1e2a38;
+  color: #1e2a38;
+  background: #f0f4f8;
+}
+
+.upload-btn i {
+  font-size: 1.4rem;
+}
+
+.image-preview {
+  margin-top: 15px;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  background: #f5f6fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

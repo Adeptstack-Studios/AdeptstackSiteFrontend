@@ -5,6 +5,7 @@ import {NewsService} from '../services/news-service';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {NewsCard} from '../news-card/news-card';
 import {PostModal} from '../post-modal/post-modal';
+import {FileService} from '../services/file-service';
 
 @Component({
   selector: 'app-admin-news',
@@ -21,6 +22,7 @@ import {PostModal} from '../post-modal/post-modal';
 export class AdminNews {
   auth: AuthorizationService;
   newsService: NewsService;
+  fileService: FileService;
   fb: FormBuilder;
   news: News[] | null = [];
   isPopupOpen = false;
@@ -28,6 +30,7 @@ export class AdminNews {
   isEdit = false;
   modeString: string = "Create";
   today: string = new Date().toISOString().split('T')[0];
+  isUploading = false;
 
   newsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -41,6 +44,7 @@ export class AdminNews {
   constructor() {
     this.auth = inject(AuthorizationService);
     this.newsService = inject(NewsService);
+    this.fileService = inject(FileService);
     this.fb = inject(FormBuilder);
 
     this.update()
@@ -150,5 +154,29 @@ export class AdminNews {
         console.log("error: " + error.message);
       }
     });
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+
+    if (file) {
+      this.isUploading = true;
+
+      this.fileService.uploadImage(file).subscribe({
+        next: (response: any) => {
+          const uploadedUrl = response.url;
+
+          this.newsForm.patchValue({
+            imageUrl: uploadedUrl
+          });
+
+          this.isUploading = false;
+        },
+        error: (err: any) => {
+          console.error("Upload fehlgeschlagen", err);
+          this.isUploading = false;
+        }
+      });
+    }
   }
 }

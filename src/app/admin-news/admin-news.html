@@ -51,14 +51,34 @@
         </div>
       </div>
 
+      <!--FILE UPLOAD-->
       <div class="input-box">
-        <input type="text" formControlName="imageUrl" placeholder="Cover Image Url">
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" id="fileUpload" style="display: none;">
+
+        <label for="fileUpload" class="upload-btn">
+          <i class='bx bx-cloud-upload'></i>
+          @if(isUploading) {
+            Uploading...
+          } @else {
+            Upload Image
+          }
+        </label>
+
+        <input type="text" formControlName="imageUrl" placeholder="Image URL (automatic on upload)" readonly style="margin-top: 10px; background: #f9f9f9; color: #777;">
+
+        @if (newsForm.get('imageUrl')?.value) {
+          <div class="image-preview">
+            <img [src]="newsForm.get('imageUrl')?.value" alt="Preview">
+          </div>
+        }
+
         <div class="text-danger">
           @if (newsForm.controls['imageUrl'].touched && newsForm.controls['imageUrl'].errors?.['required']) {
             <span>This is required. </span>
           }
         </div>
       </div>
+      <!--END FILE UPLOAD-->
 
       <div class="input-box">
         <input type="text" formControlName="category" placeholder="Category">

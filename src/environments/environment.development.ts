@@ -20,4 +20,6 @@ export const environment = {
   changelogsDelete: 'http://localhost:8080/api/changelogs/delete',
   searchChangelogs: 'http://localhost:8080/api/changelogs/searchBy?title=',
   searchByChangelogs: 'http://localhost:8080/api/changelogs/searchBy?app=',
+
+  uploadFile: 'http://localhost:8080/api/files/upload',
 };

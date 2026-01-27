@@ -20,4 +20,6 @@ export const environment = {
   changelogsDelete: 'https://api.adeptstack.net/api/changelogs/delete',
   searchChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?title=',
   searchByChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?app=',
+
+  uploadFile: 'https://api.adeptstack.net/api/files/upload',
 };

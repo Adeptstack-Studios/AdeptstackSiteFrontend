@@ -5,6 +5,7 @@ import {ChangelogsService} from '../services/changelogs-service';
 import {Changelogs} from '../models/changelogs';
 import {PostModal} from '../post-modal/post-modal';
 import {ChangelogCard} from '../changelog-card/changelog-card';
+import {FileService} from '../services/file-service';
 
 @Component({
   selector: 'app-admin-changelogs',
@@ -21,6 +22,7 @@ import {ChangelogCard} from '../changelog-card/changelog-card';
 export class AdminChangelogs {
   auth: AuthorizationService;
   changelogService: ChangelogsService;
+  fileService: FileService;
   fb: FormBuilder;
 
   changelogs: Changelogs[] = [];
@@ -38,6 +40,7 @@ export class AdminChangelogs {
   isEdit = false;
   modeString: string = "Create";
   today: string = new Date().toISOString().split('T')[0];
+  isUploading = false;
 
   changelogForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -53,6 +56,7 @@ export class AdminChangelogs {
   constructor() {
     this.auth = inject(AuthorizationService);
     this.changelogService = inject(ChangelogsService);
+    this.fileService = inject(FileService);
     this.fb = inject(FormBuilder);
 
     this.update()
@@ -199,5 +203,29 @@ export class AdminChangelogs {
     this.isEdit = false;
     this.modeString = "Create";
     this.clearForm();
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+
+    if (file) {
+      this.isUploading = true;
+
+      this.fileService.uploadImage(file).subscribe({
+        next: (response: any) => {
+          const uploadedUrl = response.url;
+
+          this.changelogForm.patchValue({
+            imageUrl: uploadedUrl
+          });
+
+          this.isUploading = false;
+        },
+        error: (err: any) => {
+          console.error("Upload fehlgeschlagen", err);
+          this.isUploading = false;
+        }
+      });
+    }
   }
 }
