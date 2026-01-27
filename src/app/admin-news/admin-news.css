@@ -120,6 +120,7 @@
 }
 
 .news-create input[type="text"],
+.news-create input[type="date"],
 .news-create textarea {
   width: 100%;
   padding: 12px;
@@ -131,17 +132,25 @@
   outline: none;
   transition: border 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .news-create input[type="text"]:hover,
+.news-create input[type="date"]:hover,
 .news-create textarea:hover {
   border-color: #999;
 }
 
 .news-create input[type="text"]:focus,
+.news-create input[type="date"]:focus,
 .news-create textarea:focus {
   border-color: #1e2a38;
   box-shadow: 0 0 0 2px rgba(30, 42, 56, 0.15);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.2);
 }
 
 textarea {

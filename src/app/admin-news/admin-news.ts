@@ -27,7 +27,7 @@ export class AdminNews {
   popupNews?: News;
   isEdit = false;
   modeString: string = "Create";
-  today: Date = new Date();
+  today: string = new Date().toISOString().split('T')[0];
 
   newsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),

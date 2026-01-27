@@ -70,7 +70,7 @@
       </div>
 
       <div class="input-box">
-        <input type="text" formControlName="publishedAt" placeholder="Published At">
+        <input type="date" formControlName="publishedAt" placeholder="Published At" [max]="today">
         <div class="text-danger">
           @if (newsForm.controls['publishedAt'].touched && newsForm.controls['publishedAt'].errors?.['required']) {
             <span>This is required. </span>

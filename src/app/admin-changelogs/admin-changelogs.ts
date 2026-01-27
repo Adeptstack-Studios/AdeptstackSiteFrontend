@@ -27,7 +27,7 @@ export class AdminChangelogs {
   popupChangelog?: Changelogs;
   isEdit = false;
   modeString: string = "Create";
-  today: Date = new Date();
+  today: string = new Date().toISOString().split('T')[0];
 
   changelogForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),

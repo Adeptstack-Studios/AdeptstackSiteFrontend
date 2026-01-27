@@ -120,6 +120,7 @@
 }
 
 .changelog-create input[type="text"],
+.changelog-create input[type="date"],
 .changelog-create textarea {
   width: 100%;
   padding: 12px;
@@ -134,14 +135,21 @@
 }
 
 .changelog-create input[type="text"]:hover,
+.changelog-create input[type="date"]:hover,
 .changelog-create textarea:hover {
   border-color: #999;
 }
 
 .changelog-create input[type="text"]:focus,
+.changelog-create input[type="date"]:focus,
 .changelog-create textarea:focus {
   border-color: #1e2a38;
   box-shadow: 0 0 0 2px rgba(30, 42, 56, 0.15);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.2);
 }
 
 textarea {
