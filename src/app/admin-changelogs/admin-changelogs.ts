@@ -22,7 +22,17 @@ export class AdminChangelogs {
   auth: AuthorizationService;
   changelogService: ChangelogsService;
   fb: FormBuilder;
-  changelogs: Changelogs[] | null = [];
+
+  changelogs: Changelogs[] = [];
+  filteredChangelogs: Changelogs[] = [];
+
+  uniqueApps: (string | undefined)[] = [];
+  uniqueChannels: (string | undefined)[] = [];
+
+  selectedApp: string = '';
+  selectedChannel: string = '';
+  searchTerm: string = '';
+
   isPopupOpen = false;
   popupChangelog?: Changelogs;
   isEdit = false;
@@ -51,7 +61,11 @@ export class AdminChangelogs {
   update() {
     this.changelogService.getAll().subscribe({
       next: (response) => {
-        this.changelogs = response.body;
+        if(response.body) {
+          this.changelogs = response.body;
+          this.extractFilterOptions();
+          this.applyFilters();
+        }
       }, error: (error) => {
         console.log("error: " + error.message);
       }
@@ -65,6 +79,51 @@ export class AdminChangelogs {
     }
   }
 
+  extractFilterOptions() {
+    const apps = new Set(this.changelogs.map(c => c.app));
+    this.uniqueApps = Array.from(apps).sort();
+
+    const channels = new Set(this.changelogs.map(c => c.channel));
+    this.uniqueChannels = Array.from(channels).sort();
+  }
+
+  onFilterChange() {
+    this.applyFilters();
+  }
+
+  onSearch(event: any) {
+    this.searchTerm = event.target.value.toLowerCase();
+    this.applyFilters();
+  }
+
+  applyFilters() {
+    let temp = [...this.changelogs];
+
+    if (this.selectedApp) {
+      temp = temp.filter(item => item.app === this.selectedApp);
+    }
+
+    if (this.selectedChannel) {
+      temp = temp.filter(item => item.channel === this.selectedChannel);
+    }
+
+    if (this.searchTerm) {
+      temp = temp.filter(item =>
+        (item.title && item.title.toLowerCase().includes(this.searchTerm)) ||
+        (item.version && item.version.toLowerCase().includes(this.searchTerm))
+      );
+    }
+
+    temp.sort((a, b) => {
+      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+
+      return dateB - dateA;
+    });
+
+    this.filteredChangelogs = temp;
+  }
+
   onSubmit() {
     if (!this.isEdit) {
       if (this.changelogForm.valid) {
@@ -72,8 +131,7 @@ export class AdminChangelogs {
         const changelog: Changelogs = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
 
         this.changelogService.create(changelog).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
+          next: () => {
             this.clearForm();
             this.update();
           }, error: (error) => {
@@ -91,8 +149,7 @@ export class AdminChangelogs {
         const changelog: Changelogs = {id: this.popupChangelog?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
 
         this.changelogService.update(changelog).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
+          next: () => {
             this.isEdit = false;
             this.clearForm();
             this.update();
@@ -142,17 +199,5 @@ export class AdminChangelogs {
     this.isEdit = false;
     this.modeString = "Create";
     this.clearForm();
-  }
-
-  onSearch(event: any) {
-    this.cancelEdit()
-
-    this.changelogService.search(event.target.value.toLowerCase()).subscribe({
-      next: (response) => {
-        this.changelogs = response.body;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
-    });
   }
 }

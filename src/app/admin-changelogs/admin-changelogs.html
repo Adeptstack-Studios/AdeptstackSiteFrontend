@@ -3,20 +3,45 @@
 
     <div class="list-header">
       <h2>All Changelogs</h2>
+
+      <div class="filter-group">
+
+        <div class="select-wrapper">
+          <select [(ngModel)]="selectedApp" (change)="onFilterChange()">
+            <option value="">All Apps</option>
+            @for (app of uniqueApps; track $index) {
+              <option [value]="app">{{app}}</option>
+            }
+          </select>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+
+        <div class="select-wrapper">
+          <select [(ngModel)]="selectedChannel" (change)="onFilterChange()">
+            <option value="">All Channels</option>
+            @for (channel of uniqueChannels; track $index) {
+              <option [value]="channel">{{channel}}</option>
+            }
+          </select>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+
+      </div>
+
       <div class="search-box">
         <i class='bx bx-search'></i>
         <input type="text" placeholder="Search" (input)="onSearch($event)">
       </div>
     </div>
 
-    @if (changelogs) {
+    @if (filteredChangelogs.length > 0) {
       <div class="changelog-grid">
-        @for (item of changelogs; track $index) {
+        @for (item of filteredChangelogs; track $index) {
           <app-changelog-card [item]="item" class="changelog-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
     } @else {
-      <div class="empty-state"><p>No changelog yet...</p></div>
+      <div class="empty-state"><p>No changelog found...</p></div>
     }
   </div>
 
