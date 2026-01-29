@@ -247,6 +247,10 @@ textarea.ng-invalid.ng-touched {
 
 .upload-btn i {
   font-size: 1.4rem;
+  top: 0;
+  right: 0;
+  transform: none;
+  position: relative;
 }
 
 .image-preview {

@@ -47,6 +47,7 @@ export class AdminChangelogs {
     description: new FormControl('', Validators.required),
     content: new FormControl('', Validators.required),
     imageUrl: new FormControl('', Validators.required),
+    appUrl: new FormControl('', Validators.required),
     app: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
@@ -132,7 +133,7 @@ export class AdminChangelogs {
     if (!this.isEdit) {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
-        const changelog: Changelogs = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
+        const changelog: Changelogs = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, appUrl: formValue.appUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
 
         this.changelogService.create(changelog).subscribe({
           next: () => {
@@ -150,7 +151,7 @@ export class AdminChangelogs {
     else {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
-        const changelog: Changelogs = {id: this.popupChangelog?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
+        const changelog: Changelogs = {id: this.popupChangelog?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, appUrl: formValue.appUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
 
         this.changelogService.update(changelog).subscribe({
           next: () => {
@@ -191,6 +192,7 @@ export class AdminChangelogs {
         description: new FormControl(this.popupChangelog?.description, Validators.required),
         content: new FormControl(this.popupChangelog?.content, Validators.required),
         imageUrl: new FormControl(this.popupChangelog?.imageUrl, Validators.required),
+        appUrl: new FormControl(this.popupChangelog?.appUrl, Validators.required),
         app: new FormControl(this.popupChangelog?.app, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
@@ -205,12 +207,20 @@ export class AdminChangelogs {
     this.clearForm();
   }
 
-  onFileSelected(event: any) {
+  onImageSelected(event: any) {
     const file: File = event.target.files[0];
 
     if (file) {
-      this.isUploading = true;
+      const fileName = file.name.toLowerCase();
+      const isAllowed = fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp');
 
+      if (!isAllowed) {
+        alert('Invalid File! Please choose .jpg, .jpeg, .png, webp files.');
+        event.target.value = '';
+        return;
+      }
+
+      this.isUploading = true;
       this.fileService.uploadImage(file).subscribe({
         next: (response: any) => {
           const uploadedUrl = response.url;
@@ -222,7 +232,39 @@ export class AdminChangelogs {
           this.isUploading = false;
         },
         error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
+          console.error("Upload failed", err);
+          this.isUploading = false;
+        }
+      });
+    }
+  }
+
+  onAppSelected(event: any) {
+    const file: File = event.target.files[0];
+
+    if (file) {
+      const fileName = file.name.toLowerCase();
+      const isAllowed = fileName.endsWith('.exe') || fileName.endsWith('.msi');
+
+      if (!isAllowed) {
+        alert('Invalid File! Please choose .exe or .msi files.');
+        event.target.value = '';
+        return;
+      }
+
+      this.isUploading = true;
+      this.fileService.uploadApp(file).subscribe({
+        next: (response: any) => {
+          const uploadedUrl = response.url;
+
+          this.changelogForm.patchValue({
+            appUrl: uploadedUrl
+          });
+
+          this.isUploading = false;
+        },
+        error: (err: any) => {
+          console.error("Upload failed", err);
           this.isUploading = false;
         }
       });

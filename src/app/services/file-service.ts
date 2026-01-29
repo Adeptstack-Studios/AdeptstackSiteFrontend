@@ -17,6 +17,13 @@ export class FileService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(environment.uploadFile, formData);
+    return this.http.post(environment.uploadImage, formData);
+  }
+
+  uploadApp(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post(environment.uploadApp, formData);
   }
 }

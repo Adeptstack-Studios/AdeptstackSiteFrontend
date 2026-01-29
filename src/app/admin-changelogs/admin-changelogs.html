@@ -78,9 +78,9 @@
 
       <!--FILE UPLOAD-->
       <div class="input-box">
-        <input type="file" (change)="onFileSelected($event)" accept="image/*" id="fileUpload" style="display: none;">
+        <input type="file" (change)="onImageSelected($event)" accept="image/*" id="imageUpload" style="display: none;">
 
-        <label for="fileUpload" class="upload-btn">
+        <label for="imageUpload" class="upload-btn">
           <i class='bx bx-cloud-upload'></i>
           @if(isUploading) {
             Uploading...
@@ -89,7 +89,7 @@
           }
         </label>
 
-        <input type="text" formControlName="imageUrl" placeholder="Image URL (automatic on upload)" readonly style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" formControlName="imageUrl" placeholder="Image URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
 
         @if (changelogForm.get('imageUrl')?.value) {
           <div class="image-preview">
@@ -140,6 +140,29 @@
           }
         </div>
       </div>
+
+      <!--FILE UPLOAD-->
+      <div class="input-box">
+        <input type="file" (change)="onAppSelected($event)" accept=".exe, .msi" id="fileUpload" style="display: none;">
+
+        <label for="fileUpload" class="upload-btn">
+          <i class='bx bx-cloud-upload'></i>
+          @if(isUploading) {
+            Uploading...
+          } @else {
+            Upload Application
+          }
+        </label>
+
+        <input type="text" formControlName="appUrl" placeholder="App URL (automatic on upload)" readonly style="margin-top: 10px; background: #f9f9f9; color: #777;">
+
+        <div class="text-danger">
+          @if (changelogForm.controls['appUrl'].touched && changelogForm.controls['appUrl'].errors?.['required']) {
+            <span>This is required. </span>
+          }
+        </div>
+      </div>
+      <!--END FILE UPLOAD-->
 
       <div class="btn-box">
         <button class="btn" type="submit">Submit</button>
