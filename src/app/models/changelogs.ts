@@ -3,6 +3,7 @@ export class Changelogs {
   title?: string;
   description?: string;
   imageUrl?: string;
+  appUrl?: string;
   content?: string;
   channel?: string;
   app?: string;

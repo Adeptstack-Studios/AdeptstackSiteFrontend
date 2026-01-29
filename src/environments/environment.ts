@@ -21,5 +21,6 @@ export const environment = {
   searchChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?title=',
   searchByChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?app=',
 
-  uploadFile: 'https://api.adeptstack.net/api/files/upload',
+  uploadApp: 'https://api.adeptstack.net/api/files/uploadApp',
+  uploadImage: 'https://api.adeptstack.net/api/files/uploadImage',
 };

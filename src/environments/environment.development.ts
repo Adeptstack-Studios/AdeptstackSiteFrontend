@@ -21,5 +21,6 @@ export const environment = {
   searchChangelogs: 'http://localhost:8080/api/changelogs/searchBy?title=',
   searchByChangelogs: 'http://localhost:8080/api/changelogs/searchBy?app=',
 
-  uploadFile: 'http://localhost:8080/api/files/upload',
+  uploadApp: 'http://localhost:8080/api/files/uploadApp',
+  uploadImage: 'http://localhost:8080/api/files/uploadImage',
 };
