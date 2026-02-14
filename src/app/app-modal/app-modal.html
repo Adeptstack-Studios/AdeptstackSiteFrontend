@@ -1,0 +1,42 @@
+<div class="overlay" (click)="onCloseModal()">
+  <div class="popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h2>{{ app?.name }}</h2>
+      <p class="subtitle">{{ app?.description }}</p>
+    </div>
+
+    <div class="popup-body">
+      <h2>{{app?.name}}</h2>
+      <div style="display: flex; justify-content: space-around;">
+        <markdown [data]="app?.feature1Desc"></markdown>
+        <img [src]="app?.image1Url" alt="cover" style="width: 50%; margin-left: 10px;">
+      </div>
+
+      <h2>Features</h2>
+      <div style="display: flex; justify-content: space-around;">
+        <img [src]="app?.image1Url" alt="cover" style="width: 50%; margin-right: 10px;">
+        <markdown [data]="app?.feature1Desc"></markdown>
+      </div>
+      <div style="display: flex; justify-content: space-around;">
+        <markdown [data]="app?.feature2Desc"></markdown>
+        <img [src]="app?.image2Url" alt="cover" style="width: 50%; margin-left: 10px;">
+      </div>
+      <div style="display: flex; justify-content: space-around;">
+        <img [src]="app?.image3Url" alt="cover" style="width: 50%; margin-right: 10px;">
+        <markdown [data]="app?.feature3Desc"></markdown>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <span class="date">{{ app?.publishedAt | date:'mediumDate' }}</span>
+
+      <div class="actions">
+        <button class="btn btn-edit" (click)="edit()">Edit</button>
+        <button class="btn btn-delete" (click)="delete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+@if (isOpened) {
+  <app-warning (delete)="isDelete($event)"></app-warning>
+}
