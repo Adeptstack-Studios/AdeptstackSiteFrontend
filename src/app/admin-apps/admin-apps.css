@@ -1,0 +1,279 @@
+.admin-page {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background: #f5f6fa;
+  padding: 30px;
+  box-sizing: border-box;
+  gap: 30px;
+  overflow: hidden;
+}
+
+.app-list {
+  flex: 1;
+  padding-right: 0;
+  padding-bottom: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  margin-bottom: 25px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.list-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.search-box {
+  background: #f5f6fa;
+  padding: 5px 15px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  width: 250px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.search-box:hover,
+.search-box:focus-within {
+  background: white;
+  box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+.search-box input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  outline: none !important;
+  height: 40px;
+  padding: 0 0 0 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  color: #333;
+  margin: 0;
+}
+
+.search-box input:hover,
+.search-box input:focus {
+  border-color: transparent !important;
+}
+
+.search-box i {
+  font-size: 1.2rem;
+  color: #999;
+}
+
+.search-box:focus-within i {
+  color: #74ebd5;
+}
+
+.app-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.app-item {
+  height: 340px;
+}
+
+.app-create {
+  width: 400px;
+  flex-shrink: 0;
+  background: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.app-create form {
+  overflow-y: auto;
+  padding-right: 5px; /* Platz für Scrollbar */
+  scrollbar-width: thin;
+}
+
+.app-create h1 {
+  margin-bottom: 15px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #222;
+}
+
+.input-box, .textarea-box {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.app-create input[type="text"],
+.app-create input[type="date"],
+.app-create textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.app-create input[type="text"]:hover,
+.app-create input[type="date"]:hover,
+.app-create textarea:hover {
+  border-color: #999;
+}
+
+.app-create input[type="text"]:focus,
+.app-create input[type="date"]:focus,
+.app-create textarea:focus {
+  border-color: #1e2a38;
+  box-shadow: 0 0 0 2px rgba(30, 42, 56, 0.15);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.2);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+  max-height: 300px;
+}
+
+.input-box i, .textarea-box i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.textarea-box i {
+  top: 20px;
+  transform: none;
+}
+
+.text-danger span {
+  display: block;
+  margin-top: 6px;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+}
+
+.btn-box {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn {
+  margin-top: 15px;
+  padding: 10px 22px;
+  font-size: 15px;
+  background: #1e2a38;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn:hover { background: #273445; }
+
+.btn2 {
+  margin-top: 15px;
+  margin-left: 15px;
+  padding: 10px 22px;
+  font-size: 15px;
+  border: 2px solid #1e2a38;
+  background: transparent;
+  color: black;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn2:hover { background: #273445; color: white; }
+
+/*File Upload*/
+.upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #555;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.upload-btn:hover {
+  border-color: #1e2a38;
+  color: #1e2a38;
+  background: #f0f4f8;
+}
+
+.upload-btn i {
+  font-size: 1.4rem;
+  top: 0;
+  right: 0;
+  transform: none;
+  position: relative;
+}
+
+.image-preview {
+  margin-top: 15px;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  background: #f5f6fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

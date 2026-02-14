@@ -5,6 +5,7 @@ import {Register} from './register/register';
 import {AdminPanel} from './admin-panel/admin-panel';
 import {AdminNews} from './admin-news/admin-news';
 import {AdminChangelogs} from './admin-changelogs/admin-changelogs';
+import {AdminApps} from './admin-apps/admin-apps';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -20,6 +21,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'news' },
       { path: 'news', component: AdminNews, canMatch: [AuthGuard], canActivate: [AuthGuard] },
       { path: 'changelogs', component: AdminChangelogs, canMatch: [AuthGuard], canActivate: [AuthGuard] },
+      { path: 'apps', component: AdminApps, canMatch: [AuthGuard], canActivate: [AuthGuard] },
     ]
   },
 ];
