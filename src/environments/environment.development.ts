@@ -23,4 +23,10 @@ export const environment = {
 
   uploadApp: 'http://localhost:8080/api/files/uploadApp',
   uploadImage: 'http://localhost:8080/api/files/uploadImage',
+
+  appsGet: 'http://localhost:8080/api/apps/get',
+  appsCreate: 'http://localhost:8080/api/apps/create',
+  appsUpdate: 'http://localhost:8080/api/apps/update',
+  appsDelete: 'http://localhost:8080/api/apps/delete',
+  searchApps: 'http://localhost:8080/api/apps/search?name=',
 };

@@ -23,4 +23,10 @@ export const environment = {
 
   uploadApp: 'https://api.adeptstack.net/api/files/uploadApp',
   uploadImage: 'https://api.adeptstack.net/api/files/uploadImage',
+
+  appsGet: 'https://api.adeptstack.net/api/apps/get',
+  appsCreate: 'https://api.adeptstack.net/api/apps/create',
+  appsUpdate: 'https://api.adeptstack.net/api/apps/update',
+  appsDelete: 'https://api.adeptstack.net/api/apps/delete',
+  searchApps: 'https://api.adeptstack.net/api/apps/search?name=',
 };
