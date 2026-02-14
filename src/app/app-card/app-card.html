@@ -1,0 +1,18 @@
+<button class="app-item" (click)="onAppClicked()">
+  <div class="app-item">
+    <div class="img-container">
+      <img [src]="item?.image1Url" alt="cover">
+    </div>
+
+    <div class="info-container">
+      <p>{{ item?.name }}</p>
+      <p>{{ item?.description }}</p>
+
+      <div class="meta-row">
+        <span class="meta-left">{{ item?.category }}</span>
+        <span class="meta-left">{{ item?.latestMainVersion?.version }}</span>
+        <span class="meta-right">{{ item?.publishedAt | date }}</span>
+      </div>
+    </div>
+  </div>
+</button>
