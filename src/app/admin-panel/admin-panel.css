@@ -127,8 +127,7 @@
 .content {
   flex: 1;
   background-color: #f3f4f6;
-  padding: 30px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 @keyframes fadeIn {
