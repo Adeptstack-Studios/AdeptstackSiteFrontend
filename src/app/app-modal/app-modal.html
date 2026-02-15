@@ -2,13 +2,13 @@
   <div class="popup" (click)="$event.stopPropagation()">
     <div class="popup-header">
       <h2>{{ app?.name }}</h2>
-      <p class="subtitle">{{ app?.description }}</p>
+      <p class="subtitle">{{ app?.slogan }}</p>
     </div>
 
     <div class="popup-body">
       <h2>{{app?.name}}</h2>
       <div style="display: flex; justify-content: space-around;">
-        <markdown [data]="app?.feature1Desc"></markdown>
+        <markdown [data]="app?.description"></markdown>
         <img [src]="app?.image1Url" alt="cover" style="width: 50%; margin-left: 10px;">
       </div>
 
