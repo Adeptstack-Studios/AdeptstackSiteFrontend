@@ -1,6 +1,6 @@
 import {Component, inject} from '@angular/core';
 import {AuthorizationService} from '../services/authorization';
-import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl} from '@angular/forms';
 import {ChangelogsService} from '../services/changelogs-service';
 import {Changelogs} from '../models/changelogs';
 import {PostModal} from '../post-modal/post-modal';
@@ -47,12 +47,16 @@ export class AdminChangelogs {
     description: new FormControl('', Validators.required),
     content: new FormControl('', Validators.required),
     imageUrl: new FormControl('', Validators.required),
-    appUrl: new FormControl('', Validators.required),
+    appUrl: new FormControl(''),
+    microsoftStoreUrl: new FormControl(''),
+    playStoreUrl: new FormControl(''),
+    appStoreUrl: new FormControl(''),
+    steamUrl: new FormControl(''),
     app: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
     publishedAt: new FormControl('', Validators.required)
-  });
+  }, { validators: this.atLeastOneUrlValidator });
 
   constructor() {
     this.auth = inject(AuthorizationService);
@@ -61,6 +65,19 @@ export class AdminChangelogs {
     this.fb = inject(FormBuilder);
 
     this.update()
+  }
+
+  atLeastOneUrlValidator(group: AbstractControl): { [key: string]: any } | null {
+    const appUrl = group.get('appUrl')?.value;
+    const microsoftStoreUrl = group.get('microsoftStoreUrl')?.value;
+    const playStoreUrl = group.get('playStoreUrl')?.value;
+    const appStoreUrl = group.get('appStoreUrl')?.value;
+    const steamUrl = group.get('steamUrl')?.value;
+
+    if (!appUrl && !microsoftStoreUrl && !playStoreUrl && !appStoreUrl && !steamUrl) {
+      return { 'noUrlProvided': true };
+    }
+    return null;
   }
 
   update() {
@@ -133,7 +150,22 @@ export class AdminChangelogs {
     if (!this.isEdit) {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
-        const changelog: Changelogs = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, appUrl: formValue.appUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
+        const changelog: Changelogs = {
+          id: 0,
+          title: formValue.title,
+          description: formValue.description,
+          content: formValue.content,
+          imageUrl: formValue.imageUrl,
+          appUrl: formValue.appUrl,
+          microsoftStoreUrl: formValue.microsoftStoreUrl,
+          playStoreUrl: formValue.playStoreUrl,
+          appStoreUrl: formValue.appStoreUrl,
+          steamUrl: formValue.steamUrl,
+          app: formValue.app,
+          channel: formValue.channel,
+          version: formValue.version,
+          publishedAt: new Date(formValue.publishedAt)
+        };
 
         this.changelogService.create(changelog).subscribe({
           next: () => {
@@ -151,7 +183,22 @@ export class AdminChangelogs {
     else {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
-        const changelog: Changelogs = {id: this.popupChangelog?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, appUrl: formValue.appUrl, app: formValue.app, channel: formValue.channel, version: formValue.version, publishedAt: new Date(formValue.publishedAt)};
+        const changelog: Changelogs = {
+          id: this.popupChangelog?.id,
+          title: formValue.title,
+          description: formValue.description,
+          content: formValue.content,
+          imageUrl: formValue.imageUrl,
+          appUrl: formValue.appUrl,
+          microsoftStoreUrl: formValue.microsoftStoreUrl,
+          playStoreUrl: formValue.playStoreUrl,
+          appStoreUrl: formValue.appStoreUrl,
+          steamUrl: formValue.steamUrl,
+          app: formValue.app,
+          channel: formValue.channel,
+          version: formValue.version,
+          publishedAt: new Date(formValue.publishedAt)
+        };
 
         this.changelogService.update(changelog).subscribe({
           next: () => {
@@ -192,12 +239,16 @@ export class AdminChangelogs {
         description: new FormControl(this.popupChangelog?.description, Validators.required),
         content: new FormControl(this.popupChangelog?.content, Validators.required),
         imageUrl: new FormControl(this.popupChangelog?.imageUrl, Validators.required),
-        appUrl: new FormControl(this.popupChangelog?.appUrl, Validators.required),
+        appUrl: new FormControl(this.popupChangelog?.appUrl),
+        microsoftStoreUrl: new FormControl(this.popupChangelog?.microsoftStoreUrl),
+        playStoreUrl: new FormControl(this.popupChangelog?.playStoreUrl),
+        appStoreUrl: new FormControl(this.popupChangelog?.appStoreUrl),
+        steamUrl: new FormControl(this.popupChangelog?.steamUrl),
         app: new FormControl(this.popupChangelog?.app, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
         publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required)
-      });
+      }, { validators: this.atLeastOneUrlValidator });
     }
   }
 

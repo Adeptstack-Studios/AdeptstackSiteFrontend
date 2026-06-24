@@ -141,6 +141,22 @@
         </div>
       </div>
 
+      <div class="input-box">
+        <input type="text" formControlName="microsoftStoreUrl" placeholder="Microsoft Store URL">
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="playStoreUrl" placeholder="Play Store URL">
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="appStoreUrl" placeholder="App Store URL">
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="steamUrl" placeholder="Steam URL">
+      </div>
+
       <!--FILE UPLOAD-->
       <div class="input-box">
         <input type="file" (change)="onAppSelected($event)" accept=".exe, .msi" id="fileUpload" style="display: none;">
@@ -157,8 +173,8 @@
         <input type="text" formControlName="appUrl" placeholder="App URL (automatic on upload)" readonly style="margin-top: 10px; background: #f9f9f9; color: #777;">
 
         <div class="text-danger">
-          @if (changelogForm.controls['appUrl'].touched && changelogForm.controls['appUrl'].errors?.['required']) {
-            <span>This is required. </span>
+          @if (changelogForm.touched && changelogForm.errors?.['noUrlProvided']) {
+            <span>At least one URL (App, Microsoft, Play, App Store or Steam) is required.</span>
           }
         </div>
       </div>
