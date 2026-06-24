@@ -307,3 +307,37 @@ select {
   max-height: 100%;
   object-fit: contain;
 }
+
+.app-url-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.app-url-container input {
+  flex: 1;
+  background: #f9f9f9 !important;
+  color: #777 !important;
+}
+
+.clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #c0392b;
+  transition: all 0.2s;
+}
+
+.clear-btn:hover {
+  background: #fdf2f2;
+  border-color: #c0392b;
+}
+
+.clear-btn i {
+  font-size: 1.2rem;
+}

@@ -244,6 +244,10 @@ export class AdminChangelogs {
     this.changelogForm.reset();
   }
 
+  clearAppUrl() {
+    this.changelogForm.patchValue({ appUrl: '' });
+  }
+
   protected onPostClicked(post: Changelogs) {
     this.popupChangelog = post;
     this.isPopupOpen = !this.isPopupOpen;

@@ -175,7 +175,12 @@
           }
         </label>
 
-        <input type="text" formControlName="appUrl" placeholder="App URL (automatic on upload)" readonly style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <div class="app-url-container">
+          <input type="text" formControlName="appUrl" placeholder="App URL (automatic on upload)" readonly>
+          <button type="button" class="clear-btn" (click)="clearAppUrl()" title="Clear App URL">
+            <i class='bx bx-trash'></i>
+          </button>
+        </div>
 
         <div class="text-danger">
           @if (changelogForm.touched && changelogForm.errors?.['noUrlProvided']) {
