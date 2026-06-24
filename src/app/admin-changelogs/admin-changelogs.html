@@ -7,10 +7,10 @@
       <div class="filter-group">
 
         <div class="select-wrapper">
-          <select [(ngModel)]="selectedApp" (change)="onFilterChange()">
+          <select [(ngModel)]="selectedAppId" (change)="onFilterChange()">
             <option value="">All Apps</option>
-            @for (app of uniqueApps; track $index) {
-              <option [value]="app">{{app}}</option>
+            @for (appId of uniqueAppIds; track $index) {
+              <option [value]="appId">{{getAppName(appId)}}</option>
             }
           </select>
           <i class='bx bx-chevron-down'></i>
@@ -106,9 +106,14 @@
       <!--END FILE UPLOAD-->
 
       <div class="input-box">
-        <input type="text" formControlName="app" placeholder="App Name">
+        <select formControlName="appId">
+          <option value="" disabled selected>Select App</option>
+          @for (app of apps; track $index) {
+            <option [value]="app.id">{{app.name}}</option>
+          }
+        </select>
         <div class="text-danger">
-          @if (changelogForm.controls['app'].touched && changelogForm.controls['app'].errors?.['required']) {
+          @if (changelogForm.controls['appId'].touched && changelogForm.controls['appId'].errors?.['required']) {
             <span>This is required. </span>
           }
         </div>

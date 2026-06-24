@@ -163,7 +163,8 @@
 
 .changelog-create input[type="text"],
 .changelog-create input[type="date"],
-.changelog-create textarea {
+.changelog-create textarea,
+.changelog-create select {
   width: 100%;
   padding: 12px;
   border: 1px solid #ccc;
@@ -179,13 +180,15 @@
 
 .changelog-create input[type="text"]:hover,
 .changelog-create input[type="date"]:hover,
-.changelog-create textarea:hover {
+.changelog-create textarea:hover,
+.changelog-create select:hover {
   border-color: #999;
 }
 
 .changelog-create input[type="text"]:focus,
 .changelog-create input[type="date"]:focus,
-.changelog-create textarea:focus {
+.changelog-create textarea:focus,
+.changelog-create select:focus {
   border-color: #1e2a38;
   box-shadow: 0 0 0 2px rgba(30, 42, 56, 0.15);
 }
@@ -209,9 +212,19 @@ textarea {
 }
 
 input.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched,
 textarea.ng-invalid.ng-touched {
   border-color: #c0392b;
   box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px !important;
 }
 
 .btn-box {

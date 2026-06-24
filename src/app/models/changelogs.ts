@@ -10,6 +10,7 @@ export class Changelogs {
   steamUrl?: string;
   content?: string;
   channel?: string;
+  appId?: number;
   app?: string;
   version?: string;
   publishedAt?: Date;

@@ -1,10 +1,11 @@
-import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
+import {Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {Changelogs} from '../models/changelogs';
 import {News} from '../models/news';
 import {DatePipe} from '@angular/common';
 import {Warning} from '../warning/warning';
 import {NewsService} from '../services/news-service';
 import {ChangelogsService} from '../services/changelogs-service';
+import {AppService} from '../services/app-service';
 import {MarkdownComponent} from 'ngx-markdown';
 
 @Component({
@@ -17,7 +18,7 @@ import {MarkdownComponent} from 'ngx-markdown';
   templateUrl: './post-modal.html',
   styleUrl: './post-modal.css',
 })
-export class PostModal {
+export class PostModal implements OnInit, OnChanges {
 
   @Input() post?: News | Changelogs;
   @Input() isNews: boolean = true;
@@ -25,10 +26,41 @@ export class PostModal {
   @Output() onEditPost = new EventEmitter<number>();
   newsService: NewsService;
   changelogsService: ChangelogsService;
+  appService: AppService;
+
+  appName: string = '';
 
   constructor() {
     this.newsService = inject(NewsService);
     this.changelogsService = inject(ChangelogsService);
+    this.appService = inject(AppService);
+  }
+
+  ngOnInit() {
+    this.loadAppName();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['post'] && !changes['post'].isFirstChange()) {
+      this.loadAppName();
+    }
+  }
+
+  private loadAppName() {
+    if (!this.isNews && this.post && 'appId' in this.post && this.post.appId) {
+      this.appService.getById(this.post.appId).subscribe({
+        next: (response) => {
+          if (response.body) {
+            this.appName = response.body.name || '';
+          }
+        },
+        error: () => {
+          this.appName = '';
+        }
+      });
+    } else {
+      this.appName = '';
+    }
   }
 
   isOpened = false;

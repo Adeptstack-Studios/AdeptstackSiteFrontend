@@ -2,7 +2,9 @@ import {Component, inject} from '@angular/core';
 import {AuthorizationService} from '../services/authorization';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl} from '@angular/forms';
 import {ChangelogsService} from '../services/changelogs-service';
+import {AppService} from '../services/app-service';
 import {Changelogs} from '../models/changelogs';
+import {AppResponse} from '../models/app-response';
 import {PostModal} from '../post-modal/post-modal';
 import {ChangelogCard} from '../changelog-card/changelog-card';
 import {FileService} from '../services/file-service';
@@ -22,16 +24,18 @@ import {FileService} from '../services/file-service';
 export class AdminChangelogs {
   auth: AuthorizationService;
   changelogService: ChangelogsService;
+  appService: AppService;
   fileService: FileService;
   fb: FormBuilder;
 
   changelogs: Changelogs[] = [];
   filteredChangelogs: Changelogs[] = [];
+  apps: AppResponse[] = [];
 
-  uniqueApps: (string | undefined)[] = [];
+  uniqueAppIds: (number | undefined)[] = [];
   uniqueChannels: (string | undefined)[] = [];
 
-  selectedApp: string = '';
+  selectedAppId: number | string = '';
   selectedChannel: string = '';
   searchTerm: string = '';
 
@@ -52,7 +56,7 @@ export class AdminChangelogs {
     playStoreUrl: new FormControl(''),
     appStoreUrl: new FormControl(''),
     steamUrl: new FormControl(''),
-    app: new FormControl('', Validators.required),
+    appId: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
     publishedAt: new FormControl('', Validators.required)
@@ -61,10 +65,25 @@ export class AdminChangelogs {
   constructor() {
     this.auth = inject(AuthorizationService);
     this.changelogService = inject(ChangelogsService);
+    this.appService = inject(AppService);
     this.fileService = inject(FileService);
     this.fb = inject(FormBuilder);
 
     this.update()
+    this.loadApps();
+  }
+
+  loadApps() {
+    this.appService.getAll().subscribe({
+      next: (response) => {
+        if (response.body) {
+          this.apps = response.body;
+        }
+      },
+      error: (error) => {
+        console.log("error loading apps: " + error.message);
+      }
+    });
   }
 
   atLeastOneUrlValidator(group: AbstractControl): { [key: string]: any } | null {
@@ -102,11 +121,15 @@ export class AdminChangelogs {
   }
 
   extractFilterOptions() {
-    const apps = new Set(this.changelogs.map(c => c.app));
-    this.uniqueApps = Array.from(apps).sort();
+    const appIds = new Set(this.changelogs.map(c => c.appId));
+    this.uniqueAppIds = Array.from(appIds).sort((a, b) => (a || 0) - (b || 0));
 
     const channels = new Set(this.changelogs.map(c => c.channel));
     this.uniqueChannels = Array.from(channels).sort();
+  }
+
+  getAppName(appId?: number): string {
+    return this.apps.find(a => a.id === appId)?.name || 'Unknown App';
   }
 
   onFilterChange() {
@@ -121,8 +144,8 @@ export class AdminChangelogs {
   applyFilters() {
     let temp = [...this.changelogs];
 
-    if (this.selectedApp) {
-      temp = temp.filter(item => item.app === this.selectedApp);
+    if (this.selectedAppId) {
+      temp = temp.filter(item => item.appId === Number(this.selectedAppId));
     }
 
     if (this.selectedChannel) {
@@ -150,6 +173,7 @@ export class AdminChangelogs {
     if (!this.isEdit) {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
+        const selectedApp = this.apps.find(a => a.id === Number(formValue.appId));
         const changelog: Changelogs = {
           id: 0,
           title: formValue.title,
@@ -161,7 +185,8 @@ export class AdminChangelogs {
           playStoreUrl: formValue.playStoreUrl,
           appStoreUrl: formValue.appStoreUrl,
           steamUrl: formValue.steamUrl,
-          app: formValue.app,
+          appId: Number(formValue.appId),
+          app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
           publishedAt: new Date(formValue.publishedAt)
@@ -183,6 +208,7 @@ export class AdminChangelogs {
     else {
       if (this.changelogForm.valid) {
         const formValue = this.changelogForm.value;
+        const selectedApp = this.apps.find(a => a.id === Number(formValue.appId));
         const changelog: Changelogs = {
           id: this.popupChangelog?.id,
           title: formValue.title,
@@ -194,7 +220,8 @@ export class AdminChangelogs {
           playStoreUrl: formValue.playStoreUrl,
           appStoreUrl: formValue.appStoreUrl,
           steamUrl: formValue.steamUrl,
-          app: formValue.app,
+          appId: Number(formValue.appId),
+          app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
           publishedAt: new Date(formValue.publishedAt)
@@ -244,7 +271,7 @@ export class AdminChangelogs {
         playStoreUrl: new FormControl(this.popupChangelog?.playStoreUrl),
         appStoreUrl: new FormControl(this.popupChangelog?.appStoreUrl),
         steamUrl: new FormControl(this.popupChangelog?.steamUrl),
-        app: new FormControl(this.popupChangelog?.app, Validators.required),
+        appId: new FormControl(this.popupChangelog?.appId, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
         publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required)
