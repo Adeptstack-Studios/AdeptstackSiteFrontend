@@ -179,4 +179,17 @@ export class AdminNews {
       });
     }
   }
+
+  makeAllVisible() {
+    if (this.news) {
+      this.news.forEach(item => {
+        if (!item.visible) {
+          item.visible = true;
+          this.newsService.update(item).subscribe({
+            error: (err) => console.error(err)
+          });
+        }
+      });
+    }
+  }
 }
