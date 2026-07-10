@@ -41,3 +41,18 @@ body {
   background-repeat: no-repeat;
   background-position: center;
 }
+
+.not-visible {
+  opacity: 0.5;
+  filter: grayscale(0.8);
+}
+
+.btn-visibility {
+  background: #fef9c3 !important;
+  color: #854d0e !important;
+  margin-top: 0 !important;
+}
+
+.btn-visibility:hover {
+  background: #fef08a !important;
+}
