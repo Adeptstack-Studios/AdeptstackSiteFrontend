@@ -39,6 +39,20 @@ export class AppModal {
     this.onEditApp.emit(<number>this.app?.id);
   }
 
+  toggleVisibility() {
+    if (this.app) {
+      this.app.visible = !this.app.visible;
+      this.appService.update(this.app as any).subscribe({
+        next: () => {
+        },
+        error: (err) => {
+          this.app!.visible = !this.app!.visible;
+          console.error(err);
+        }
+      });
+    }
+  }
+
   delete() {
     this.isOpened = true;
   }
