@@ -279,4 +279,17 @@ export class AdminApps {
       });
     }
   }
+
+  makeAllVisible() {
+    if (this.apps) {
+      this.apps.forEach(item => {
+        if (!item.visible) {
+          item.visible = true;
+          this.appService.update(item as any).subscribe({
+            error: (err) => console.error(err)
+          });
+        }
+      });
+    }
+  }
 }
