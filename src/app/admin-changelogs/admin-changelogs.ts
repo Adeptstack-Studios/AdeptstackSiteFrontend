@@ -352,4 +352,17 @@ export class AdminChangelogs {
       });
     }
   }
+
+  makeAllVisible() {
+    if (this.filteredChangelogs) {
+      this.filteredChangelogs.forEach(item => {
+        if (!item.visible) {
+          item.visible = true;
+          this.changelogService.update(item).subscribe({
+            error: (err) => console.error(err)
+          });
+        }
+      });
+    }
+  }
 }

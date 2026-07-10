@@ -5,7 +5,6 @@
       <h2>All Changelogs</h2>
 
       <div class="filter-group">
-
         <div class="select-wrapper">
           <select [(ngModel)]="selectedAppId" (change)="onFilterChange()">
             <option value="">All Apps</option>
@@ -28,9 +27,12 @@
 
       </div>
 
-      <div class="search-box">
-        <i class='bx bx-search'></i>
-        <input type="text" placeholder="Search" (input)="onSearch($event)">
+      <div class="header-actions">
+        <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
+        <div class="search-box">
+          <i class='bx bx-search'></i>
+          <input type="text" placeholder="Search" (input)="onSearch($event)">
+        </div>
       </div>
     </div>
 
