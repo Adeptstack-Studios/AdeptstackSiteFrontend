@@ -14,4 +14,5 @@ export class Changelogs {
   app?: string;
   version?: string;
   publishedAt?: Date;
+  visible?: boolean;
 }

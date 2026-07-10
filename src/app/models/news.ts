@@ -6,4 +6,5 @@ export class News {
   category?: string;
   content?: string;
   publishedAt?: Date;
+  visible?: boolean;
 }

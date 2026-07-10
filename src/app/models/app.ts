@@ -16,6 +16,6 @@ export class App {
   feature1Desc?: string;
   feature2Desc?: string;
   feature3Desc?: string;
-
   publishedAt?: Date;
+  visible?: boolean;
 }
