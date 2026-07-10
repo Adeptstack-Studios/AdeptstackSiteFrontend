@@ -1,4 +1,4 @@
-<button class="app-item" (click)="onAppClicked()">
+<button class="app-item" [class.not-visible]="item?.visible === false" (click)="onAppClicked()">
   <div class="app-item">
     <div class="img-container">
       <img [src]="item?.image1Url" alt="cover">

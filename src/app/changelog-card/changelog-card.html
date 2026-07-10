@@ -1,4 +1,4 @@
-<button class="changelog-item" (click)="onPostClicked()">
+<button class="changelog-item" [class.not-visible]="item?.visible === false" (click)="onPostClicked()">
   <div class="changelog-item">
     <div class="img-container">
       <img [src]="item?.imageUrl" alt="cover">
