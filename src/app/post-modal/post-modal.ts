@@ -73,6 +73,31 @@ export class PostModal implements OnInit, OnChanges {
     this.onEditPost.emit(<number>this.post?.id);
   }
 
+  toggleVisibility() {
+    if (this.post) {
+      this.post.visible = !this.post.visible;
+      if (this.isNews) {
+        this.newsService.update(this.post as News).subscribe({
+          next: () => {
+          },
+          error: (err) => {
+            this.post!.visible = !this.post!.visible;
+            console.error(err);
+          }
+        });
+      } else {
+        this.changelogsService.update(this.post as Changelogs).subscribe({
+          next: () => {
+          },
+          error: (err) => {
+            this.post!.visible = !this.post!.visible;
+            console.error(err);
+          }
+        });
+      }
+    }
+  }
+
   delete() {
     this.isOpened = true;
   }

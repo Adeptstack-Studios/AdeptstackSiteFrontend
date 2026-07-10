@@ -16,6 +16,9 @@
       <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
 
       <div class="actions">
+        <button class="btn btn-visibility" (click)="toggleVisibility()">
+          {{ post?.visible ? 'Make Private' : 'Make Public' }}
+        </button>
         <button class="btn btn-edit" (click)="edit()">Edit</button>
         <button class="btn btn-delete" (click)="delete()">Delete</button>
       </div>
