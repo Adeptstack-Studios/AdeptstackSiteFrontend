@@ -20,6 +20,7 @@ export class AppResponse {
   feature3Desc?: string;
 
   publishedAt?: Date;
+  visible?: boolean;
 
   latestMainVersion?: Changelogs;
 }
