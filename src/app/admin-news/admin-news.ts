@@ -38,7 +38,8 @@ export class AdminNews {
     content: new FormControl('', Validators.required),
     imageUrl: new FormControl('', Validators.required),
     category: new FormControl('', Validators.required),
-    publishedAt: new FormControl('', Validators.required)
+    publishedAt: new FormControl('', Validators.required),
+    visible: new FormControl(false)
   });
 
   constructor() {
@@ -71,7 +72,7 @@ export class AdminNews {
     if (!this.isEdit) {
       if (this.newsForm.valid) {
         const formValue = this.newsForm.value;
-        const news: News = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
+        const news: News = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
 
         this.newsService.create(news).subscribe({
           next: (response) => {
@@ -90,7 +91,7 @@ export class AdminNews {
     else {
       if (this.newsForm.valid) {
         const formValue = this.newsForm.value;
-        const news: News = {id: this.popupNews?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
+        const news: News = {id: this.popupNews?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
 
         this.newsService.update(news).subscribe({
           next: (response) => {
@@ -107,7 +108,9 @@ export class AdminNews {
   }
 
   clearForm() {
-    this.newsForm.reset();
+    this.newsForm.reset({
+      visible: false
+    });
   }
 
   protected onPostClicked(post: News) {
@@ -133,7 +136,8 @@ export class AdminNews {
         content: new FormControl(this.popupNews?.content, Validators.required),
         imageUrl: new FormControl(this.popupNews?.imageUrl, Validators.required),
         category: new FormControl(this.popupNews?.category, Validators.required),
-        publishedAt: new FormControl(this.popupNews?.publishedAt, Validators.required)
+        publishedAt: new FormControl(this.popupNews?.publishedAt, Validators.required),
+        visible: new FormControl(this.popupNews?.visible)
       });
     }
   }

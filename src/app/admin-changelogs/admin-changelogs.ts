@@ -59,7 +59,8 @@ export class AdminChangelogs {
     appId: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
-    publishedAt: new FormControl('', Validators.required)
+    publishedAt: new FormControl('', Validators.required),
+    visible: new FormControl(false)
   }, { validators: this.atLeastOneUrlValidator });
 
   constructor() {
@@ -189,7 +190,8 @@ export class AdminChangelogs {
           app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt)
+          publishedAt: new Date(formValue.publishedAt),
+          visible: formValue.visible
         };
 
         this.changelogService.create(changelog).subscribe({
@@ -224,7 +226,8 @@ export class AdminChangelogs {
           app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt)
+          publishedAt: new Date(formValue.publishedAt),
+          visible: formValue.visible
         };
 
         this.changelogService.update(changelog).subscribe({
@@ -241,7 +244,11 @@ export class AdminChangelogs {
   }
 
   clearForm() {
-    this.changelogForm.reset();
+    this.changelogForm.reset({
+      visible: false,
+      appId: '',
+      channel: ''
+    });
   }
 
   clearAppUrl() {
@@ -278,7 +285,8 @@ export class AdminChangelogs {
         appId: new FormControl(this.popupChangelog?.appId, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
-        publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required)
+        publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required),
+        visible: new FormControl(this.popupChangelog?.visible)
       }, { validators: this.atLeastOneUrlValidator });
     }
   }

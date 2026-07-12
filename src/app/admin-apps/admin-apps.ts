@@ -51,7 +51,8 @@ export class AdminApps {
     feature2Desc: new FormControl('', Validators.required),
     feature3Desc: new FormControl('', Validators.required),
 
-    publishedAt: new FormControl('', Validators.required)
+    publishedAt: new FormControl('', Validators.required),
+    visible: new FormControl(false)
   });
 
   constructor() {
@@ -91,7 +92,7 @@ export class AdminApps {
       const app: App = {id: 0, name: formValue.name, slogan: formValue.slogan, description: formValue.description, iconUrl: formValue.iconUrl, slug: this.generateSlug(formValue.name),
         category: formValue.category, platforms: formValue.platforms, highlighted: formValue.highlighted, legacy: formValue.legacy, image1Url: formValue.image1Url,
         feature1Desc: formValue.feature1Desc, image2Url: formValue.image2Url, feature2Desc: formValue.feature2Desc, image3Url: formValue.image3Url, feature3Desc: formValue.feature3Desc,
-        publishedAt: new Date(formValue.publishedAt)};
+        publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
 
       if (!this.isEdit) {
         this.appService.create(app).subscribe({
@@ -124,7 +125,11 @@ export class AdminApps {
   }
 
   clearForm() {
-    this.appForm.reset();
+    this.appForm.reset({
+      visible: false,
+      highlighted: false,
+      legacy: false
+    });
   }
 
   protected onAppClicked(app: App) {
@@ -161,7 +166,8 @@ export class AdminApps {
         feature2Desc: new FormControl(this.popupApp?.feature2Desc, Validators.required),
         feature3Desc: new FormControl(this.popupApp?.feature3Desc, Validators.required),
 
-        publishedAt: new FormControl(this.popupApp?.publishedAt, Validators.required)
+        publishedAt: new FormControl(this.popupApp?.publishedAt, Validators.required),
+        visible: new FormControl(this.popupApp?.visible)
       });
     }
   }
