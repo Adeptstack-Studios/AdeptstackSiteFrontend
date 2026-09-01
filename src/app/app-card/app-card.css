@@ -62,6 +62,15 @@
   font-weight: 500;
 }
 
+.meta-downloads {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #34495e;
+  font-weight: 500;
+}
+
 .meta-right {
   font-size: 13px;
   color: #7f8c8d;
