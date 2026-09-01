@@ -164,6 +164,14 @@
         <input type="text" formControlName="steamUrl" placeholder="Steam URL">
       </div>
 
+      <div class="input-box">
+        <input type="text" formControlName="curseforgeUrl" placeholder="CurseForge URL">
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="modrinthUrl" placeholder="Modrinth URL">
+      </div>
+
       <!--FILE UPLOAD-->
       <div class="input-box">
         <input type="file" (change)="onAppSelected($event)" accept=".exe, .msi" id="fileUpload" style="display: none;">
@@ -186,7 +194,7 @@
 
         <div class="text-danger">
           @if (changelogForm.touched && changelogForm.errors?.['noUrlProvided']) {
-            <span>At least one URL (App, Microsoft, Play, App Store or Steam) is required.</span>
+            <span>At least one URL (App, Microsoft, Play, App Store, Steam, CurseForge or Modrinth) is required.</span>
           }
         </div>
       </div>

@@ -56,6 +56,8 @@ export class AdminChangelogs {
     playStoreUrl: new FormControl(''),
     appStoreUrl: new FormControl(''),
     steamUrl: new FormControl(''),
+    curseforgeUrl: new FormControl(''),
+    modrinthUrl: new FormControl(''),
     appId: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
@@ -93,8 +95,10 @@ export class AdminChangelogs {
     const playStoreUrl = group.get('playStoreUrl')?.value;
     const appStoreUrl = group.get('appStoreUrl')?.value;
     const steamUrl = group.get('steamUrl')?.value;
+    const curseforgeUrl = group.get('curseforgeUrl')?.value;
+    const modrinthUrl = group.get('modrinthUrl')?.value;
 
-    if (!appUrl && !microsoftStoreUrl && !playStoreUrl && !appStoreUrl && !steamUrl) {
+    if (!appUrl && !microsoftStoreUrl && !playStoreUrl && !appStoreUrl && !steamUrl && !curseforgeUrl && !modrinthUrl) {
       return { 'noUrlProvided': true };
     }
     return null;
@@ -186,6 +190,8 @@ export class AdminChangelogs {
           playStoreUrl: formValue.playStoreUrl,
           appStoreUrl: formValue.appStoreUrl,
           steamUrl: formValue.steamUrl,
+          curseforgeUrl: formValue.curseforgeUrl,
+          modrinthUrl: formValue.modrinthUrl,
           appId: Number(formValue.appId),
           app: selectedApp?.name,
           channel: formValue.channel,
@@ -222,6 +228,8 @@ export class AdminChangelogs {
           playStoreUrl: formValue.playStoreUrl,
           appStoreUrl: formValue.appStoreUrl,
           steamUrl: formValue.steamUrl,
+          curseforgeUrl: formValue.curseforgeUrl,
+          modrinthUrl: formValue.modrinthUrl,
           appId: Number(formValue.appId),
           app: selectedApp?.name,
           channel: formValue.channel,
@@ -282,6 +290,8 @@ export class AdminChangelogs {
         playStoreUrl: new FormControl(this.popupChangelog?.playStoreUrl),
         appStoreUrl: new FormControl(this.popupChangelog?.appStoreUrl),
         steamUrl: new FormControl(this.popupChangelog?.steamUrl),
+        curseforgeUrl: new FormControl(this.popupChangelog?.curseforgeUrl),
+        modrinthUrl: new FormControl(this.popupChangelog?.modrinthUrl),
         appId: new FormControl(this.popupChangelog?.appId, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
