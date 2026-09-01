@@ -44,6 +44,9 @@ export class AdminApps {
     highlighted: new FormControl(false),
     legacy: new FormControl(false),
 
+    modrinthId: new FormControl(''),
+    curseforgeId: new FormControl(''),
+
     image1Url: new FormControl('', Validators.required),
     image2Url: new FormControl('', Validators.required),
     image3Url: new FormControl('', Validators.required),
@@ -92,7 +95,8 @@ export class AdminApps {
       const app: App = {id: 0, name: formValue.name, slogan: formValue.slogan, description: formValue.description, iconUrl: formValue.iconUrl, slug: this.generateSlug(formValue.name),
         category: formValue.category, platforms: formValue.platforms, highlighted: formValue.highlighted, legacy: formValue.legacy, image1Url: formValue.image1Url,
         feature1Desc: formValue.feature1Desc, image2Url: formValue.image2Url, feature2Desc: formValue.feature2Desc, image3Url: formValue.image3Url, feature3Desc: formValue.feature3Desc,
-        publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
+        publishedAt: new Date(formValue.publishedAt), visible: formValue.visible,
+        modrinthId: formValue.modrinthId, curseforgeId: formValue.curseforgeId};
 
       if (!this.isEdit) {
         this.appService.create(app).subscribe({
@@ -158,6 +162,9 @@ export class AdminApps {
         category: new FormControl(this.popupApp?.category, Validators.required),
         highlighted: new FormControl(this.popupApp?.highlighted),
         legacy: new FormControl(this.popupApp?.legacy),
+
+        modrinthId: new FormControl(this.popupApp?.modrinthId),
+        curseforgeId: new FormControl(this.popupApp?.curseforgeId),
 
         image1Url: new FormControl(this.popupApp?.image1Url, Validators.required),
         image2Url: new FormControl(this.popupApp?.image2Url, Validators.required),

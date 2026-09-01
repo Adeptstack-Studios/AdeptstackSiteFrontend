@@ -119,6 +119,15 @@
       </div>
 
       <div class="input-box">
+        <label>Mod Downloads (optional)</label>
+        <input type="text" formControlName="modrinthId" placeholder="Modrinth Project ID or Slug">
+      </div>
+
+      <div class="input-box">
+        <input type="text" formControlName="curseforgeId" placeholder="CurseForge Project ID (numeric)">
+      </div>
+
+      <div class="input-box">
         <input type="date" formControlName="publishedAt" placeholder="Published At" [max]="today">
         <div class="text-danger">
           @if (appForm.controls['publishedAt'].touched && appForm.controls['publishedAt'].errors?.['required']) {
