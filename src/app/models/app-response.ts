@@ -12,6 +12,11 @@ export class AppResponse {
   highlighted?: boolean;
   legacy?: boolean;
 
+  modrinthId?: string;
+  curseforgeId?: string;
+  downloads?: number;
+  downloadsFormatted?: string;
+
   image1Url?: string;
   image2Url?: string;
   image3Url?: string;
