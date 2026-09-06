@@ -1,4 +1,4 @@
-<button class="news-item" [class.not-visible]="item?.visible === false" (click)="onPostClicked()">
+<button class="news-item" [class.not-visible]="item?.visible === false" [class.selected]="selected" (click)="onPostClicked()">
   <div class="news-item">
     <div class="img-container">
       <img [src]="item?.imageUrl" alt="cover">

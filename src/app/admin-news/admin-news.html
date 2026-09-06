@@ -4,7 +4,17 @@
     <div class="list-header">
       <h2>All News</h2>
       <div class="header-actions">
-        <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
+        @if (!selectionMode) {
+          <button class="btn btn-push" (click)="toggleSelectionMode()">Select for push</button>
+          <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
+        } @else {
+          <span class="selection-count">{{ selectedIds.size }} selected</span>
+          <button class="btn btn-push" (click)="sendPushForSelection()"
+                  [disabled]="selectedIds.size === 0 || isSendingPush">
+            {{ isSendingPush ? 'Sending...' : 'Send push' }}
+          </button>
+          <button class="btn" (click)="toggleSelectionMode()">Cancel</button>
+        }
         <div class="search-box">
           <i class='bx bx-search'></i>
           <input type="text" placeholder="Search" (input)="onSearch($event)">
@@ -15,7 +25,7 @@
     @if (news) {
       <div class="news-grid">
         @for (item of news; track $index) {
-          <app-news-card [item]="item" class="news-item" (postClicked)="onPostClicked($event)"/>
+          <app-news-card [item]="item" [selected]="isSelected(item.id)" class="news-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
     } @else {

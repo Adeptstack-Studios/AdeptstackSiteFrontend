@@ -34,6 +34,11 @@ export class ChangelogsService {
     return this.http.get<Changelogs[]>(environment.searchByChangelogs + app + "&title=" + query, { observe: 'response' });
   }
 
+  /** Sends one push for the given changelogs, named after the newest of them. */
+  sendPush(ids: number[]): Observable<HttpResponse<string>> {
+    return this.http.post(environment.changelogsPush, { ids }, { observe: 'response', responseType: 'text' });
+  }
+
   getById(id: number): Observable<HttpResponse<Changelogs>> {
     return this.http.get<Changelogs>(environment.changelogsGetById + id, { observe: 'response' });
   }

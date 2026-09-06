@@ -12,6 +12,7 @@ import {News} from '../models/news';
 })
 export class NewsCard {
   @Input() item?: News;
+  @Input() selected = false;
   @Output() postClicked = new EventEmitter<News>();
 
   onPostClicked() {

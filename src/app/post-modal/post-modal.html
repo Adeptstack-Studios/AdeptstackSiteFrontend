@@ -16,6 +16,16 @@
       <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
 
       <div class="actions">
+        <button class="btn btn-push" (click)="sendPush()" [disabled]="isSendingPush || !post?.visible"
+                [title]="post?.visible ? 'Send a push notification for this post' : 'Make it visible first'">
+          {{ isSendingPush ? 'Sending...' : 'Send Push' }}
+        </button>
+        @if (isNews) {
+          <button class="btn btn-newsletter" (click)="sendNewsletter()" [disabled]="isSendingNewsletter || !post?.visible"
+                  [title]="post?.visible ? 'Send the newsletter to all subscribers' : 'Make it visible first'">
+            {{ isSendingNewsletter ? 'Sending...' : 'Send Newsletter' }}
+          </button>
+        }
         <button class="btn btn-visibility" (click)="toggleVisibility()">
           {{ post?.visible ? 'Make Private' : 'Make Public' }}
         </button>

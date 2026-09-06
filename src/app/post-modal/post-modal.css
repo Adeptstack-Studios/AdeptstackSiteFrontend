@@ -106,6 +106,22 @@
   color: #dc2626;
 }
 
+.btn-push {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-newsletter {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
 markdown {
   display: block;
   width: 100%;

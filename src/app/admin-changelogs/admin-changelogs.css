@@ -348,3 +348,30 @@ select {
 .clear-btn i {
   font-size: 1.2rem;
 }
+
+/* .btn carries margin-top for the form submit button; not wanted in the header row */
+.header-actions .btn {
+  margin-top: 0;
+}
+
+.btn-push {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-push:hover:not(:disabled) {
+  background: #bfdbfe;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selection-count {
+  align-self: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+}

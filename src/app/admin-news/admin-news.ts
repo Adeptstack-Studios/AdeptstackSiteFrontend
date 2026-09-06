@@ -1,5 +1,6 @@
 import {Component, inject} from '@angular/core';
 import {AuthorizationService} from '../services/authorization';
+import {ToastService} from '../services/toast-service';
 import {News} from '../models/news';
 import {NewsService} from '../services/news-service';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
@@ -114,9 +115,57 @@ export class AdminNews {
   }
 
   protected onPostClicked(post: News) {
+    if (this.selectionMode) {
+      this.toggleSelection(post.id);
+      return;
+    }
     this.popupNews = post;
     this.isPopupOpen = !this.isPopupOpen;
   }
+
+  // --- push-mehrfachauswahl ---
+  // Sichtbarmachen verschickt nichts mehr; Pushes werden hier bewusst ausgeloest.
+  selectionMode = false;
+  selectedIds = new Set<number>();
+  isSendingPush = false;
+  private readonly toastService = inject(ToastService);
+
+  toggleSelectionMode() {
+    this.selectionMode = !this.selectionMode;
+    this.selectedIds.clear();
+  }
+
+  toggleSelection(id?: number) {
+    if (id === undefined) return;
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+    } else {
+      this.selectedIds.add(id);
+    }
+  }
+
+  isSelected(id?: number) {
+    return id !== undefined && this.selectedIds.has(id);
+  }
+
+  sendPushForSelection() {
+    if (this.selectedIds.size === 0 || this.isSendingPush) return;
+
+    this.isSendingPush = true;
+    this.newsService.sendPush([...this.selectedIds]).subscribe({
+      next: (response) => {
+        this.toastService.success(response.body || 'Push sent.');
+        this.isSendingPush = false;
+        this.selectionMode = false;
+        this.selectedIds.clear();
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
+        this.isSendingPush = false;
+      }
+    });
+  }
+
 
   closeModal() {
     this.isPopupOpen = false;

@@ -1,0 +1,10 @@
+<div class="toast-container" role="status" aria-live="polite">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <button type="button" class="toast" [class.error]="toast.kind === 'error'"
+            (click)="toastService.dismiss(toast.id)" title="Dismiss">
+      <i class="bx" [class.bx-check-circle]="toast.kind === 'success'"
+         [class.bx-error-circle]="toast.kind === 'error'"></i>
+      <span>{{ toast.message }}</span>
+    </button>
+  }
+</div>

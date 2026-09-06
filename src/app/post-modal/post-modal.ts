@@ -6,6 +6,7 @@ import {Warning} from '../warning/warning';
 import {NewsService} from '../services/news-service';
 import {ChangelogsService} from '../services/changelogs-service';
 import {AppService} from '../services/app-service';
+import {ToastService} from '../services/toast-service';
 import {MarkdownComponent} from 'ngx-markdown';
 
 @Component({
@@ -27,6 +28,7 @@ export class PostModal implements OnInit, OnChanges {
   newsService: NewsService;
   changelogsService: ChangelogsService;
   appService: AppService;
+  toastService: ToastService;
 
   appName: string = '';
 
@@ -34,6 +36,7 @@ export class PostModal implements OnInit, OnChanges {
     this.newsService = inject(NewsService);
     this.changelogsService = inject(ChangelogsService);
     this.appService = inject(AppService);
+    this.toastService = inject(ToastService);
   }
 
   ngOnInit() {
@@ -64,6 +67,45 @@ export class PostModal implements OnInit, OnChanges {
   }
 
   isOpened = false;
+  isSendingPush = false;
+  isSendingNewsletter = false;
+
+  /** Push and newsletter are triggered manually, never by making a post visible. */
+  sendPush() {
+    if (!this.post?.id || this.isSendingPush) return;
+
+    this.isSendingPush = true;
+    const request = this.isNews
+      ? this.newsService.sendPush([this.post.id])
+      : this.changelogsService.sendPush([this.post.id]);
+
+    request.subscribe({
+      next: (response) => {
+        this.toastService.success(response.body || 'Push sent.');
+        this.isSendingPush = false;
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
+        this.isSendingPush = false;
+      }
+    });
+  }
+
+  sendNewsletter() {
+    if (!this.post?.id || this.isSendingNewsletter) return;
+
+    this.isSendingNewsletter = true;
+    this.newsService.sendNewsletter(this.post.id).subscribe({
+      next: (response) => {
+        this.toastService.success(response.body || 'Newsletter sent.');
+        this.isSendingNewsletter = false;
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.message || err.error || 'Sending the newsletter failed.');
+        this.isSendingNewsletter = false;
+      }
+    });
+  }
 
   onCloseModal() {
     this.closeModal.emit();

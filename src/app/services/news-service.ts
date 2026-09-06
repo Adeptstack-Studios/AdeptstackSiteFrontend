@@ -30,6 +30,15 @@ export class NewsService {
     return this.http.get<News[]>(environment.searchNews + query, { observe: 'response' });
   }
 
+  /** Sends one push for the given posts, named after the newest of them. */
+  sendPush(ids: number[]): Observable<HttpResponse<string>> {
+    return this.http.post(environment.newsPush, { ids }, { observe: 'response', responseType: 'text' });
+  }
+
+  sendNewsletter(id: number): Observable<HttpResponse<string>> {
+    return this.http.post(environment.newsNewsletter + id, {}, { observe: 'response', responseType: 'text' });
+  }
+
   getById(id: number): Observable<HttpResponse<News>> {
     return this.http.get<News>(environment.newsGet + "/" + id, { observe: 'response' });
   }

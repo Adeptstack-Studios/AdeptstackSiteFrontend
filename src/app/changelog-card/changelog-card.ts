@@ -14,6 +14,7 @@ import {AppService} from '../services/app-service';
 })
 export class ChangelogCard implements OnInit, OnChanges {
   @Input() item?: Changelogs;
+  @Input() selected = false;
   @Output() postClicked = new EventEmitter<Changelogs>();
 
   appService = inject(AppService);

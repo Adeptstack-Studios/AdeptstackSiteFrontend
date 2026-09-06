@@ -3,6 +3,7 @@ import {AuthorizationService} from '../services/authorization';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl} from '@angular/forms';
 import {ChangelogsService} from '../services/changelogs-service';
 import {AppService} from '../services/app-service';
+import {ToastService} from '../services/toast-service';
 import {Changelogs} from '../models/changelogs';
 import {AppResponse} from '../models/app-response';
 import {PostModal} from '../post-modal/post-modal';
@@ -264,9 +265,57 @@ export class AdminChangelogs {
   }
 
   protected onPostClicked(post: Changelogs) {
+    if (this.selectionMode) {
+      this.toggleSelection(post.id);
+      return;
+    }
     this.popupChangelog = post;
     this.isPopupOpen = !this.isPopupOpen;
   }
+
+  // --- push-mehrfachauswahl ---
+  // Sichtbarmachen verschickt nichts mehr; Pushes werden hier bewusst ausgeloest.
+  selectionMode = false;
+  selectedIds = new Set<number>();
+  isSendingPush = false;
+  private readonly toastService = inject(ToastService);
+
+  toggleSelectionMode() {
+    this.selectionMode = !this.selectionMode;
+    this.selectedIds.clear();
+  }
+
+  toggleSelection(id?: number) {
+    if (id === undefined) return;
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+    } else {
+      this.selectedIds.add(id);
+    }
+  }
+
+  isSelected(id?: number) {
+    return id !== undefined && this.selectedIds.has(id);
+  }
+
+  sendPushForSelection() {
+    if (this.selectedIds.size === 0 || this.isSendingPush) return;
+
+    this.isSendingPush = true;
+    this.changelogService.sendPush([...this.selectedIds]).subscribe({
+      next: (response) => {
+        this.toastService.success(response.body || 'Push sent.');
+        this.isSendingPush = false;
+        this.selectionMode = false;
+        this.selectedIds.clear();
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
+        this.isSendingPush = false;
+      }
+    });
+  }
+
 
   closeModal() {
     this.isPopupOpen = false;
