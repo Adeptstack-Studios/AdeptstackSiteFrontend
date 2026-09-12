@@ -13,7 +13,24 @@
     </div>
 
     <div class="popup-footer">
-      <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
+      <div class="footer-meta">
+        <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
+        <div class="visibility-picker" role="group" aria-label="Visibility">
+          @for (option of visibilityOptions; track option.value) {
+            <button type="button"
+                    class="visibility-option"
+                    [class.active]="currentVisibility === option.value"
+                    [class.is-public]="option.value === 'PUBLIC'"
+                    [class.is-unlisted]="option.value === 'UNLISTED'"
+                    [class.is-private]="option.value === 'PRIVATE'"
+                    [disabled]="isSavingVisibility"
+                    [title]="option.hint"
+                    (click)="setVisibility(option.value)">
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
 
       <div class="actions">
         <button class="btn btn-push" (click)="sendPush()" [disabled]="isSendingPush || !post?.visible"
@@ -26,9 +43,6 @@
             {{ isSendingNewsletter ? 'Sending...' : 'Send Newsletter' }}
           </button>
         }
-        <button class="btn btn-visibility" (click)="toggleVisibility()">
-          {{ post?.visible ? 'Make Private' : 'Make Public' }}
-        </button>
         <button class="btn btn-edit" (click)="edit()">Edit</button>
         <button class="btn btn-delete" (click)="delete()">Delete</button>
       </div>

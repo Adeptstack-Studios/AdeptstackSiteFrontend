@@ -59,13 +59,23 @@
   color: #888;
 }
 
+/* state (date + visibility) on top, actions below: a single row was too narrow for everything */
 .popup-footer {
   padding: 15px 25px;
   background: #f9f9f9;
   border-top: 1px solid #eee;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.footer-meta {
+  display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .date {
@@ -76,6 +86,8 @@
 .actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .btn {
@@ -191,4 +203,55 @@ markdown ::ng-deep {
     font-family: monospace;
     font-size: 0.9em;
   }
+}
+
+/* three-state visibility control */
+.visibility-picker {
+  display: inline-flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.visibility-option {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.visibility-option + .visibility-option {
+  border-left: 1px solid #e2e8f0;
+}
+
+.visibility-option:hover:not(:disabled):not(.active) {
+  background: #eef2f7;
+  color: #1e2a38;
+}
+
+.visibility-option.active.is-public {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.visibility-option.active.is-unlisted {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.visibility-option.active.is-private {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.visibility-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

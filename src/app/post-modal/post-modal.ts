@@ -1,4 +1,5 @@
 import {Component, EventEmitter, inject, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
+import {Observable} from 'rxjs';
 import {Changelogs} from '../models/changelogs';
 import {News} from '../models/news';
 import {DatePipe} from '@angular/common';
@@ -115,29 +116,46 @@ export class PostModal implements OnInit, OnChanges {
     this.onEditPost.emit(<number>this.post?.id);
   }
 
-  toggleVisibility() {
-    if (this.post) {
-      this.post.visible = !this.post.visible;
-      if (this.isNews) {
-        this.newsService.update(this.post as News).subscribe({
-          next: () => {
-          },
-          error: (err) => {
-            this.post!.visible = !this.post!.visible;
-            console.error(err);
-          }
-        });
-      } else {
-        this.changelogsService.update(this.post as Changelogs).subscribe({
-          next: () => {
-          },
-          error: (err) => {
-            this.post!.visible = !this.post!.visible;
-            console.error(err);
-          }
-        });
+
+  /** Public / Unlisted / Private, set directly in the popup. */
+  readonly visibilityOptions: { value: 'PUBLIC' | 'UNLISTED' | 'PRIVATE'; label: string; hint: string }[] = [
+    { value: 'PUBLIC', label: 'Public', hint: 'Listed everywhere' },
+    { value: 'UNLISTED', label: 'Unlisted', hint: 'Only via direct link and in the app' },
+    { value: 'PRIVATE', label: 'Private', hint: 'Admins only' }
+  ];
+  isSavingVisibility = false;
+
+  get currentVisibility(): 'PUBLIC' | 'UNLISTED' | 'PRIVATE' {
+    return this.post?.visibility || 'PRIVATE';
+  }
+
+  setVisibility(next: 'PUBLIC' | 'UNLISTED' | 'PRIVATE') {
+    const item = this.post;
+    if (!item || this.isSavingVisibility || item.visibility === next) return;
+
+    const previous = item.visibility;
+    item.visibility = next;
+    item.visible = next !== 'PRIVATE';
+    this.isSavingVisibility = true;
+
+    // the two services return different payload types; only completion matters here
+    const request: Observable<unknown> = this.isNews
+      ? this.newsService.update(item as News)
+      : this.changelogsService.update(item as Changelogs);
+
+    request.subscribe({
+      next: () => {
+        this.isSavingVisibility = false;
+        this.toastService.success('Visibility set to ' + next.toLowerCase() + '.');
+      },
+      error: (err: unknown) => {
+        item.visibility = previous;
+        item.visible = previous !== 'PRIVATE';
+        this.isSavingVisibility = false;
+        this.toastService.error('Could not change the visibility.');
+        console.error(err);
       }
-    }
+    });
   }
 
   delete() {
