@@ -54,8 +54,7 @@ export class AdminApps {
     feature2Desc: new FormControl('', Validators.required),
     feature3Desc: new FormControl('', Validators.required),
 
-    publishedAt: new FormControl('', Validators.required),
-    visible: new FormControl(false)
+    publishedAt: new FormControl('', Validators.required)
   });
 
   constructor() {
@@ -95,7 +94,7 @@ export class AdminApps {
       const app: App = {id: 0, name: formValue.name, slogan: formValue.slogan, description: formValue.description, iconUrl: formValue.iconUrl, slug: this.generateSlug(formValue.name),
         category: formValue.category, platforms: formValue.platforms, highlighted: formValue.highlighted, legacy: formValue.legacy, image1Url: formValue.image1Url,
         feature1Desc: formValue.feature1Desc, image2Url: formValue.image2Url, feature2Desc: formValue.feature2Desc, image3Url: formValue.image3Url, feature3Desc: formValue.feature3Desc,
-        publishedAt: new Date(formValue.publishedAt), visible: formValue.visible,
+        publishedAt: new Date(formValue.publishedAt),
         modrinthId: formValue.modrinthId, curseforgeId: formValue.curseforgeId};
 
       if (!this.isEdit) {
@@ -130,7 +129,6 @@ export class AdminApps {
 
   clearForm() {
     this.appForm.reset({
-      visible: false,
       highlighted: false,
       legacy: false
     });
@@ -173,8 +171,7 @@ export class AdminApps {
         feature2Desc: new FormControl(this.popupApp?.feature2Desc, Validators.required),
         feature3Desc: new FormControl(this.popupApp?.feature3Desc, Validators.required),
 
-        publishedAt: new FormControl(this.popupApp?.publishedAt, Validators.required),
-        visible: new FormControl(this.popupApp?.visible)
+        publishedAt: new FormControl(this.popupApp?.publishedAt, Validators.required)
       });
     }
   }
@@ -296,7 +293,9 @@ export class AdminApps {
   makeAllVisible() {
     if (this.apps) {
       this.apps.forEach(item => {
-        if (!item.visible) {
+        // unlisted entries are deliberately hidden from listings, do not publish them
+        if (item.visibility === 'PRIVATE' || !item.visibility) {
+          item.visibility = 'PUBLIC';
           item.visible = true;
           this.appService.update(item as any).subscribe({
             error: (err) => console.error(err)
