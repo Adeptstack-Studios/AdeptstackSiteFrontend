@@ -35,12 +35,12 @@ export class AdminNews {
 
   newsForm: FormGroup = new FormGroup({
     title: new FormControl('', Validators.required),
+    slug: new FormControl(''),
     description: new FormControl('', Validators.required),
     content: new FormControl('', Validators.required),
     imageUrl: new FormControl('', Validators.required),
     category: new FormControl('', Validators.required),
-    publishedAt: new FormControl('', Validators.required),
-    visible: new FormControl(false)
+    publishedAt: new FormControl('', Validators.required)
   });
 
   constructor() {
@@ -73,7 +73,7 @@ export class AdminNews {
     if (!this.isEdit) {
       if (this.newsForm.valid) {
         const formValue = this.newsForm.value;
-        const news: News = {id: 0, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
+        const news: News = {id: 0, title: formValue.title, slug: formValue.slug, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
 
         this.newsService.create(news).subscribe({
           next: (response) => {
@@ -92,7 +92,7 @@ export class AdminNews {
     else {
       if (this.newsForm.valid) {
         const formValue = this.newsForm.value;
-        const news: News = {id: this.popupNews?.id, title: formValue.title, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt), visible: formValue.visible};
+        const news: News = {id: this.popupNews?.id, title: formValue.title, slug: formValue.slug, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
 
         this.newsService.update(news).subscribe({
           next: (response) => {
@@ -109,9 +109,7 @@ export class AdminNews {
   }
 
   clearForm() {
-    this.newsForm.reset({
-      visible: false
-    });
+    this.newsForm.reset();
   }
 
   protected onPostClicked(post: News) {
@@ -181,12 +179,12 @@ export class AdminNews {
 
       this.newsForm = this.fb.group({
         title: new FormControl(this.popupNews?.title, Validators.required),
+        slug: new FormControl(this.popupNews?.slug),
         description: new FormControl(this.popupNews?.description, Validators.required),
         content: new FormControl(this.popupNews?.content, Validators.required),
         imageUrl: new FormControl(this.popupNews?.imageUrl, Validators.required),
         category: new FormControl(this.popupNews?.category, Validators.required),
-        publishedAt: new FormControl(this.popupNews?.publishedAt, Validators.required),
-        visible: new FormControl(this.popupNews?.visible)
+        publishedAt: new FormControl(this.popupNews?.publishedAt, Validators.required)
       });
     }
   }
@@ -236,7 +234,9 @@ export class AdminNews {
   makeAllVisible() {
     if (this.news) {
       this.news.forEach(item => {
-        if (!item.visible) {
+        // unlisted entries are deliberately hidden from listings, do not publish them
+        if (item.visibility === 'PRIVATE' || !item.visibility) {
+          item.visibility = 'PUBLIC';
           item.visible = true;
           this.newsService.update(item).subscribe({
             error: (err) => console.error(err)

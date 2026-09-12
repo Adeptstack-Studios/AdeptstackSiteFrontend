@@ -46,6 +46,10 @@
       </div>
 
       <div class="input-box">
+        <input type="text" formControlName="slug" placeholder="Slug (optional, aus dem Titel erzeugt)">
+      </div>
+
+      <div class="input-box">
         <input type="text" formControlName="description" placeholder="Description">
         <div class="text-danger">
           @if (newsForm.controls['description'].touched && newsForm.controls['description'].errors?.['required']) {
