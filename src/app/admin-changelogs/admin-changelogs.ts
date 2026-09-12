@@ -59,11 +59,11 @@ export class AdminChangelogs {
     steamUrl: new FormControl(''),
     curseforgeUrl: new FormControl(''),
     modrinthUrl: new FormControl(''),
+    saasUrl: new FormControl(''),
     appId: new FormControl('', Validators.required),
     channel: new FormControl('', Validators.required),
     version: new FormControl('', Validators.required),
-    publishedAt: new FormControl('', Validators.required),
-    visible: new FormControl(false)
+    publishedAt: new FormControl('', Validators.required)
   }, { validators: this.atLeastOneUrlValidator });
 
   constructor() {
@@ -98,8 +98,9 @@ export class AdminChangelogs {
     const steamUrl = group.get('steamUrl')?.value;
     const curseforgeUrl = group.get('curseforgeUrl')?.value;
     const modrinthUrl = group.get('modrinthUrl')?.value;
+    const saasUrl = group.get('saasUrl')?.value;
 
-    if (!appUrl && !microsoftStoreUrl && !playStoreUrl && !appStoreUrl && !steamUrl && !curseforgeUrl && !modrinthUrl) {
+    if (!appUrl && !microsoftStoreUrl && !playStoreUrl && !appStoreUrl && !steamUrl && !curseforgeUrl && !modrinthUrl && !saasUrl) {
       return { 'noUrlProvided': true };
     }
     return null;
@@ -193,12 +194,12 @@ export class AdminChangelogs {
           steamUrl: formValue.steamUrl,
           curseforgeUrl: formValue.curseforgeUrl,
           modrinthUrl: formValue.modrinthUrl,
+          saasUrl: formValue.saasUrl,
           appId: Number(formValue.appId),
           app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt),
-          visible: formValue.visible
+          publishedAt: new Date(formValue.publishedAt)
         };
 
         this.changelogService.create(changelog).subscribe({
@@ -231,12 +232,12 @@ export class AdminChangelogs {
           steamUrl: formValue.steamUrl,
           curseforgeUrl: formValue.curseforgeUrl,
           modrinthUrl: formValue.modrinthUrl,
+          saasUrl: formValue.saasUrl,
           appId: Number(formValue.appId),
           app: selectedApp?.name,
           channel: formValue.channel,
           version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt),
-          visible: formValue.visible
+          publishedAt: new Date(formValue.publishedAt)
         };
 
         this.changelogService.update(changelog).subscribe({
@@ -254,7 +255,6 @@ export class AdminChangelogs {
 
   clearForm() {
     this.changelogForm.reset({
-      visible: false,
       appId: '',
       channel: ''
     });
@@ -341,11 +341,11 @@ export class AdminChangelogs {
         steamUrl: new FormControl(this.popupChangelog?.steamUrl),
         curseforgeUrl: new FormControl(this.popupChangelog?.curseforgeUrl),
         modrinthUrl: new FormControl(this.popupChangelog?.modrinthUrl),
+        saasUrl: new FormControl(this.popupChangelog?.saasUrl),
         appId: new FormControl(this.popupChangelog?.appId, Validators.required),
         channel: new FormControl(this.popupChangelog?.channel, Validators.required),
         version: new FormControl(this.popupChangelog?.version, Validators.required),
-        publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required),
-        visible: new FormControl(this.popupChangelog?.visible)
+        publishedAt: new FormControl(this.popupChangelog?.publishedAt, Validators.required)
       }, { validators: this.atLeastOneUrlValidator });
     }
   }
@@ -423,7 +423,9 @@ export class AdminChangelogs {
   makeAllVisible() {
     if (this.filteredChangelogs) {
       this.filteredChangelogs.forEach(item => {
-        if (!item.visible) {
+        // unlisted entries are deliberately hidden from listings, do not publish them
+        if (item.visibility === 'PRIVATE' || !item.visibility) {
+          item.visibility = 'PUBLIC';
           item.visible = true;
           this.changelogService.update(item).subscribe({
             error: (err) => console.error(err)

@@ -182,6 +182,10 @@
         <input type="text" formControlName="modrinthUrl" placeholder="Modrinth URL">
       </div>
 
+      <div class="input-box">
+        <input type="text" formControlName="saasUrl" placeholder="SaaS Platform URL (shown as a Visit button)">
+      </div>
+
       <!--FILE UPLOAD-->
       <div class="input-box">
         <input type="file" (change)="onAppSelected($event)" accept=".exe, .msi" id="fileUpload" style="display: none;">
@@ -204,7 +208,7 @@
 
         <div class="text-danger">
           @if (changelogForm.touched && changelogForm.errors?.['noUrlProvided']) {
-            <span>At least one URL (App, Microsoft, Play, App Store, Steam, CurseForge or Modrinth) is required.</span>
+            <span>At least one URL (App, Microsoft, Play, App Store, Steam, CurseForge, Modrinth or SaaS) is required.</span>
           }
         </div>
       </div>
