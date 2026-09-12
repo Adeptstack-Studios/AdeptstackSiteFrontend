@@ -12,6 +12,7 @@ export class App {
 
   modrinthId?: string;
   curseforgeId?: string;
+  visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
 
   image1Url?: string;
   image2Url?: string;

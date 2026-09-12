@@ -14,6 +14,7 @@ export class AppResponse {
 
   modrinthId?: string;
   curseforgeId?: string;
+  visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
   downloads?: number;
   downloadsFormatted?: string;
 

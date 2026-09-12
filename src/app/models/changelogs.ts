@@ -10,6 +10,7 @@ export class Changelogs {
   steamUrl?: string;
   curseforgeUrl?: string;
   modrinthUrl?: string;
+  saasUrl?: string;
   content?: string;
   channel?: string;
   appId?: number;
@@ -17,4 +18,5 @@ export class Changelogs {
   version?: string;
   publishedAt?: Date;
   visible?: boolean;
+  visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
 }
