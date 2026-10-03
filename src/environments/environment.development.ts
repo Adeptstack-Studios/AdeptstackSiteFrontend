@@ -12,6 +12,7 @@ export const environment = {
   searchNews: 'http://localhost:8080/api/news/search?title=',
   newsPush: 'http://localhost:8080/api/news/push',
   newsNewsletter: 'http://localhost:8080/api/news/newsletter/',
+  newsCategories: 'http://localhost:8080/api/news/categories',
 
   changelogsGetAll: 'http://localhost:8080/api/changelogs/get',
   changelogsGetById: 'http://localhost:8080/api/changelogs/get/',
@@ -23,6 +24,7 @@ export const environment = {
   searchChangelogs: 'http://localhost:8080/api/changelogs/searchBy?title=',
   searchByChangelogs: 'http://localhost:8080/api/changelogs/searchBy?app=',
   changelogsPush: 'http://localhost:8080/api/changelogs/push',
+  changelogsChannels: 'http://localhost:8080/api/changelogs/channels',
 
   uploadApp: 'http://localhost:8080/api/files/uploadApp',
   uploadImage: 'http://localhost:8080/api/files/uploadImage',

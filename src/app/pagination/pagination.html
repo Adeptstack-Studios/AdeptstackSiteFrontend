@@ -1,0 +1,35 @@
+@if (total > 0) {
+  <nav class="pagination" aria-label="Pagination">
+    <p class="summary">Showing <strong>{{ first }}–{{ last }}</strong> of <strong>{{ total }}</strong> {{ noun }}</p>
+
+    @if (pages > 1) {
+      <div class="pages">
+        <button type="button" class="page-btn" [disabled]="page === 1" (click)="goTo(page - 1)" aria-label="Previous page">
+          <i class='bx bx-chevron-left'></i>
+        </button>
+        @for (entry of window; track $index) {
+          @if (entry === 'gap') {
+            <span class="gap">…</span>
+          } @else {
+            <button type="button" class="page-btn" [class.active]="entry === page"
+                    [attr.aria-current]="entry === page ? 'page' : null" (click)="goTo(entry)">
+              {{ entry }}
+            </button>
+          }
+        }
+        <button type="button" class="page-btn" [disabled]="page === pages" (click)="goTo(page + 1)" aria-label="Next page">
+          <i class='bx bx-chevron-right'></i>
+        </button>
+      </div>
+    }
+
+    <div class="per-page">
+      <span>Per page</span>
+      <div class="size-switch" role="group" aria-label="Entries per page">
+        @for (option of sizes; track option) {
+          <button type="button" [class.active]="option === size" (click)="setSize(option)">{{ option }}</button>
+        }
+      </div>
+    </div>
+  </nav>
+}

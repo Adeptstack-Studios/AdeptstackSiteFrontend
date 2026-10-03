@@ -12,6 +12,7 @@ export const environment = {
   searchNews: 'https://api.adeptstack.net/api/news/search?title=',
   newsPush: 'https://api.adeptstack.net/api/news/push',
   newsNewsletter: 'https://api.adeptstack.net/api/news/newsletter/',
+  newsCategories: 'https://api.adeptstack.net/api/news/categories',
 
   changelogsGetAll: 'https://api.adeptstack.net/api/changelogs/get',
   changelogsGetById: 'https://api.adeptstack.net/api/changelogs/get/',
@@ -23,6 +24,7 @@ export const environment = {
   searchChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?title=',
   searchByChangelogs: 'https://api.adeptstack.net/api/changelogs/searchBy?app=',
   changelogsPush: 'https://api.adeptstack.net/api/changelogs/push',
+  changelogsChannels: 'https://api.adeptstack.net/api/changelogs/channels',
 
   uploadApp: 'https://api.adeptstack.net/api/files/uploadApp',
   uploadImage: 'https://api.adeptstack.net/api/files/uploadImage',
