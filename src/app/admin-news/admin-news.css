@@ -32,12 +32,61 @@
   width: 100%;
   box-sizing: border-box;
   gap: 20px;
+  /* filters, sort and the actions do not fit one row on smaller screens */
+  flex-wrap: wrap;
+  row-gap: 15px;
 }
 
 .header-actions {
   display: flex;
   gap: 10px;
   align-items: center;
+  margin-left: auto;
+}
+
+.filter-group {
+  display: flex;
+  gap: 15px;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.select-wrapper {
+  position: relative;
+  width: 180px;
+}
+
+.select-wrapper select {
+  width: 100%;
+  padding: 8px 30px 8px 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #f5f6fa;
+  color: #555;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.select-wrapper select:hover,
+.select-wrapper select:focus {
+  background: white;
+  border-color: #1e2a38;
+}
+
+.select-wrapper i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+  font-size: 1.1rem;
 }
 
 .list-header h2 {

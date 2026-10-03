@@ -1,4 +1,6 @@
 import {Component, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {debounceTime, distinctUntilChanged, forkJoin, Subject} from 'rxjs';
 import {AuthorizationService} from '../services/authorization';
 import {ToastService} from '../services/toast-service';
 import {News} from '../models/news';
@@ -7,6 +9,8 @@ import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, V
 import {NewsCard} from '../news-card/news-card';
 import {PostModal} from '../post-modal/post-modal';
 import {FileService} from '../services/file-service';
+import {Pagination} from '../pagination/pagination';
+import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing';
 
 @Component({
   selector: 'app-admin-news',
@@ -16,7 +20,8 @@ import {FileService} from '../services/file-service';
     FormsModule,
     ReactiveFormsModule,
     NewsCard,
-    PostModal
+    PostModal,
+    Pagination
   ],
   styleUrl: './admin-news.css'
 })
@@ -25,7 +30,27 @@ export class AdminNews {
   newsService: NewsService;
   fileService: FileService;
   fb: FormBuilder;
-  news: News[] | null = [];
+  /** The current page; filtering, sorting and paging happen in the backend. */
+  news: News[] = [];
+  total = 0;
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
+  categories: Facet[] = [];
+
+  selectedCategory = '';
+  searchTerm = '';
+  sort = 'publishedAt,desc';
+
+  readonly sortOptions: SortOption[] = [
+    { value: 'publishedAt,desc', label: 'Newest first' },
+    { value: 'publishedAt,asc', label: 'Oldest first' },
+    { value: 'title,asc', label: 'Title A–Z' },
+    { value: 'readingTime,asc', label: 'Quick reads first' },
+    { value: 'readingTime,desc', label: 'Long reads first' },
+  ];
+
+  private readonly searchInput = new Subject<string>();
+  private readonly toastService = inject(ToastService);
   isPopupOpen = false;
   popupNews?: News;
   isEdit = false;
@@ -49,16 +74,43 @@ export class AdminNews {
     this.fileService = inject(FileService);
     this.fb = inject(FormBuilder);
 
+    // one request per pause in typing, not per keystroke
+    this.searchInput.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe(term => {
+      this.searchTerm = term;
+      this.page = 1;
+      this.update();
+    });
+
     this.update()
   }
 
+  private get listQuery() {
+    return {
+      category: this.selectedCategory || undefined,
+      q: this.searchTerm || undefined,
+      sort: this.sort,
+    };
+  }
+
   update() {
-    this.newsService.getAll().subscribe({
-      next: (response) => {
-        this.news = response.body;
+    this.newsService.list({ ...this.listQuery, page: this.page, size: this.pageSize }).subscribe({
+      next: (result) => {
+        // e.g. the last post of the last page was deleted: step back to the page that still exists
+        if (result.items.length === 0 && result.total > 0 && this.page > 1) {
+          this.page = pageCount(result.total, this.pageSize);
+          this.update();
+          return;
+        }
+        this.news = result.items;
+        this.total = result.total;
       }, error: (error) => {
         console.log("error: " + error.message);
       }
+    });
+    // categories change with every created, edited or deleted post
+    this.newsService.categories().subscribe({
+      next: (categories) => this.categories = categories,
+      error: (error) => console.log("error loading categories: " + error.message)
     });
 
     if (this.isEdit) {
@@ -126,7 +178,6 @@ export class AdminNews {
   selectionMode = false;
   selectedIds = new Set<number>();
   isSendingPush = false;
-  private readonly toastService = inject(ToastService);
 
   toggleSelectionMode() {
     this.selectionMode = !this.selectionMode;
@@ -197,14 +248,23 @@ export class AdminNews {
 
   onSearch(event: any) {
     this.cancelEdit()
+    this.searchInput.next(event.target.value.trim());
+  }
 
-    this.newsService.searchTitle(event.target.value.toLowerCase()).subscribe({
-      next: (response) => {
-        this.news = response.body;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
-    });
+  onFilterChange() {
+    this.page = 1;
+    this.update();
+  }
+
+  onPageChange(page: number) {
+    this.page = page;
+    this.update();
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize = size;
+    this.page = 1;
+    this.update();
   }
 
   onFileSelected(event: any) {
@@ -231,18 +291,32 @@ export class AdminNews {
     }
   }
 
+  /** Publishes every private post matching the current filters, not just the visible page. */
   makeAllVisible() {
-    if (this.news) {
-      this.news.forEach(item => {
+    this.newsService.list(this.listQuery).subscribe({
+      next: (result) => {
         // unlisted entries are deliberately hidden from listings, do not publish them
-        if (item.visibility === 'PRIVATE' || !item.visibility) {
-          item.visibility = 'PUBLIC';
-          item.visible = true;
-          this.newsService.update(item).subscribe({
-            error: (err) => console.error(err)
-          });
+        const updates = result.items
+          .filter(item => item.visibility === 'PRIVATE' || !item.visibility)
+          .map(item => this.newsService.update({ ...item, visibility: 'PUBLIC', visible: true }));
+
+        if (updates.length === 0) {
+          this.toastService.success('Nothing to publish.');
+          return;
         }
-      });
-    }
+        forkJoin(updates).subscribe({
+          next: () => {
+            this.toastService.success(`${updates.length} post(s) made visible.`);
+            this.update();
+          },
+          error: (err) => {
+            this.toastService.error('Some posts could not be made visible.');
+            console.error(err);
+            this.update();
+          }
+        });
+      },
+      error: (err) => console.error(err)
+    });
   }
 }

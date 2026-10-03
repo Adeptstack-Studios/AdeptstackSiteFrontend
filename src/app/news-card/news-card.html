@@ -10,7 +10,12 @@
 
       <div class="meta-row">
         <span class="meta-left">{{ item?.category }}</span>
-        <span class="meta-right">{{ item?.publishedAt | date }}</span>
+        <span class="meta-right">
+          @if (item?.readingTimeMinutes) {
+            {{ item?.readingTimeMinutes }} min ·
+          }
+          {{ item?.publishedAt | date }}
+        </span>
       </div>
     </div>
   </div>

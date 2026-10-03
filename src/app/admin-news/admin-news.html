@@ -3,6 +3,28 @@
 
     <div class="list-header">
       <h2>All News</h2>
+
+      <div class="filter-group">
+        <div class="select-wrapper">
+          <select [(ngModel)]="selectedCategory" (change)="onFilterChange()" aria-label="Category">
+            <option value="">All Categories</option>
+            @for (category of categories; track category.name) {
+              <option [value]="category.name">{{category.name}} ({{category.count}})</option>
+            }
+          </select>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+
+        <div class="select-wrapper">
+          <select [(ngModel)]="sort" (change)="onFilterChange()" aria-label="Sort by">
+            @for (option of sortOptions; track option.value) {
+              <option [value]="option.value">{{option.label}}</option>
+            }
+          </select>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+      </div>
+
       <div class="header-actions">
         @if (!selectionMode) {
           <button class="btn btn-push" (click)="toggleSelectionMode()">Select for push</button>
@@ -22,15 +44,18 @@
       </div>
     </div>
 
-    @if (news) {
+    @if (news.length > 0) {
       <div class="news-grid">
-        @for (item of news; track $index) {
+        @for (item of news; track item.id) {
           <app-news-card [item]="item" [selected]="isSelected(item.id)" class="news-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
     } @else {
-      <div class="empty-state"><p>No news yet...</p></div>
+      <div class="empty-state"><p>{{ searchTerm || selectedCategory ? 'No posts match these filters.' : 'No news yet...' }}</p></div>
     }
+
+    <app-pagination [page]="page" [size]="pageSize" [total]="total" [noun]="total === 1 ? 'post' : 'posts'"
+                    (pageChange)="onPageChange($event)" (sizeChange)="onPageSizeChange($event)"/>
   </div>
 
   <div class="news-create">
