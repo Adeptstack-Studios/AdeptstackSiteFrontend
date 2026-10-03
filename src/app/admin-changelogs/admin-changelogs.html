@@ -6,10 +6,10 @@
 
       <div class="filter-group">
         <div class="select-wrapper">
-          <select [(ngModel)]="selectedAppId" (change)="onFilterChange()">
+          <select [(ngModel)]="selectedAppId" (change)="onAppChange()">
             <option value="">All Apps</option>
-            @for (appId of uniqueAppIds; track $index) {
-              <option [value]="appId">{{getAppName(appId)}}</option>
+            @for (app of apps; track app.id) {
+              <option [value]="app.id">{{app.name}}</option>
             }
           </select>
           <i class='bx bx-chevron-down'></i>
@@ -18,8 +18,17 @@
         <div class="select-wrapper">
           <select [(ngModel)]="selectedChannel" (change)="onFilterChange()">
             <option value="">All Channels</option>
-            @for (channel of uniqueChannels; track $index) {
-              <option [value]="channel">{{channel}}</option>
+            @for (channel of channels; track channel.name) {
+              <option [value]="channel.name">{{channel.name}} ({{channel.count}})</option>
+            }
+          </select>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+
+        <div class="select-wrapper">
+          <select [(ngModel)]="sort" (change)="onFilterChange()" aria-label="Sort by">
+            @for (option of sortOptions; track option.value) {
+              <option [value]="option.value">{{option.label}}</option>
             }
           </select>
           <i class='bx bx-chevron-down'></i>
@@ -46,15 +55,18 @@
       </div>
     </div>
 
-    @if (filteredChangelogs.length > 0) {
+    @if (changelogs.length > 0) {
       <div class="changelog-grid">
-        @for (item of filteredChangelogs; track $index) {
+        @for (item of changelogs; track item.id) {
           <app-changelog-card [item]="item" [selected]="isSelected(item.id)" class="changelog-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
     } @else {
       <div class="empty-state"><p>No changelog found...</p></div>
     }
+
+    <app-pagination [page]="page" [size]="pageSize" [total]="total" [noun]="total === 1 ? 'changelog' : 'changelogs'"
+                    (pageChange)="onPageChange($event)" (sizeChange)="onPageSizeChange($event)"/>
   </div>
 
   <div class="changelog-create">

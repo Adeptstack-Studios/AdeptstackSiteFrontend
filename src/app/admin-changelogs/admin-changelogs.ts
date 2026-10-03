@@ -1,4 +1,6 @@
 import {Component, inject} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {debounceTime, distinctUntilChanged, forkJoin, Subject} from 'rxjs';
 import {AuthorizationService} from '../services/authorization';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl} from '@angular/forms';
 import {ChangelogsService} from '../services/changelogs-service';
@@ -9,6 +11,8 @@ import {AppResponse} from '../models/app-response';
 import {PostModal} from '../post-modal/post-modal';
 import {ChangelogCard} from '../changelog-card/changelog-card';
 import {FileService} from '../services/file-service';
+import {Pagination} from '../pagination/pagination';
+import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing';
 
 @Component({
   selector: 'app-admin-changelogs',
@@ -18,7 +22,8 @@ import {FileService} from '../services/file-service';
     FormsModule,
     PostModal,
     ReactiveFormsModule,
-    ChangelogCard
+    ChangelogCard,
+    Pagination
   ],
   styleUrl: './admin-changelogs.css'
 })
@@ -29,16 +34,30 @@ export class AdminChangelogs {
   fileService: FileService;
   fb: FormBuilder;
 
+  /** The current page; filtering, sorting and paging happen in the backend. */
   changelogs: Changelogs[] = [];
-  filteredChangelogs: Changelogs[] = [];
+  total = 0;
+  page = 1;
+  pageSize = DEFAULT_PAGE_SIZE;
   apps: AppResponse[] = [];
-
-  uniqueAppIds: (number | undefined)[] = [];
-  uniqueChannels: (string | undefined)[] = [];
+  channels: Facet[] = [];
 
   selectedAppId: number | string = '';
   selectedChannel: string = '';
   searchTerm: string = '';
+  sort = 'publishedAt,desc';
+
+  readonly sortOptions: SortOption[] = [
+    { value: 'publishedAt,desc', label: 'Newest first' },
+    { value: 'publishedAt,asc', label: 'Oldest first' },
+    { value: 'version,desc', label: 'Highest version' },
+    { value: 'version,asc', label: 'Lowest version' },
+    { value: 'app,asc', label: 'App A–Z' },
+    { value: 'title,asc', label: 'Title A–Z' },
+  ];
+
+  private readonly searchInput = new Subject<string>();
+  private readonly toastService = inject(ToastService);
 
   isPopupOpen = false;
   popupChangelog?: Changelogs;
@@ -73,8 +92,30 @@ export class AdminChangelogs {
     this.fileService = inject(FileService);
     this.fb = inject(FormBuilder);
 
+    // one request per pause in typing, not per keystroke
+    this.searchInput.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe(term => {
+      this.searchTerm = term;
+      this.page = 1;
+      this.update();
+    });
+
     this.update()
     this.loadApps();
+    this.loadChannels();
+  }
+
+  loadChannels() {
+    this.changelogService.channels(this.selectedAppId ? Number(this.selectedAppId) : undefined).subscribe({
+      next: (channels) => {
+        this.channels = channels;
+        // the newly selected app may not have the channel that was filtered by
+        if (this.selectedChannel && !channels.some(c => c.name === this.selectedChannel)) {
+          this.selectedChannel = '';
+          this.onFilterChange();
+        }
+      },
+      error: (error) => console.log("error loading channels: " + error.message)
+    });
   }
 
   loadApps() {
@@ -106,14 +147,26 @@ export class AdminChangelogs {
     return null;
   }
 
+  private get listQuery() {
+    return {
+      app: this.selectedAppId ? Number(this.selectedAppId) : undefined,
+      channel: this.selectedChannel || undefined,
+      q: this.searchTerm || undefined,
+      sort: this.sort,
+    };
+  }
+
   update() {
-    this.changelogService.getAll().subscribe({
-      next: (response) => {
-        if(response.body) {
-          this.changelogs = response.body;
-          this.extractFilterOptions();
-          this.applyFilters();
+    this.changelogService.list({ ...this.listQuery, page: this.page, size: this.pageSize }).subscribe({
+      next: (result) => {
+        // e.g. the last entry of the last page was deleted: step back to the page that still exists
+        if (result.items.length === 0 && result.total > 0 && this.page > 1) {
+          this.page = pageCount(result.total, this.pageSize);
+          this.update();
+          return;
         }
+        this.changelogs = result.items;
+        this.total = result.total;
       }, error: (error) => {
         console.log("error: " + error.message);
       }
@@ -127,53 +180,29 @@ export class AdminChangelogs {
     }
   }
 
-  extractFilterOptions() {
-    const appIds = new Set(this.changelogs.map(c => c.appId));
-    this.uniqueAppIds = Array.from(appIds).sort((a, b) => (a || 0) - (b || 0));
-
-    const channels = new Set(this.changelogs.map(c => c.channel));
-    this.uniqueChannels = Array.from(channels).sort();
-  }
-
-  getAppName(appId?: number): string {
-    return this.apps.find(a => a.id === appId)?.name || 'Unknown App';
-  }
-
   onFilterChange() {
-    this.applyFilters();
+    this.page = 1;
+    this.update();
+  }
+
+  onAppChange() {
+    this.onFilterChange();
+    this.loadChannels();
   }
 
   onSearch(event: any) {
-    this.searchTerm = event.target.value.toLowerCase();
-    this.applyFilters();
+    this.searchInput.next(event.target.value.trim());
   }
 
-  applyFilters() {
-    let temp = [...this.changelogs];
+  onPageChange(page: number) {
+    this.page = page;
+    this.update();
+  }
 
-    if (this.selectedAppId) {
-      temp = temp.filter(item => item.appId === Number(this.selectedAppId));
-    }
-
-    if (this.selectedChannel) {
-      temp = temp.filter(item => item.channel === this.selectedChannel);
-    }
-
-    if (this.searchTerm) {
-      temp = temp.filter(item =>
-        (item.title && item.title.toLowerCase().includes(this.searchTerm)) ||
-        (item.version && item.version.toLowerCase().includes(this.searchTerm))
-      );
-    }
-
-    temp.sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-
-      return dateB - dateA;
-    });
-
-    this.filteredChangelogs = temp;
+  onPageSizeChange(size: number) {
+    this.pageSize = size;
+    this.page = 1;
+    this.update();
   }
 
   onSubmit() {
@@ -278,7 +307,6 @@ export class AdminChangelogs {
   selectionMode = false;
   selectedIds = new Set<number>();
   isSendingPush = false;
-  private readonly toastService = inject(ToastService);
 
   toggleSelectionMode() {
     this.selectionMode = !this.selectionMode;
@@ -420,18 +448,32 @@ export class AdminChangelogs {
     }
   }
 
+  /** Publishes every private changelog matching the current filters, not just the visible page. */
   makeAllVisible() {
-    if (this.filteredChangelogs) {
-      this.filteredChangelogs.forEach(item => {
+    this.changelogService.list(this.listQuery).subscribe({
+      next: (result) => {
         // unlisted entries are deliberately hidden from listings, do not publish them
-        if (item.visibility === 'PRIVATE' || !item.visibility) {
-          item.visibility = 'PUBLIC';
-          item.visible = true;
-          this.changelogService.update(item).subscribe({
-            error: (err) => console.error(err)
-          });
+        const updates = result.items
+          .filter(item => item.visibility === 'PRIVATE' || !item.visibility)
+          .map(item => this.changelogService.update({ ...item, visibility: 'PUBLIC', visible: true }));
+
+        if (updates.length === 0) {
+          this.toastService.success('Nothing to publish.');
+          return;
         }
-      });
-    }
+        forkJoin(updates).subscribe({
+          next: () => {
+            this.toastService.success(`${updates.length} changelog(s) made visible.`);
+            this.update();
+          },
+          error: (err) => {
+            this.toastService.error('Some changelogs could not be made visible.');
+            console.error(err);
+            this.update();
+          }
+        });
+      },
+      error: (err) => console.error(err)
+    });
   }
 }
