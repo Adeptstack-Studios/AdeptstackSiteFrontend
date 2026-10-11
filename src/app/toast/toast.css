@@ -2,7 +2,7 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 1000;
+  z-index: 1100;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -13,42 +13,63 @@
 .toast {
   pointer-events: auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  max-width: 360px;
-  padding: 12px 16px;
-  border: none;
-  border-left: 4px solid #16a34a;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1e2a38;
-  font-size: 14px;
-  font-family: inherit;
-  text-align: left;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  animation: toast-in 0.2s ease-out;
+  width: min(380px, calc(100vw - 32px));
+  padding: 12px 10px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in .2s ease-out;
 }
 
-.toast i {
-  font-size: 18px;
-  color: #16a34a;
-  flex-shrink: 0;
+.kind-icon {
+  flex: none;
+  margin-top: 1px;
 }
+
+.toast.success .kind-icon { color: var(--good); }
+.toast.error .kind-icon { color: var(--danger); }
+.toast.info .kind-icon { color: var(--accent-text); }
 
 .toast.error {
-  border-left-color: #dc2626;
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--line));
 }
 
-.toast.error i {
-  color: #dc2626;
+.message {
+  flex: 1;
+  line-height: 1.45;
+}
+
+.close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  margin: -3px 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--panel-2);
+  color: var(--text);
 }
 
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .toast { animation: none; }
+@media (max-width: 600px) {
+  .toast-container {
+    right: 16px;
+    bottom: 16px;
+  }
 }

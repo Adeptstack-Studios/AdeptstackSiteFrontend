@@ -1,0 +1,15 @@
+<div class="dialog" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+  <div class="head">
+    @if (options.danger) {
+      <span class="icon" aria-hidden="true">
+        <lucide-icon [img]="warnIcon" [size]="20"></lucide-icon>
+      </span>
+    }
+    <h2 id="confirm-title">{{ options.title }}</h2>
+  </div>
+  <p id="confirm-message">{{ options.message }}</p>
+  <div class="actions">
+    <button type="button" class="btn ghost" (click)="ref.close(false)" cdkFocusInitial>Cancel</button>
+    <button type="button" class="btn" [class.danger]="options.danger" (click)="ref.close(true)">{{ options.confirmLabel }}</button>
+  </div>
+</div>

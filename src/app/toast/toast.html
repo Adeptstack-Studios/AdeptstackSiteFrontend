@@ -1,10 +1,12 @@
-<div class="toast-container" role="status" aria-live="polite">
+<!-- errors interrupt (alert), everything else waits its turn (status) -->
+<div class="toast-container" aria-live="polite">
   @for (toast of toastService.toasts(); track toast.id) {
-    <button type="button" class="toast" [class.error]="toast.kind === 'error'"
-            (click)="toastService.dismiss(toast.id)" title="Dismiss">
-      <i class="bx" [class.bx-check-circle]="toast.kind === 'success'"
-         [class.bx-error-circle]="toast.kind === 'error'"></i>
-      <span>{{ toast.message }}</span>
-    </button>
+    <div [class]="'toast ' + toast.kind" [attr.role]="toast.kind === 'error' ? 'alert' : 'status'">
+      <lucide-icon class="kind-icon" [img]="kindIcon[toast.kind]" [size]="18" aria-hidden="true"></lucide-icon>
+      <span class="message">{{ toast.message }}</span>
+      <button type="button" class="close" aria-label="Dismiss" (click)="toastService.dismiss(toast.id)">
+        <lucide-icon [img]="closeIcon" [size]="15" aria-hidden="true"></lucide-icon>
+      </button>
+    </div>
   }
 </div>

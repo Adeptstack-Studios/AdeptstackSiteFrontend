@@ -1,5 +1,5 @@
 import {inject, Injectable} from '@angular/core';
-import {HttpClient, HttpResponse} from '@angular/common/http';
+import {HttpClient, HttpContext, HttpResponse} from '@angular/common/http';
 import {App} from '../models/app';
 import {Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
@@ -31,8 +31,8 @@ export class AppService {
     return this.http.get<AppResponse[]>(environment.searchApps + query, { observe: 'response' });
   }
 
-  getById(id: number): Observable<HttpResponse<AppResponse>> {
-    return this.http.get<AppResponse>(environment.appsGet + "/" + id, { observe: 'response' });
+  getById(id: number, context?: HttpContext): Observable<HttpResponse<AppResponse>> {
+    return this.http.get<AppResponse>(environment.appsGet + "/" + id, { observe: 'response', context });
   }
 
   getAll(): Observable<HttpResponse<AppResponse[]>> {

@@ -35,8 +35,8 @@ export class AuthGuard implements CanActivate, CanActivateChild, CanMatch {
     // Verify token with backend to prevent access with stale/invalid tokens
     return this.auth.verifyLogin().pipe(
       map(() => true),
-      catchError(err => {
-        console.log('Auth verification failed:', err?.message || err);
+      // an expired or invalid session simply ends on the login page
+      catchError(() => {
         this.storage.remove('auth-key');
         return of(this.router.createUrlTree(['/login']));
       })
