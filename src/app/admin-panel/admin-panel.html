@@ -1,28 +1,84 @@
-<header class="header">
-  <div class="header-left">
-    <img src="img/adeptstack_white.png" alt="logo" height="50" width="50">
-    <h1>Admin Panel</h1>
-  </div>
-  <div class="header-right" *ngIf="currentUser as user">
-    <div class="user-menu">
-      <button type="button" class="user-button" (click)="toggleMenu()">
-        {{ user.username }}
+<div class="shell" [class.nav-open]="navOpen()">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" routerLink="/news">
+      <span class="brand-mark"><img src="img/adeptstack_white.png" alt="" width="20" height="20"></span>
+      <span class="brand-text">
+        <span class="brand-name">adeptstack</span>
+        <span class="brand-sub">console</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      @for (item of nav; track item.path) {
+        <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
+           [attr.aria-current]="link.isActive ? 'page' : null">
+          <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </aside>
+
+  @if (navOpen()) {
+    <button type="button" class="scrim" aria-label="Close menu" (click)="navOpen.set(false)"></button>
+  }
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="icon-btn menu-btn" aria-label="Open menu" aria-controls="sidebar"
+              [attr.aria-expanded]="navOpen()" (click)="navOpen.set(!navOpen())">
+        <lucide-icon [img]="icons.Menu" [size]="18" aria-hidden="true"></lucide-icon>
       </button>
-      <div class="dropdown" *ngIf="isMenuOpen">
-        <button type="button" class="dropdown-item" (click)="logout()">Logout</button>
+
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <span>Console</span>
+        <span aria-hidden="true">/</span>
+        <span class="current" aria-current="page">{{ pageLabel() }}</span>
+      </nav>
+
+      <div class="topbar-actions">
+        <button type="button" class="icon-btn" (click)="theme.toggle()"
+                [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+                [title]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+          <lucide-icon [img]="theme.isDark() ? icons.Sun : icons.Moon" [size]="17" aria-hidden="true"></lucide-icon>
+        </button>
+
+        @if (user(); as current) {
+          <button type="button" class="user-btn" [cdkMenuTriggerFor]="userMenu" aria-label="Account and theme">
+            <span class="avatar" aria-hidden="true">{{ initial(current) }}</span>
+            <span class="user-name">{{ current.username }}</span>
+            <lucide-icon [img]="icons.ChevronDown" [size]="15" aria-hidden="true"></lucide-icon>
+          </button>
+        }
       </div>
-    </div>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
   </div>
-</header>
-
-<div class="admin-layout">
-  <nav class="sidebar">
-    <a routerLink="news" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">News</a>
-    <a routerLink="changelogs" routerLinkActive="active">Changelogs</a>
-    <a routerLink="apps" routerLinkActive="active">Apps</a>
-  </nav>
-
-  <main class="content">
-    <router-outlet></router-outlet>
-  </main>
 </div>
+
+<ng-template #userMenu>
+  <div class="menu" cdkMenu>
+    <div class="menu-label" id="theme-label">Theme</div>
+    <div cdkMenuGroup aria-labelledby="theme-label">
+      <button type="button" class="menu-item" cdkMenuItemRadio [cdkMenuItemChecked]="theme.mode() === 'system'"
+              (cdkMenuItemTriggered)="theme.setMode('system')">
+        <lucide-icon [img]="icons.Monitor" [size]="16" aria-hidden="true"></lucide-icon> System
+      </button>
+      <button type="button" class="menu-item" cdkMenuItemRadio [cdkMenuItemChecked]="theme.mode() === 'light'"
+              (cdkMenuItemTriggered)="theme.setMode('light')">
+        <lucide-icon [img]="icons.Sun" [size]="16" aria-hidden="true"></lucide-icon> Light
+      </button>
+      <button type="button" class="menu-item" cdkMenuItemRadio [cdkMenuItemChecked]="theme.mode() === 'dark'"
+              (cdkMenuItemTriggered)="theme.setMode('dark')">
+        <lucide-icon [img]="icons.Moon" [size]="16" aria-hidden="true"></lucide-icon> Dark
+      </button>
+    </div>
+    <div class="menu-separator" role="separator"></div>
+    <button type="button" class="menu-item danger" cdkMenuItem (cdkMenuItemTriggered)="logout()">
+      <lucide-icon [img]="icons.LogOut" [size]="16" aria-hidden="true"></lucide-icon> Log out
+    </button>
+  </div>
+</ng-template>
