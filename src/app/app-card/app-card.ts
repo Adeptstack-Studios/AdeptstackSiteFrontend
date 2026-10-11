@@ -8,7 +8,7 @@ import {AppResponse} from '../models/app-response';
     DatePipe
   ],
   templateUrl: './app-card.html',
-  styleUrl: './app-card.css',
+  styleUrl: '../shared/styles/entry-card.css',
 })
 export class AppCard {
   @Input() item?: AppResponse;

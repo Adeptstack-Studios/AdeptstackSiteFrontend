@@ -1,12 +1,12 @@
-<button class="news-item" [class.not-visible]="item?.visible === false" [class.selected]="selected" (click)="onPostClicked()">
-  <div class="news-item">
+<button type="button" class="card" [class.not-visible]="item?.visible === false" [class.selected]="selected"
+        [attr.aria-pressed]="selected || null" (click)="onPostClicked()">
     <div class="img-container">
-      <img [src]="item?.imageUrl" alt="cover">
+      <img [src]="item?.imageUrl" alt="">
     </div>
 
     <div class="info-container">
-      <p>{{ item?.title }}</p>
-      <p>{{ item?.description }}</p>
+      <p class="title">{{ item?.title }}</p>
+      <p class="description">{{ item?.description }}</p>
 
       <div class="meta-row">
         <span class="meta-left">{{ item?.category }}</span>
@@ -18,5 +18,4 @@
         </span>
       </div>
     </div>
-  </div>
 </button>

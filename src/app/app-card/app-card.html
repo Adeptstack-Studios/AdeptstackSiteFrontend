@@ -1,23 +1,21 @@
-<button class="app-item" [class.not-visible]="item?.visible === false" (click)="onAppClicked()">
-  <div class="app-item">
+<button type="button" class="card" [class.not-visible]="item?.visible === false" (click)="onAppClicked()">
     <div class="img-container">
-      <img [src]="item?.image1Url" alt="cover">
+      <img [src]="item?.image1Url" alt="">
     </div>
 
     <div class="info-container">
-      <p>{{ item?.name }}</p>
-      <p>{{ item?.slogan }}</p>
+      <p class="title">{{ item?.name }}</p>
+      <p class="description">{{ item?.slogan }}</p>
 
       <div class="meta-row">
         <span class="meta-left">{{ item?.category }}</span>
-        <span class="meta-left">{{ item?.latestMainVersion?.version }}</span>
+        <span class="meta-left meta-mono">{{ item?.latestMainVersion?.version }}</span>
         @if (item?.downloadsFormatted) {
           <span class="meta-downloads" [title]="item?.downloads + ' downloads'">
-            <i class='bx bx-download'></i>{{ item?.downloadsFormatted }}
+            <i class='bx bx-download' aria-hidden="true"></i>{{ item?.downloadsFormatted }}
           </span>
         }
         <span class="meta-right">{{ item?.publishedAt | date }}</span>
       </div>
     </div>
-  </div>
 </button>

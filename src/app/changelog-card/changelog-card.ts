@@ -10,7 +10,7 @@ import {AppService} from '../services/app-service';
     DatePipe
   ],
   templateUrl: './changelog-card.html',
-  styleUrl: './changelog-card.css',
+  styleUrl: '../shared/styles/entry-card.css',
 })
 export class ChangelogCard implements OnInit, OnChanges {
   @Input() item?: Changelogs;

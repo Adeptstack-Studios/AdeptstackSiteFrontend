@@ -8,7 +8,7 @@ import {News} from '../models/news';
         DatePipe
     ],
   templateUrl: './news-card.html',
-  styleUrl: './news-card.css'
+  styleUrl: '../shared/styles/entry-card.css'
 })
 export class NewsCard {
   @Input() item?: News;
