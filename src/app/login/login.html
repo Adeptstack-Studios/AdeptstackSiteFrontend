@@ -1,33 +1,36 @@
-<div class="parent">
-  <div class="container">
-    <form [formGroup]="userForm">
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark"><img src="img/adeptstack_white.png" alt="" width="20" height="20"></span>
+      <span class="brand-text">
+        <span class="brand-name">adeptstack</span>
+        <span class="brand-sub">console</span>
+      </span>
+    </div>
 
-      <div class="logo-container">
-        <img ngSrc="img/adeptstack.png" alt="logo" class="logo-img" height="100" width="100">
-      </div>
+    <div>
+      <h1>Sign in</h1>
+      <p class="lead">Manage apps, releases and blog posts.</p>
+    </div>
 
-      <h1>Welcome back!</h1>
-
-      <div class="input-box">
-        <input type="email" formControlName="username" placeholder="Username">
-        <i class='bx bx-user'></i> </div>
-      <div class="text-danger">
+    <form [formGroup]="userForm" (ngSubmit)="login()">
+      <div class="field">
+        <label for="login-username">Username</label>
+        <input id="login-username" type="text" formControlName="username" autocomplete="username">
         @if (userForm.get('username')?.touched && userForm.get('username')?.errors?.['required']) {
-          <span>Username is required</span>
+          <span class="error">Enter your username.</span>
         }
       </div>
 
-      <div class="input-box">
-        <input type="password" formControlName="password" placeholder="Password">
-        <i class='bx bx-lock-alt'></i>
-      </div>
-      <div class="text-danger">
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" formControlName="password" autocomplete="current-password">
         @if (userForm.get('password')?.touched && (userForm.get('password')?.errors?.['minlength'] || userForm.get('password')?.errors?.['required'])) {
-          <span>Password of length 8 required</span>
+          <span class="error">Your password has at least 8 characters.</span>
         }
       </div>
 
-      <button type="submit" class="btn" (click)="login()">Sign In</button>
+      <button type="submit" class="btn" [disabled]="signingIn">{{ signingIn ? 'Signing in…' : 'Sign in' }}</button>
     </form>
   </div>
 </div>

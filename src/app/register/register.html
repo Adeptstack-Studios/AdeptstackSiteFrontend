@@ -1,35 +1,42 @@
-<div class="parent">
-
-  <div class="signup-card">
-
-    @if (msg) {
-      <div class="msg-box">{{msg}}</div>
-    }
-
-    <div class="card-title">
-      <h1>Create Account</h1>
-      <span>You already have an Account? <a routerLink="/login">Sign In</a></span>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark"><img src="img/adeptstack_white.png" alt="" width="20" height="20"></span>
+      <span class="brand-text">
+        <span class="brand-name">adeptstack</span>
+        <span class="brand-sub">console</span>
+      </span>
     </div>
 
-    <form class="form-group" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+    <div>
+      <h1>Create an account</h1>
+      <p class="lead">Adds another admin to the console.</p>
+    </div>
 
-      <input type="text" placeholder="Username" formControlName="username" class="input-field">
-      <div class="text-danger">
+    @if (msg) {
+      <div class="notice" role="status">{{ msg }}</div>
+    }
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <div class="field">
+        <label for="register-username">Username</label>
+        <input id="register-username" type="text" formControlName="username" autocomplete="off">
         @if (signupForm.controls['username'].touched && signupForm.controls['username'].errors?.['required']) {
-          <span>Username is required</span>
+          <span class="error">Enter a username.</span>
         }
       </div>
 
-      <input type="password" placeholder="Password" formControlName="password" class="input-field">
-      <div class="text-danger">
+      <div class="field">
+        <label for="register-password">Password</label>
+        <input id="register-password" type="password" formControlName="password" autocomplete="new-password">
         @if (signupForm.controls['password'].touched && (signupForm.controls['password'].errors?.['minlength'] || signupForm.controls['password'].errors?.['required'])) {
-          <span>Password of length 8 required</span>
+          <span class="error">Use at least 8 characters.</span>
         }
       </div>
 
-      <input type="submit" [disabled]="!signupForm.valid" value="Sign Up" class="btn-submit">
-
+      <button type="submit" class="btn">Create account</button>
     </form>
 
+    <p class="foot"><a routerLink="/news">Back to the console</a></p>
   </div>
 </div>
