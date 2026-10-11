@@ -4,21 +4,21 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 15px;
-  margin-top: 25px;
-  padding: 15px 25px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  padding: 12px 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .summary {
   margin: 0;
-  font-size: 14px;
-  color: #7f8c8d;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .summary strong {
-  color: #333;
+  color: var(--text);
 }
 
 .pages {
@@ -28,21 +28,20 @@
 }
 
 .page-btn {
-  min-width: 36px;
-  height: 36px;
+  min-width: 34px;
+  height: 34px;
   padding: 0 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #f5f6fa;
-  color: #555;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background .15s, border-color .15s;
 }
 
 .page-btn i {
@@ -50,61 +49,59 @@
 }
 
 .page-btn:hover:not(:disabled):not(.active) {
-  background: white;
-  border-color: #1e2a38;
+  background: var(--panel-2);
 }
 
 .page-btn.active {
-  background: #1e2a38;
-  border-color: #1e2a38;
-  color: white;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
   cursor: default;
 }
 
 .page-btn:disabled {
-  opacity: 0.4;
+  opacity: .4;
   cursor: not-allowed;
 }
 
 .gap {
   padding: 0 4px;
-  color: #aaa;
+  color: var(--muted);
 }
 
 .per-page {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
-  color: #7f8c8d;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .size-switch {
   display: inline-flex;
   padding: 3px;
-  border-radius: 8px;
-  background: #f5f6fa;
-  border: 1px solid #eee;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
 }
 
 .size-switch button {
-  padding: 5px 12px;
+  padding: 4px 11px;
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #555;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .size-switch button:hover:not(.active) {
-  color: #1e2a38;
+  color: var(--text);
 }
 
 .size-switch button.active {
-  background: #1e2a38;
-  color: white;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
