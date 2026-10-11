@@ -1,26 +1,140 @@
-@font-face {
-  font-family: 'Nunito';
-  src: url('../public/fonts/Nunito-VariableFont_wght.ttf') format('truetype');
-  font-weight: 200 1000;
-  font-style: normal;
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+/* positions the CDK menus and dialogs */
+@import '@angular/cdk/overlay-prebuilt.css';
+
+/*
+ * Design tokens. Light values live on :root, dark values are the same tokens again.
+ * "system" sets no data-theme and follows the OS; an explicit choice sets data-theme,
+ * which wins in both directions. Components only ever use these variables.
+ */
+:root {
+  --bg: #F4F5F7;
+  --panel: #FFFFFF;
+  --panel-2: #F1F3F6;
+  --line: #E2E5EA;
+  --line-strong: #CDD2DA;
+  --text: #0E1116;
+  --muted: #556072;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-text: #1D4ED8;
+  --accent-soft: rgba(37, 99, 235, .10);
+  --on-accent: #FFFFFF;
+  --good: #15803D;
+  --good-soft: rgba(21, 128, 61, .10);
+  --warn: #B45309;
+  --warn-soft: rgba(180, 83, 9, .10);
+  --danger: #DC2626;
+  --danger-soft: rgba(220, 38, 38, .10);
+  --beta: #C2700A;
+  --off: #6B7280;
+  --overlay: rgba(14, 17, 22, .45);
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+  --shadow-lg: 0 18px 48px rgba(16, 24, 40, .18);
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --font: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  color-scheme: light;
 }
 
-@font-face {
-  font-family: 'Nunito';
-  src: url('../public/fonts/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
-  font-weight: 200 1000;
-  font-style: italic;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A0C10;
+    --panel: #11141A;
+    --panel-2: #171B23;
+    --line: #242A36;
+    --line-strong: #343B4A;
+    --text: #ECEEF3;
+    --muted: #9AA3B5;
+    --accent: #2563EB;
+    --accent-hover: #3B74F0;
+    --accent-text: #7DA9FF;
+    --accent-soft: rgba(59, 130, 246, .16);
+    --good: #4ADE80;
+    --good-soft: rgba(74, 222, 128, .14);
+    --warn: #FBBF24;
+    --warn-soft: rgba(251, 191, 36, .14);
+    --danger: #F87171;
+    --danger-soft: rgba(248, 113, 113, .14);
+    --beta: #F5A524;
+    --off: #7C8496;
+    --overlay: rgba(3, 5, 8, .62);
+    --shadow-sm: 0 1px 0 rgba(255, 255, 255, .03) inset;
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0A0C10;
+  --panel: #11141A;
+  --panel-2: #171B23;
+  --line: #242A36;
+  --line-strong: #343B4A;
+  --text: #ECEEF3;
+  --muted: #9AA3B5;
+  --accent: #2563EB;
+  --accent-hover: #3B74F0;
+  --accent-text: #7DA9FF;
+  --accent-soft: rgba(59, 130, 246, .16);
+  --good: #4ADE80;
+  --good-soft: rgba(74, 222, 128, .14);
+  --warn: #FBBF24;
+  --warn-soft: rgba(251, 191, 36, .14);
+  --danger: #F87171;
+  --danger-soft: rgba(248, 113, 113, .14);
+  --beta: #F5A524;
+  --off: #7C8496;
+  --overlay: rgba(3, 5, 8, .62);
+  --shadow-sm: 0 1px 0 rgba(255, 255, 255, .03) inset;
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  font-family: 'Nunito', sans-serif;
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* backdrop behind the confirm dialog (CDK overlay, outside every component) */
+.confirm-backdrop {
+  background: var(--overlay);
 }
 
 @keyframes skeleton-pulse {
-  0% { background-color: #f3f4f6; }
-  50% { background-color: #e5e7eb; }
-  100% { background-color: #f3f4f6; }
+  0% { background-color: var(--panel-2); }
+  50% { background-color: var(--line); }
+  100% { background-color: var(--panel-2); }
 }
 
 .popup-body img {
@@ -28,12 +142,12 @@ body {
   max-width: 100% !important;
   height: auto !important;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-sm);
   margin: 1rem auto;
 
   min-height: 90px;
 
-  background-color: #f3f4f6;
+  background-color: var(--panel-2);
 
   animation: skeleton-pulse 1.5s infinite ease-in-out;
 
@@ -48,11 +162,20 @@ body {
 }
 
 .btn-visibility {
-  background: #fef9c3 !important;
-  color: #854d0e !important;
+  background: var(--warn-soft) !important;
+  color: var(--warn) !important;
   margin-top: 0 !important;
 }
 
 .btn-visibility:hover {
-  background: #fef08a !important;
+  background: var(--warn-soft) !important;
+  filter: brightness(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
