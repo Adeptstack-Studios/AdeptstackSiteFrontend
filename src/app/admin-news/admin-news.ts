@@ -1,7 +1,4 @@
-import {Component, inject} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {debounceTime, distinctUntilChanged, forkJoin, Subject} from 'rxjs';
-import {AuthorizationService} from '../services/authorization';
+import {Component, DestroyRef, inject} from '@angular/core';
 import {ToastService} from '../services/toast-service';
 import {News} from '../models/news';
 import {NewsService} from '../services/news-service';
@@ -10,7 +7,13 @@ import {NewsCard} from '../news-card/news-card';
 import {PostModal} from '../post-modal/post-modal';
 import {FileService} from '../services/file-service';
 import {Pagination} from '../pagination/pagination';
-import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing';
+import {Facet, SortOption} from '../models/listing';
+import {ListController} from '../shared/listing/list-controller';
+import {PushSelection} from '../shared/listing/push-selection';
+import {publishPrivate} from '../shared/listing/publish-private';
+import {IMAGE_FILE_HINT, isImageFile} from '../shared/listing/upload-files';
+import {ListToolbar} from '../shared/list-toolbar/list-toolbar';
+import {ConfirmService} from '../core/confirm/confirm-service';
 
 @Component({
   selector: 'app-admin-news',
@@ -21,24 +24,20 @@ import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing
     ReactiveFormsModule,
     NewsCard,
     PostModal,
-    Pagination
+    Pagination,
+    ListToolbar
   ],
-  styleUrl: './admin-news.css'
+  styleUrls: ['../shared/styles/admin-page.css', '../shared/styles/entry-editor.css']
 })
 export class AdminNews {
-  auth: AuthorizationService;
-  newsService: NewsService;
-  fileService: FileService;
-  fb: FormBuilder;
-  /** The current page; filtering, sorting and paging happen in the backend. */
-  news: News[] = [];
-  total = 0;
-  page = 1;
-  pageSize = DEFAULT_PAGE_SIZE;
-  categories: Facet[] = [];
+  private readonly newsService = inject(NewsService);
+  private readonly fileService = inject(FileService);
+  private readonly fb = inject(FormBuilder);
+  private readonly toastService = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
+  categories: Facet[] = [];
   selectedCategory = '';
-  searchTerm = '';
   sort = 'publishedAt,desc';
 
   readonly sortOptions: SortOption[] = [
@@ -49,8 +48,12 @@ export class AdminNews {
     { value: 'readingTime,desc', label: 'Long reads first' },
   ];
 
-  private readonly searchInput = new Subject<string>();
-  private readonly toastService = inject(ToastService);
+  /** The current page; filtering, sorting and paging happen in the backend. */
+  readonly list = new ListController<News>(
+    (page, size, search) => this.newsService.list({ ...this.filters(search), page, size }),
+    inject(DestroyRef));
+  readonly selection = new PushSelection(ids => this.newsService.sendPush(ids), this.toastService);
+
   isPopupOpen = false;
   popupNews?: News;
   isEdit = false;
@@ -69,94 +72,56 @@ export class AdminNews {
   });
 
   constructor() {
-    this.auth = inject(AuthorizationService);
-    this.newsService = inject(NewsService);
-    this.fileService = inject(FileService);
-    this.fb = inject(FormBuilder);
-
-    // one request per pause in typing, not per keystroke
-    this.searchInput.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe(term => {
-      this.searchTerm = term;
-      this.page = 1;
-      this.update();
-    });
-
-    this.update()
+    this.refresh();
   }
 
-  private get listQuery() {
+  private filters(search: string) {
     return {
       category: this.selectedCategory || undefined,
-      q: this.searchTerm || undefined,
+      q: search || undefined,
       sort: this.sort,
     };
   }
 
-  update() {
-    this.newsService.list({ ...this.listQuery, page: this.page, size: this.pageSize }).subscribe({
-      next: (result) => {
-        // e.g. the last post of the last page was deleted: step back to the page that still exists
-        if (result.items.length === 0 && result.total > 0 && this.page > 1) {
-          this.page = pageCount(result.total, this.pageSize);
-          this.update();
-          return;
-        }
-        this.news = result.items;
-        this.total = result.total;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
-    });
+  refresh() {
+    this.list.reload();
     // categories change with every created, edited or deleted post
-    this.newsService.categories().subscribe({
-      next: (categories) => this.categories = categories,
-      error: (error) => console.log("error loading categories: " + error.message)
-    });
+    this.newsService.categories().subscribe(categories => this.categories = categories);
 
-    if (this.isEdit) {
-      this.modeString = "Edit";
-    }
-    else {
-      this.modeString = "Create";
-    }
+    this.modeString = this.isEdit ? "Edit" : "Create";
   }
 
   onSubmit() {
-    if (!this.isEdit) {
-      if (this.newsForm.valid) {
-        const formValue = this.newsForm.value;
-        const news: News = {id: 0, title: formValue.title, slug: formValue.slug, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
-
-        this.newsService.create(news).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
-      else {
-        this.newsForm?.markAllAsTouched();
-      }
+    if (!this.newsForm.valid) {
+      this.newsForm.markAllAsTouched();
+      return;
     }
-    else {
-      if (this.newsForm.valid) {
-        const formValue = this.newsForm.value;
-        const news: News = {id: this.popupNews?.id, title: formValue.title, slug: formValue.slug, description: formValue.description, content: formValue.content, imageUrl: formValue.imageUrl, category: formValue.category, publishedAt: new Date(formValue.publishedAt)};
 
-        this.newsService.update(news).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
-            this.isEdit = false;
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
+    const formValue = this.newsForm.value;
+    const news: News = {
+      id: this.isEdit ? this.popupNews?.id : 0,
+      title: formValue.title,
+      slug: formValue.slug,
+      description: formValue.description,
+      content: formValue.content,
+      imageUrl: formValue.imageUrl,
+      category: formValue.category,
+      publishedAt: new Date(formValue.publishedAt)
+    };
+
+    if (!this.isEdit) {
+      this.newsService.create(news).subscribe(() => {
+        this.toastService.success('Post created. It stays private until you make it visible.');
+        this.clearForm();
+        this.refresh();
+      });
+    } else {
+      this.newsService.update(news).subscribe(() => {
+        this.toastService.success('Post saved.');
+        this.isEdit = false;
+        this.clearForm();
+        this.refresh();
+      });
     }
   }
 
@@ -165,60 +130,17 @@ export class AdminNews {
   }
 
   protected onPostClicked(post: News) {
-    if (this.selectionMode) {
-      this.toggleSelection(post.id);
+    if (this.selection.active) {
+      this.selection.toggle(post.id);
       return;
     }
     this.popupNews = post;
     this.isPopupOpen = !this.isPopupOpen;
   }
 
-  // --- push-mehrfachauswahl ---
-  // Sichtbarmachen verschickt nichts mehr; Pushes werden hier bewusst ausgeloest.
-  selectionMode = false;
-  selectedIds = new Set<number>();
-  isSendingPush = false;
-
-  toggleSelectionMode() {
-    this.selectionMode = !this.selectionMode;
-    this.selectedIds.clear();
-  }
-
-  toggleSelection(id?: number) {
-    if (id === undefined) return;
-    if (this.selectedIds.has(id)) {
-      this.selectedIds.delete(id);
-    } else {
-      this.selectedIds.add(id);
-    }
-  }
-
-  isSelected(id?: number) {
-    return id !== undefined && this.selectedIds.has(id);
-  }
-
-  sendPushForSelection() {
-    if (this.selectedIds.size === 0 || this.isSendingPush) return;
-
-    this.isSendingPush = true;
-    this.newsService.sendPush([...this.selectedIds]).subscribe({
-      next: (response) => {
-        this.toastService.success(response.body || 'Push sent.');
-        this.isSendingPush = false;
-        this.selectionMode = false;
-        this.selectedIds.clear();
-      },
-      error: (err) => {
-        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
-        this.isSendingPush = false;
-      }
-    });
-  }
-
-
   closeModal() {
     this.isPopupOpen = false;
-    this.update();
+    this.refresh();
   }
 
   onEditPost(id: number) {
@@ -246,77 +168,41 @@ export class AdminNews {
     this.clearForm();
   }
 
-  onSearch(event: any) {
-    this.cancelEdit()
-    this.searchInput.next(event.target.value.trim());
+  onSearch(term: string) {
+    this.cancelEdit();
+    this.list.search(term);
   }
 
-  onFilterChange() {
-    this.page = 1;
-    this.update();
-  }
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-  onPageChange(page: number) {
-    this.page = page;
-    this.update();
-  }
-
-  onPageSizeChange(size: number) {
-    this.pageSize = size;
-    this.page = 1;
-    this.update();
-  }
-
-  onFileSelected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      this.isUploading = true;
-
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.newsForm.patchValue({
-            imageUrl: uploadedUrl
-          });
-
-          this.isUploading = false;
-        },
-        error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
-          this.isUploading = false;
-        }
-      });
+    if (!isImageFile(file)) {
+      this.toastService.error(IMAGE_FILE_HINT);
+      input.value = '';
+      return;
     }
+
+    this.isUploading = true;
+    this.fileService.uploadImage(file).subscribe({
+      next: (response: any) => {
+        this.newsForm.patchValue({ imageUrl: response.url });
+        this.isUploading = false;
+        this.toastService.success('Image uploaded.');
+      },
+      error: () => this.isUploading = false
+    });
   }
 
-  /** Publishes every private post matching the current filters, not just the visible page. */
-  makeAllVisible() {
-    this.newsService.list(this.listQuery).subscribe({
-      next: (result) => {
-        // unlisted entries are deliberately hidden from listings, do not publish them
-        const updates = result.items
-          .filter(item => item.visibility === 'PRIVATE' || !item.visibility)
-          .map(item => this.newsService.update({ ...item, visibility: 'PUBLIC', visible: true }));
-
-        if (updates.length === 0) {
-          this.toastService.success('Nothing to publish.');
-          return;
-        }
-        forkJoin(updates).subscribe({
-          next: () => {
-            this.toastService.success(`${updates.length} post(s) made visible.`);
-            this.update();
-          },
-          error: (err) => {
-            this.toastService.error('Some posts could not be made visible.');
-            console.error(err);
-            this.update();
-          }
-        });
-      },
-      error: (err) => console.error(err)
+  async makeAllVisible() {
+    const published = await publishPrivate<News>({
+      loadAll: () => this.newsService.list(this.filters(this.list.searchTerm)),
+      update: item => this.newsService.update(item),
+      noun: ['post', 'posts'],
+      confirm: this.confirm,
+      toast: this.toastService,
     });
+    if (published) this.refresh();
   }
 }

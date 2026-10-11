@@ -1,0 +1,35 @@
+<div class="toolbar">
+  <h2>{{ heading }}</h2>
+
+  <div class="filters">
+    <ng-content select="[filters]"></ng-content>
+  </div>
+
+  <div class="actions">
+    @if (selection?.active) {
+      <span class="selection-count" aria-live="polite">{{ selection!.count }} selected</span>
+      <button type="button" class="btn primary" (click)="selection!.send()"
+              [disabled]="selection!.count === 0 || selection!.sending">
+        {{ selection!.sending ? 'Sending…' : 'Send one push' }}
+      </button>
+      <button type="button" class="btn" (click)="selection!.toggleMode()">Cancel</button>
+    } @else {
+      @if (selection) {
+        <button type="button" class="btn" (click)="selection.toggleMode()">
+          <lucide-icon [img]="icons.Bell" [size]="15" aria-hidden="true"></lucide-icon>
+          Select for push
+        </button>
+      }
+      <button type="button" class="btn" (click)="publishAll.emit()">
+        <lucide-icon [img]="icons.Eye" [size]="15" aria-hidden="true"></lucide-icon>
+        Make all visible
+      </button>
+    }
+
+    <label class="search">
+      <lucide-icon [img]="icons.Search" [size]="15" aria-hidden="true"></lucide-icon>
+      <span class="sr-only">Search</span>
+      <input type="search" [placeholder]="searchPlaceholder" (input)="onSearch($event)">
+    </label>
+  </div>
+</div>

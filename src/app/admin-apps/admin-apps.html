@@ -1,29 +1,21 @@
 <div class="admin-page">
-  <div class="app-list">
+  <div class="entry-list">
 
-    <div class="list-header">
-      <h2>All Apps</h2>
-      <div class="header-actions">
-        <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
-        <div class="search-box">
-          <i class='bx bx-search'></i>
-          <input type="text" placeholder="Search" (input)="onSearch($event)">
-        </div>
-      </div>
-    </div>
+    <app-list-toolbar heading="Apps" searchPlaceholder="Search apps" (searched)="onSearch($event)"
+                      (publishAll)="makeAllVisible()"/>
 
-    @if (apps) {
-      <div class="app-grid">
-        @for (item of apps; track $index) {
-          <app-app-card [item]="item" class="app-item" (appClicked)="onAppClicked($event)"/>
+    @if (apps.length > 0) {
+      <div class="entry-grid">
+        @for (item of apps; track item.id) {
+          <app-app-card [item]="item" class="entry-item" (appClicked)="onAppClicked($event)"/>
         }
       </div>
-    } @else {
-      <div class="empty-state"><p>No apps yet...</p></div>
+    } @else if (!loading) {
+      <div class="empty-state"><p>{{ searchTerm ? 'No apps match this search.' : 'No apps yet. Create the first one on the right.' }}</p></div>
     }
   </div>
 
-  <div class="app-create">
+  <div class="entry-editor">
     <form [formGroup]="appForm" (ngSubmit)="onSubmit()">
       <h1>{{modeString}}</h1>
       <div class="input-box">
@@ -99,23 +91,17 @@
       </div>
 
       <div class="input-box">
-        <input type="checkbox" formControlName="highlighted" placeholder="IsHighlighted">
-        <label>Is Highlighted Product?</label>
-        <div class="text-danger">
-          @if (appForm.controls['highlighted'].touched && appForm.controls['highlighted'].errors?.['required']) {
-            <span>This is required. </span>
-          }
-        </div>
+        <label class="check">
+          <input type="checkbox" formControlName="highlighted">
+          Highlighted on the start page
+        </label>
       </div>
 
       <div class="input-box">
-        <input type="checkbox" formControlName="legacy" placeholder="IsLegacy">
-        <label>Is Legacy Product?</label>
-        <div class="text-danger">
-          @if (appForm.controls['legacy'].touched && appForm.controls['legacy'].errors?.['required']) {
-            <span>This is required. </span>
-          }
-        </div>
+        <label class="check">
+          <input type="checkbox" formControlName="legacy">
+          Legacy product
+        </label>
       </div>
 
       <div class="input-box">
@@ -139,18 +125,18 @@
       <!--FILE UPLOAD 1-->
       <div class="input-box">
         <Label>App Icon</Label>
-        <input type="file" (change)="onIconSelected($event)" accept="image/*" id="iconUpload" style="display: none;">
+        <input type="file" (change)="onImageSelected($event, 'iconUrl')" accept="image/*" id="iconUpload" style="display: none;">
 
         <label for="iconUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
-          @if(isUploading1) {
-            Uploading...
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
+          @if(uploading === 'iconUrl') {
+            Uploading…
           } @else {
             Upload Image
           }
         </label>
 
-        <input type="text" formControlName="iconUrl" placeholder="Image URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" formControlName="iconUrl" class="auto-filled" placeholder="Image URL (filled in on upload)">
 
         @if (appForm.get('iconUrl')?.value) {
           <div class="image-preview">
@@ -169,18 +155,18 @@
       <!--FILE UPLOAD 2-->
       <div class="input-box">
         <Label>Feature Image 1</Label>
-        <input type="file" (change)="onI1Selected($event)" accept="image/*" id="fileOneUpload" style="display: none;">
+        <input type="file" (change)="onImageSelected($event, 'image1Url')" accept="image/*" id="fileOneUpload" style="display: none;">
 
         <label for="fileOneUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
-          @if(isUploading2) {
-            Uploading...
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
+          @if(uploading === 'image1Url') {
+            Uploading…
           } @else {
             Upload Image
           }
         </label>
 
-        <input type="text" formControlName="image1Url" placeholder="Image 1 URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" formControlName="image1Url" class="auto-filled" placeholder="Image 1 URL (filled in on upload)">
 
         @if (appForm.get('image1Url')?.value) {
           <div class="image-preview">
@@ -199,18 +185,18 @@
       <!--FILE UPLOAD 3-->
       <div class="input-box">
         <Label>Feature Image 2</Label>
-        <input type="file" (change)="onI2Selected($event)" accept="image/*" id="fileTwoUpload" style="display: none;">
+        <input type="file" (change)="onImageSelected($event, 'image2Url')" accept="image/*" id="fileTwoUpload" style="display: none;">
 
         <label for="fileTwoUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
-          @if(isUploading3) {
-            Uploading...
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
+          @if(uploading === 'image2Url') {
+            Uploading…
           } @else {
             Upload Image
           }
         </label>
 
-        <input type="text" formControlName="image2Url" placeholder="Image 2 URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" formControlName="image2Url" class="auto-filled" placeholder="Image 2 URL (filled in on upload)">
 
         @if (appForm.get('image2Url')?.value) {
           <div class="image-preview">
@@ -229,18 +215,18 @@
       <!--FILE UPLOAD 4-->
       <div class="input-box">
         <Label>Feature Image 3</Label>
-        <input type="file" (change)="onI3Selected($event)" accept="image/*" id="fileThreeUpload" style="display: none;">
+        <input type="file" (change)="onImageSelected($event, 'image3Url')" accept="image/*" id="fileThreeUpload" style="display: none;">
 
         <label for="fileThreeUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
-          @if(isUploading4) {
-            Uploading...
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
+          @if(uploading === 'image3Url') {
+            Uploading…
           } @else {
             Upload Image
           }
         </label>
 
-        <input type="text" formControlName="image3Url" placeholder="Image 3 URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" formControlName="image3Url" class="auto-filled" placeholder="Image 3 URL (filled in on upload)">
 
         @if (appForm.get('image3Url')?.value) {
           <div class="image-preview">
@@ -257,9 +243,9 @@
       <!--END FILE UPLOAD-->
 
       <div class="btn-box">
-        <button class="btn" type="submit">Submit</button>
+        <button class="btn" type="submit">{{ isEdit ? 'Save' : 'Create' }}</button>
         @if (isEdit) {
-          <div class="btn2" (click)="cancelEdit()">Cancel</div>
+          <button type="button" class="btn2" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>

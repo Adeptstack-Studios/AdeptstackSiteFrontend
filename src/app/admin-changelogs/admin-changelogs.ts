@@ -1,7 +1,4 @@
-import {Component, inject} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {debounceTime, distinctUntilChanged, forkJoin, Subject} from 'rxjs';
-import {AuthorizationService} from '../services/authorization';
+import {Component, DestroyRef, inject} from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators, AbstractControl} from '@angular/forms';
 import {ChangelogsService} from '../services/changelogs-service';
 import {AppService} from '../services/app-service';
@@ -12,7 +9,13 @@ import {PostModal} from '../post-modal/post-modal';
 import {ChangelogCard} from '../changelog-card/changelog-card';
 import {FileService} from '../services/file-service';
 import {Pagination} from '../pagination/pagination';
-import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing';
+import {Facet, SortOption} from '../models/listing';
+import {ListController} from '../shared/listing/list-controller';
+import {PushSelection} from '../shared/listing/push-selection';
+import {publishPrivate} from '../shared/listing/publish-private';
+import {IMAGE_FILE_HINT, INSTALLER_FILE_HINT, isImageFile, isInstallerFile} from '../shared/listing/upload-files';
+import {ListToolbar} from '../shared/list-toolbar/list-toolbar';
+import {ConfirmService} from '../core/confirm/confirm-service';
 
 @Component({
   selector: 'app-admin-changelogs',
@@ -23,28 +26,24 @@ import {DEFAULT_PAGE_SIZE, Facet, pageCount, SortOption} from '../models/listing
     PostModal,
     ReactiveFormsModule,
     ChangelogCard,
-    Pagination
+    Pagination,
+    ListToolbar
   ],
-  styleUrl: './admin-changelogs.css'
+  styleUrls: ['../shared/styles/admin-page.css', '../shared/styles/entry-editor.css']
 })
 export class AdminChangelogs {
-  auth: AuthorizationService;
-  changelogService: ChangelogsService;
-  appService: AppService;
-  fileService: FileService;
-  fb: FormBuilder;
+  private readonly changelogService = inject(ChangelogsService);
+  private readonly appService = inject(AppService);
+  private readonly fileService = inject(FileService);
+  private readonly fb = inject(FormBuilder);
+  private readonly toastService = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
-  /** The current page; filtering, sorting and paging happen in the backend. */
-  changelogs: Changelogs[] = [];
-  total = 0;
-  page = 1;
-  pageSize = DEFAULT_PAGE_SIZE;
   apps: AppResponse[] = [];
   channels: Facet[] = [];
 
   selectedAppId: number | string = '';
   selectedChannel: string = '';
-  searchTerm: string = '';
   sort = 'publishedAt,desc';
 
   readonly sortOptions: SortOption[] = [
@@ -56,8 +55,11 @@ export class AdminChangelogs {
     { value: 'title,asc', label: 'Title A–Z' },
   ];
 
-  private readonly searchInput = new Subject<string>();
-  private readonly toastService = inject(ToastService);
+  /** The current page; filtering, sorting and paging happen in the backend. */
+  readonly list = new ListController<Changelogs>(
+    (page, size, search) => this.changelogService.list({ ...this.filters(search), page, size }),
+    inject(DestroyRef));
+  readonly selection = new PushSelection(ids => this.changelogService.sendPush(ids), this.toastService);
 
   isPopupOpen = false;
   popupChangelog?: Changelogs;
@@ -86,47 +88,32 @@ export class AdminChangelogs {
   }, { validators: this.atLeastOneUrlValidator });
 
   constructor() {
-    this.auth = inject(AuthorizationService);
-    this.changelogService = inject(ChangelogsService);
-    this.appService = inject(AppService);
-    this.fileService = inject(FileService);
-    this.fb = inject(FormBuilder);
-
-    // one request per pause in typing, not per keystroke
-    this.searchInput.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe(term => {
-      this.searchTerm = term;
-      this.page = 1;
-      this.update();
-    });
-
-    this.update()
-    this.loadApps();
+    this.refresh();
+    this.appService.getAll().subscribe(response => this.apps = response.body ?? []);
     this.loadChannels();
   }
 
-  loadChannels() {
-    this.changelogService.channels(this.selectedAppId ? Number(this.selectedAppId) : undefined).subscribe({
-      next: (channels) => {
-        this.channels = channels;
-        // the newly selected app may not have the channel that was filtered by
-        if (this.selectedChannel && !channels.some(c => c.name === this.selectedChannel)) {
-          this.selectedChannel = '';
-          this.onFilterChange();
-        }
-      },
-      error: (error) => console.log("error loading channels: " + error.message)
-    });
+  private filters(search: string) {
+    return {
+      app: this.selectedAppId ? Number(this.selectedAppId) : undefined,
+      channel: this.selectedChannel || undefined,
+      q: search || undefined,
+      sort: this.sort,
+    };
   }
 
-  loadApps() {
-    this.appService.getAll().subscribe({
-      next: (response) => {
-        if (response.body) {
-          this.apps = response.body;
-        }
-      },
-      error: (error) => {
-        console.log("error loading apps: " + error.message);
+  refresh() {
+    this.list.reload();
+    this.modeString = this.isEdit ? "Edit" : "Create";
+  }
+
+  loadChannels() {
+    this.changelogService.channels(this.selectedAppId ? Number(this.selectedAppId) : undefined).subscribe(channels => {
+      this.channels = channels;
+      // the newly selected app may not have the channel that was filtered by
+      if (this.selectedChannel && !channels.some(c => c.name === this.selectedChannel)) {
+        this.selectedChannel = '';
+        this.list.filtersChanged();
       }
     });
   }
@@ -147,138 +134,55 @@ export class AdminChangelogs {
     return null;
   }
 
-  private get listQuery() {
-    return {
-      app: this.selectedAppId ? Number(this.selectedAppId) : undefined,
-      channel: this.selectedChannel || undefined,
-      q: this.searchTerm || undefined,
-      sort: this.sort,
-    };
-  }
-
-  update() {
-    this.changelogService.list({ ...this.listQuery, page: this.page, size: this.pageSize }).subscribe({
-      next: (result) => {
-        // e.g. the last entry of the last page was deleted: step back to the page that still exists
-        if (result.items.length === 0 && result.total > 0 && this.page > 1) {
-          this.page = pageCount(result.total, this.pageSize);
-          this.update();
-          return;
-        }
-        this.changelogs = result.items;
-        this.total = result.total;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
-    });
-
-    if (this.isEdit) {
-      this.modeString = "Edit";
-    }
-    else {
-      this.modeString = "Create";
-    }
-  }
-
-  onFilterChange() {
-    this.page = 1;
-    this.update();
-  }
-
   onAppChange() {
-    this.onFilterChange();
+    this.list.filtersChanged();
     this.loadChannels();
   }
 
-  onSearch(event: any) {
-    this.searchInput.next(event.target.value.trim());
-  }
-
-  onPageChange(page: number) {
-    this.page = page;
-    this.update();
-  }
-
-  onPageSizeChange(size: number) {
-    this.pageSize = size;
-    this.page = 1;
-    this.update();
-  }
-
   onSubmit() {
-    if (!this.isEdit) {
-      if (this.changelogForm.valid) {
-        const formValue = this.changelogForm.value;
-        const selectedApp = this.apps.find(a => a.id === Number(formValue.appId));
-        const changelog: Changelogs = {
-          id: 0,
-          title: formValue.title,
-          description: formValue.description,
-          content: formValue.content,
-          imageUrl: formValue.imageUrl,
-          appUrl: formValue.appUrl,
-          microsoftStoreUrl: formValue.microsoftStoreUrl,
-          playStoreUrl: formValue.playStoreUrl,
-          appStoreUrl: formValue.appStoreUrl,
-          steamUrl: formValue.steamUrl,
-          curseforgeUrl: formValue.curseforgeUrl,
-          modrinthUrl: formValue.modrinthUrl,
-          saasUrl: formValue.saasUrl,
-          appId: Number(formValue.appId),
-          app: selectedApp?.name,
-          channel: formValue.channel,
-          version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt)
-        };
-
-        this.changelogService.create(changelog).subscribe({
-          next: () => {
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
-      else {
-        this.changelogForm?.markAllAsTouched();
-      }
+    if (!this.changelogForm.valid) {
+      this.changelogForm.markAllAsTouched();
+      return;
     }
-    else {
-      if (this.changelogForm.valid) {
-        const formValue = this.changelogForm.value;
-        const selectedApp = this.apps.find(a => a.id === Number(formValue.appId));
-        const changelog: Changelogs = {
-          id: this.popupChangelog?.id,
-          title: formValue.title,
-          description: formValue.description,
-          content: formValue.content,
-          imageUrl: formValue.imageUrl,
-          appUrl: formValue.appUrl,
-          microsoftStoreUrl: formValue.microsoftStoreUrl,
-          playStoreUrl: formValue.playStoreUrl,
-          appStoreUrl: formValue.appStoreUrl,
-          steamUrl: formValue.steamUrl,
-          curseforgeUrl: formValue.curseforgeUrl,
-          modrinthUrl: formValue.modrinthUrl,
-          saasUrl: formValue.saasUrl,
-          appId: Number(formValue.appId),
-          app: selectedApp?.name,
-          channel: formValue.channel,
-          version: formValue.version,
-          publishedAt: new Date(formValue.publishedAt)
-        };
 
-        this.changelogService.update(changelog).subscribe({
-          next: () => {
-            this.isEdit = false;
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
+    const formValue = this.changelogForm.value;
+    const selectedApp = this.apps.find(a => a.id === Number(formValue.appId));
+    const changelog: Changelogs = {
+      id: this.isEdit ? this.popupChangelog?.id : 0,
+      title: formValue.title,
+      description: formValue.description,
+      content: formValue.content,
+      imageUrl: formValue.imageUrl,
+      appUrl: formValue.appUrl,
+      microsoftStoreUrl: formValue.microsoftStoreUrl,
+      playStoreUrl: formValue.playStoreUrl,
+      appStoreUrl: formValue.appStoreUrl,
+      steamUrl: formValue.steamUrl,
+      curseforgeUrl: formValue.curseforgeUrl,
+      modrinthUrl: formValue.modrinthUrl,
+      saasUrl: formValue.saasUrl,
+      appId: Number(formValue.appId),
+      app: selectedApp?.name,
+      channel: formValue.channel,
+      version: formValue.version,
+      publishedAt: new Date(formValue.publishedAt)
+    };
+
+    if (!this.isEdit) {
+      this.changelogService.create(changelog).subscribe(() => {
+        this.toastService.success('Changelog created. It stays private until you make it visible.');
+        this.clearForm();
+        this.refresh();
+        this.loadChannels();
+      });
+    } else {
+      this.changelogService.update(changelog).subscribe(() => {
+        this.toastService.success('Changelog saved.');
+        this.isEdit = false;
+        this.clearForm();
+        this.refresh();
+        this.loadChannels();
+      });
     }
   }
 
@@ -294,60 +198,18 @@ export class AdminChangelogs {
   }
 
   protected onPostClicked(post: Changelogs) {
-    if (this.selectionMode) {
-      this.toggleSelection(post.id);
+    if (this.selection.active) {
+      this.selection.toggle(post.id);
       return;
     }
     this.popupChangelog = post;
     this.isPopupOpen = !this.isPopupOpen;
   }
 
-  // --- push-mehrfachauswahl ---
-  // Sichtbarmachen verschickt nichts mehr; Pushes werden hier bewusst ausgeloest.
-  selectionMode = false;
-  selectedIds = new Set<number>();
-  isSendingPush = false;
-
-  toggleSelectionMode() {
-    this.selectionMode = !this.selectionMode;
-    this.selectedIds.clear();
-  }
-
-  toggleSelection(id?: number) {
-    if (id === undefined) return;
-    if (this.selectedIds.has(id)) {
-      this.selectedIds.delete(id);
-    } else {
-      this.selectedIds.add(id);
-    }
-  }
-
-  isSelected(id?: number) {
-    return id !== undefined && this.selectedIds.has(id);
-  }
-
-  sendPushForSelection() {
-    if (this.selectedIds.size === 0 || this.isSendingPush) return;
-
-    this.isSendingPush = true;
-    this.changelogService.sendPush([...this.selectedIds]).subscribe({
-      next: (response) => {
-        this.toastService.success(response.body || 'Push sent.');
-        this.isSendingPush = false;
-        this.selectionMode = false;
-        this.selectedIds.clear();
-      },
-      error: (err) => {
-        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
-        this.isSendingPush = false;
-      }
-    });
-  }
-
-
   closeModal() {
     this.isPopupOpen = false;
-    this.update();
+    this.refresh();
+    this.loadChannels();
   }
 
   onEditPost(id: number) {
@@ -384,96 +246,58 @@ export class AdminChangelogs {
     this.clearForm();
   }
 
-  onImageSelected(event: any) {
-    const file: File = event.target.files[0];
+  onImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
 
-    if (file) {
-      const fileName = file.name.toLowerCase();
-      const isAllowed = fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp');
-
-      if (!isAllowed) {
-        alert('Invalid File! Please choose .jpg, .jpeg, .png, webp files.');
-        event.target.value = '';
-        return;
-      }
-
-      this.isUploading = true;
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.changelogForm.patchValue({
-            imageUrl: uploadedUrl
-          });
-
-          this.isUploading = false;
-        },
-        error: (err: any) => {
-          console.error("Upload failed", err);
-          this.isUploading = false;
-        }
-      });
+    if (!isImageFile(file)) {
+      this.toastService.error(IMAGE_FILE_HINT);
+      input.value = '';
+      return;
     }
-  }
 
-  onAppSelected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      const fileName = file.name.toLowerCase();
-      const isAllowed = fileName.endsWith('.exe') || fileName.endsWith('.msi');
-
-      if (!isAllowed) {
-        alert('Invalid File! Please choose .exe or .msi files.');
-        event.target.value = '';
-        return;
-      }
-
-      this.isUploading = true;
-      this.fileService.uploadApp(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.changelogForm.patchValue({
-            appUrl: uploadedUrl
-          });
-
-          this.isUploading = false;
-        },
-        error: (err: any) => {
-          console.error("Upload failed", err);
-          this.isUploading = false;
-        }
-      });
-    }
-  }
-
-  /** Publishes every private changelog matching the current filters, not just the visible page. */
-  makeAllVisible() {
-    this.changelogService.list(this.listQuery).subscribe({
-      next: (result) => {
-        // unlisted entries are deliberately hidden from listings, do not publish them
-        const updates = result.items
-          .filter(item => item.visibility === 'PRIVATE' || !item.visibility)
-          .map(item => this.changelogService.update({ ...item, visibility: 'PUBLIC', visible: true }));
-
-        if (updates.length === 0) {
-          this.toastService.success('Nothing to publish.');
-          return;
-        }
-        forkJoin(updates).subscribe({
-          next: () => {
-            this.toastService.success(`${updates.length} changelog(s) made visible.`);
-            this.update();
-          },
-          error: (err) => {
-            this.toastService.error('Some changelogs could not be made visible.');
-            console.error(err);
-            this.update();
-          }
-        });
+    this.isUploading = true;
+    this.fileService.uploadImage(file).subscribe({
+      next: (response: any) => {
+        this.changelogForm.patchValue({ imageUrl: response.url });
+        this.isUploading = false;
+        this.toastService.success('Image uploaded.');
       },
-      error: (err) => console.error(err)
+      error: () => this.isUploading = false
     });
+  }
+
+  onAppSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!isInstallerFile(file)) {
+      this.toastService.error(INSTALLER_FILE_HINT);
+      input.value = '';
+      return;
+    }
+
+    this.isUploading = true;
+    this.fileService.uploadApp(file).subscribe({
+      next: (response: any) => {
+        this.changelogForm.patchValue({ appUrl: response.url });
+        this.isUploading = false;
+        this.toastService.success('Application uploaded.');
+      },
+      error: () => this.isUploading = false
+    });
+  }
+
+  async makeAllVisible() {
+    const published = await publishPrivate<Changelogs>({
+      loadAll: () => this.changelogService.list(this.filters(this.list.searchTerm)),
+      update: item => this.changelogService.update(item),
+      noun: ['changelog', 'changelogs'],
+      confirm: this.confirm,
+      toast: this.toastService,
+    });
+    if (published) this.refresh();
   }
 }

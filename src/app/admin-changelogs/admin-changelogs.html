@@ -1,75 +1,55 @@
 <div class="admin-page">
-  <div class="changelog-list">
+  <div class="entry-list">
 
-    <div class="list-header">
-      <h2>All Changelogs</h2>
-
-      <div class="filter-group">
+    <app-list-toolbar heading="Changelogs" searchPlaceholder="Search version, title…" [selection]="selection"
+                      (searched)="list.search($event)" (publishAll)="makeAllVisible()">
+      <ng-container filters>
         <div class="select-wrapper">
-          <select [(ngModel)]="selectedAppId" (change)="onAppChange()">
-            <option value="">All Apps</option>
+          <select [(ngModel)]="selectedAppId" (change)="onAppChange()" aria-label="App">
+            <option value="">All apps</option>
             @for (app of apps; track app.id) {
               <option [value]="app.id">{{app.name}}</option>
             }
           </select>
-          <i class='bx bx-chevron-down'></i>
+          <i class='bx bx-chevron-down' aria-hidden="true"></i>
         </div>
 
         <div class="select-wrapper">
-          <select [(ngModel)]="selectedChannel" (change)="onFilterChange()">
-            <option value="">All Channels</option>
+          <select [(ngModel)]="selectedChannel" (change)="list.filtersChanged()" aria-label="Channel">
+            <option value="">All channels</option>
             @for (channel of channels; track channel.name) {
               <option [value]="channel.name">{{channel.name}} ({{channel.count}})</option>
             }
           </select>
-          <i class='bx bx-chevron-down'></i>
+          <i class='bx bx-chevron-down' aria-hidden="true"></i>
         </div>
 
         <div class="select-wrapper">
-          <select [(ngModel)]="sort" (change)="onFilterChange()" aria-label="Sort by">
+          <select [(ngModel)]="sort" (change)="list.filtersChanged()" aria-label="Sort by">
             @for (option of sortOptions; track option.value) {
               <option [value]="option.value">{{option.label}}</option>
             }
           </select>
-          <i class='bx bx-chevron-down'></i>
+          <i class='bx bx-chevron-down' aria-hidden="true"></i>
         </div>
+      </ng-container>
+    </app-list-toolbar>
 
-      </div>
-
-      <div class="header-actions">
-        @if (!selectionMode) {
-          <button class="btn btn-push" (click)="toggleSelectionMode()">Select for push</button>
-          <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
-        } @else {
-          <span class="selection-count">{{ selectedIds.size }} selected</span>
-          <button class="btn btn-push" (click)="sendPushForSelection()"
-                  [disabled]="selectedIds.size === 0 || isSendingPush">
-            {{ isSendingPush ? 'Sending...' : 'Send push' }}
-          </button>
-          <button class="btn" (click)="toggleSelectionMode()">Cancel</button>
-        }
-        <div class="search-box">
-          <i class='bx bx-search'></i>
-          <input type="text" placeholder="Search" (input)="onSearch($event)">
-        </div>
-      </div>
-    </div>
-
-    @if (changelogs.length > 0) {
-      <div class="changelog-grid">
-        @for (item of changelogs; track item.id) {
-          <app-changelog-card [item]="item" [selected]="isSelected(item.id)" class="changelog-item" (postClicked)="onPostClicked($event)"/>
+    @if (list.items.length > 0) {
+      <div class="entry-grid">
+        @for (item of list.items; track item.id) {
+          <app-changelog-card [item]="item" [selected]="selection.has(item.id)" class="entry-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
-    } @else {
-      <div class="empty-state"><p>No changelog found...</p></div>
+    } @else if (!list.loading) {
+      <div class="empty-state"><p>{{ list.searchTerm || selectedAppId || selectedChannel ? 'No changelogs match these filters.' : 'No changelogs yet. Create the first one on the right.' }}</p></div>
     }
 
-    <app-pagination [page]="page" [size]="pageSize" [total]="total" [noun]="total === 1 ? 'changelog' : 'changelogs'"
-                    (pageChange)="onPageChange($event)" (sizeChange)="onPageSizeChange($event)"/>
+    <app-pagination [page]="list.page" [size]="list.pageSize" [total]="list.total" [noun]="list.total === 1 ? 'changelog' : 'changelogs'"
+                    (pageChange)="list.goToPage($event)" (sizeChange)="list.setPageSize($event)"/>
   </div>
 
-  <div class="changelog-create">
+  <div class="entry-editor">
     <form [formGroup]="changelogForm" (ngSubmit)="onSubmit()">
       <h1>{{modeString}}</h1>
       <div class="input-box">
@@ -105,15 +85,15 @@
         <input type="file" (change)="onImageSelected($event)" accept="image/*" id="imageUpload" style="display: none;">
 
         <label for="imageUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
           @if(isUploading) {
-            Uploading...
+            Uploading…
           } @else {
-            Upload Image
+            Upload image
           }
         </label>
 
-        <input type="text" formControlName="imageUrl" placeholder="Image URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" class="auto-filled" formControlName="imageUrl" placeholder="Image URL (filled in on upload)">
 
         @if (changelogForm.get('imageUrl')?.value) {
           <div class="image-preview">
@@ -203,18 +183,18 @@
         <input type="file" (change)="onAppSelected($event)" accept=".exe, .msi" id="fileUpload" style="display: none;">
 
         <label for="fileUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
           @if(isUploading) {
-            Uploading...
+            Uploading…
           } @else {
-            Upload Application
+            Upload application
           }
         </label>
 
         <div class="app-url-container">
           <input type="text" formControlName="appUrl" placeholder="App URL (automatic on upload)" readonly>
           <button type="button" class="clear-btn" (click)="clearAppUrl()" title="Clear App URL">
-            <i class='bx bx-trash'></i>
+            <i class='bx bx-trash' aria-hidden="true"></i>
           </button>
         </div>
 
@@ -227,9 +207,9 @@
       <!--END FILE UPLOAD-->
 
       <div class="btn-box">
-        <button class="btn" type="submit">Submit</button>
+        <button class="btn" type="submit">{{ isEdit ? 'Save' : 'Create' }}</button>
         @if (isEdit) {
-          <div class="btn2" (click)="cancelEdit()">Cancel</div>
+          <button type="button" class="btn2" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>

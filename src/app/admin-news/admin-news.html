@@ -1,64 +1,45 @@
 <div class="admin-page">
-  <div class="news-list">
+  <div class="entry-list">
 
-    <div class="list-header">
-      <h2>All News</h2>
-
-      <div class="filter-group">
+    <app-list-toolbar heading="Blog posts" searchPlaceholder="Search posts" [selection]="selection"
+                      (searched)="onSearch($event)" (publishAll)="makeAllVisible()">
+      <ng-container filters>
         <div class="select-wrapper">
-          <select [(ngModel)]="selectedCategory" (change)="onFilterChange()" aria-label="Category">
-            <option value="">All Categories</option>
+          <select [(ngModel)]="selectedCategory" (change)="list.filtersChanged()" aria-label="Category">
+            <option value="">All categories</option>
             @for (category of categories; track category.name) {
               <option [value]="category.name">{{category.name}} ({{category.count}})</option>
             }
           </select>
-          <i class='bx bx-chevron-down'></i>
+          <i class='bx bx-chevron-down' aria-hidden="true"></i>
         </div>
 
         <div class="select-wrapper">
-          <select [(ngModel)]="sort" (change)="onFilterChange()" aria-label="Sort by">
+          <select [(ngModel)]="sort" (change)="list.filtersChanged()" aria-label="Sort by">
             @for (option of sortOptions; track option.value) {
               <option [value]="option.value">{{option.label}}</option>
             }
           </select>
-          <i class='bx bx-chevron-down'></i>
+          <i class='bx bx-chevron-down' aria-hidden="true"></i>
         </div>
-      </div>
+      </ng-container>
+    </app-list-toolbar>
 
-      <div class="header-actions">
-        @if (!selectionMode) {
-          <button class="btn btn-push" (click)="toggleSelectionMode()">Select for push</button>
-          <button class="btn btn-visibility" (click)="makeAllVisible()">Make all visible</button>
-        } @else {
-          <span class="selection-count">{{ selectedIds.size }} selected</span>
-          <button class="btn btn-push" (click)="sendPushForSelection()"
-                  [disabled]="selectedIds.size === 0 || isSendingPush">
-            {{ isSendingPush ? 'Sending...' : 'Send push' }}
-          </button>
-          <button class="btn" (click)="toggleSelectionMode()">Cancel</button>
-        }
-        <div class="search-box">
-          <i class='bx bx-search'></i>
-          <input type="text" placeholder="Search" (input)="onSearch($event)">
-        </div>
-      </div>
-    </div>
-
-    @if (news.length > 0) {
-      <div class="news-grid">
-        @for (item of news; track item.id) {
-          <app-news-card [item]="item" [selected]="isSelected(item.id)" class="news-item" (postClicked)="onPostClicked($event)"/>
+    @if (list.items.length > 0) {
+      <div class="entry-grid">
+        @for (item of list.items; track item.id) {
+          <app-news-card [item]="item" [selected]="selection.has(item.id)" class="entry-item" (postClicked)="onPostClicked($event)"/>
         }
       </div>
-    } @else {
-      <div class="empty-state"><p>{{ searchTerm || selectedCategory ? 'No posts match these filters.' : 'No news yet...' }}</p></div>
+    } @else if (!list.loading) {
+      <div class="empty-state"><p>{{ list.searchTerm || selectedCategory ? 'No posts match these filters.' : 'No posts yet. Write the first one on the right.' }}</p></div>
     }
 
-    <app-pagination [page]="page" [size]="pageSize" [total]="total" [noun]="total === 1 ? 'post' : 'posts'"
-                    (pageChange)="onPageChange($event)" (sizeChange)="onPageSizeChange($event)"/>
+    <app-pagination [page]="list.page" [size]="list.pageSize" [total]="list.total" [noun]="list.total === 1 ? 'post' : 'posts'"
+                    (pageChange)="list.goToPage($event)" (sizeChange)="list.setPageSize($event)"/>
   </div>
 
-  <div class="news-create">
+  <div class="entry-editor">
     <form [formGroup]="newsForm" (ngSubmit)="onSubmit()">
       <h1>{{modeString}}</h1>
       <div class="input-box">
@@ -71,7 +52,7 @@
       </div>
 
       <div class="input-box">
-        <input type="text" formControlName="slug" placeholder="Slug (optional, aus dem Titel erzeugt)">
+        <input type="text" formControlName="slug" placeholder="Slug (optional, created from the title)">
       </div>
 
       <div class="input-box">
@@ -98,15 +79,15 @@
         <input type="file" (change)="onFileSelected($event)" accept="image/*" id="fileUpload" style="display: none;">
 
         <label for="fileUpload" class="upload-btn">
-          <i class='bx bx-cloud-upload'></i>
+          <i class='bx bx-cloud-upload' aria-hidden="true"></i>
           @if(isUploading) {
-            Uploading...
+            Uploading…
           } @else {
-            Upload Image
+            Upload image
           }
         </label>
 
-        <input type="text" formControlName="imageUrl" placeholder="Image URL (automatic on upload)" style="margin-top: 10px; background: #f9f9f9; color: #777;">
+        <input type="text" class="auto-filled" formControlName="imageUrl" placeholder="Image URL (filled in on upload)">
 
         @if (newsForm.get('imageUrl')?.value) {
           <div class="image-preview">
@@ -141,9 +122,9 @@
       </div>
 
       <div class="btn-box">
-        <button class="btn" type="submit">Submit</button>
+        <button class="btn" type="submit">{{ isEdit ? 'Save' : 'Create' }}</button>
         @if (isEdit) {
-          <div class="btn2" (click)="cancelEdit()">Cancel</div>
+          <button type="button" class="btn2" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>

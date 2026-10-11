@@ -1,38 +1,49 @@
 import {Component, inject} from '@angular/core';
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {AuthorizationService} from '../services/authorization';
+import {map} from 'rxjs';
 import {FileService} from '../services/file-service';
 import {AppService} from '../services/app-service';
+import {ToastService} from '../services/toast-service';
 import {AppResponse} from '../models/app-response';
 import {App} from '../models/app';
 import {AppCard} from '../app-card/app-card';
 import {AppModal} from '../app-modal/app-modal';
+import {ListToolbar} from '../shared/list-toolbar/list-toolbar';
+import {ConfirmService} from '../core/confirm/confirm-service';
+import {publishPrivate} from '../shared/listing/publish-private';
+import {IMAGE_FILE_HINT, isImageFile} from '../shared/listing/upload-files';
+
+/** The four image fields of an app that are filled by an upload. */
+type AppImageField = 'iconUrl' | 'image1Url' | 'image2Url' | 'image3Url';
 
 @Component({
   selector: 'app-admin-apps',
   imports: [
     ReactiveFormsModule,
     AppCard,
-    AppModal
+    AppModal,
+    ListToolbar
   ],
   templateUrl: './admin-apps.html',
-  styleUrl: './admin-apps.css',
+  styleUrls: ['../shared/styles/admin-page.css', '../shared/styles/entry-editor.css'],
 })
 export class AdminApps {
-  auth: AuthorizationService;
-  appService: AppService;
-  fileService: FileService;
-  fb: FormBuilder;
-  apps: AppResponse[] | null = [];
+  private readonly appService = inject(AppService);
+  private readonly fileService = inject(FileService);
+  private readonly fb = inject(FormBuilder);
+  private readonly toastService = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
+
+  apps: AppResponse[] = [];
+  loading = false;
+  searchTerm = '';
   isPopupOpen = false;
   popupApp?: App;
   isEdit = false;
   modeString: string = "Create";
   today: string = new Date().toISOString().split('T')[0];
-  isUploading1 = false;
-  isUploading2 = false;
-  isUploading3 = false;
-  isUploading4 = false;
+  /** The field whose image is uploading right now. */
+  uploading: AppImageField | null = null;
 
   appForm: FormGroup = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -58,29 +69,23 @@ export class AdminApps {
   });
 
   constructor() {
-    this.auth = inject(AuthorizationService);
-    this.appService = inject(AppService);
-    this.fileService = inject(FileService);
-    this.fb = inject(FormBuilder);
-
-    this.update()
+    this.refresh();
   }
 
-  update() {
-    this.appService.getAll().subscribe({
-      next: (response) => {
-        this.apps = response.body;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
+  refresh() {
+    this.loading = true;
+    const request = this.searchTerm
+      ? this.appService.searchName(this.searchTerm.toLowerCase())
+      : this.appService.getAll();
+    request.subscribe({
+      next: response => {
+        this.apps = response.body ?? [];
+        this.loading = false;
+      },
+      error: () => this.loading = false
     });
 
-    if (this.isEdit) {
-      this.modeString = "Edit";
-    }
-    else {
-      this.modeString = "Create";
-    }
+    this.modeString = this.isEdit ? "Edit" : "Create";
   }
 
   generateSlug(name: string) {
@@ -88,42 +93,32 @@ export class AdminApps {
   }
 
   onSubmit() {
-    if (this.appForm.valid) {
-      const formValue = this.appForm.value;
-
-      const app: App = {id: 0, name: formValue.name, slogan: formValue.slogan, description: formValue.description, iconUrl: formValue.iconUrl, slug: this.generateSlug(formValue.name),
-        category: formValue.category, platforms: formValue.platforms, highlighted: formValue.highlighted, legacy: formValue.legacy, image1Url: formValue.image1Url,
-        feature1Desc: formValue.feature1Desc, image2Url: formValue.image2Url, feature2Desc: formValue.feature2Desc, image3Url: formValue.image3Url, feature3Desc: formValue.feature3Desc,
-        publishedAt: new Date(formValue.publishedAt),
-        modrinthId: formValue.modrinthId, curseforgeId: formValue.curseforgeId};
-
-      if (!this.isEdit) {
-        this.appService.create(app).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
-      else {
-        app.id = this.popupApp?.id;
-        this.appService.update(app).subscribe({
-          next: (response) => {
-            console.log("received: " + response.body);
-            this.isEdit = false;
-            this.clearForm();
-            this.update();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
+    if (!this.appForm.valid) {
+      this.appForm.markAllAsTouched();
+      return;
     }
-    else {
-      this.appForm?.markAllAsTouched();
+
+    const formValue = this.appForm.value;
+    const app: App = {id: 0, name: formValue.name, slogan: formValue.slogan, description: formValue.description, iconUrl: formValue.iconUrl, slug: this.generateSlug(formValue.name),
+      category: formValue.category, platforms: formValue.platforms, highlighted: formValue.highlighted, legacy: formValue.legacy, image1Url: formValue.image1Url,
+      feature1Desc: formValue.feature1Desc, image2Url: formValue.image2Url, feature2Desc: formValue.feature2Desc, image3Url: formValue.image3Url, feature3Desc: formValue.feature3Desc,
+      publishedAt: new Date(formValue.publishedAt),
+      modrinthId: formValue.modrinthId, curseforgeId: formValue.curseforgeId};
+
+    if (!this.isEdit) {
+      this.appService.create(app).subscribe(() => {
+        this.toastService.success('App created. It stays private until you make it visible.');
+        this.clearForm();
+        this.refresh();
+      });
+    } else {
+      app.id = this.popupApp?.id;
+      this.appService.update(app).subscribe(() => {
+        this.toastService.success('App saved.');
+        this.isEdit = false;
+        this.clearForm();
+        this.refresh();
+      });
     }
   }
 
@@ -141,7 +136,7 @@ export class AdminApps {
 
   closeModal() {
     this.isPopupOpen = false;
-    this.update();
+    this.refresh();
   }
 
   onEditApp(id: number) {
@@ -182,126 +177,46 @@ export class AdminApps {
     this.clearForm();
   }
 
-  onSearch(event: any) {
-    this.cancelEdit()
+  onSearch(term: string) {
+    this.cancelEdit();
+    this.searchTerm = term.trim();
+    this.refresh();
+  }
 
-    this.appService.searchName(event.target.value.toLowerCase()).subscribe({
-      next: (response) => {
-        this.apps = response.body;
-      }, error: (error) => {
-        console.log("error: " + error.message);
-      }
+  protected onImageSelected(event: Event, field: AppImageField) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      this.toastService.error(IMAGE_FILE_HINT);
+      input.value = '';
+      return;
+    }
+
+    this.uploading = field;
+    this.fileService.uploadImage(file).subscribe({
+      next: (response: any) => {
+        this.appForm.patchValue({ [field]: response.url });
+        this.uploading = null;
+        this.toastService.success('Image uploaded.');
+      },
+      error: () => this.uploading = null
     });
   }
 
-  protected onIconSelected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      this.isUploading1 = true;
-
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.appForm.patchValue({
-            iconUrl: uploadedUrl
-          });
-
-          this.isUploading1 = false;
-        },
-        error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
-          this.isUploading1 = false;
-        }
-      });
-    }
-  }
-
-  protected onI1Selected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      this.isUploading2 = true;
-
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.appForm.patchValue({
-            image1Url: uploadedUrl
-          });
-
-          this.isUploading2 = false;
-        },
-        error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
-          this.isUploading2 = false;
-        }
-      });
-    }
-  }
-
-  protected onI2Selected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      this.isUploading3 = true;
-
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.appForm.patchValue({
-            image2Url: uploadedUrl
-          });
-
-          this.isUploading3 = false;
-        },
-        error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
-          this.isUploading3 = false;
-        }
-      });
-    }
-  }
-
-  protected onI3Selected(event: any) {
-    const file: File = event.target.files[0];
-
-    if (file) {
-      this.isUploading4 = true;
-
-      this.fileService.uploadImage(file).subscribe({
-        next: (response: any) => {
-          const uploadedUrl = response.url;
-
-          this.appForm.patchValue({
-            image3Url: uploadedUrl
-          });
-
-          this.isUploading4 = false;
-        },
-        error: (err: any) => {
-          console.error("Upload fehlgeschlagen", err);
-          this.isUploading4 = false;
-        }
-      });
-    }
-  }
-
-  makeAllVisible() {
-    if (this.apps) {
-      this.apps.forEach(item => {
-        // unlisted entries are deliberately hidden from listings, do not publish them
-        if (item.visibility === 'PRIVATE' || !item.visibility) {
-          item.visibility = 'PUBLIC';
-          item.visible = true;
-          this.appService.update(item as any).subscribe({
-            error: (err) => console.error(err)
-          });
-        }
-      });
-    }
+  async makeAllVisible() {
+    const published = await publishPrivate<AppResponse>({
+      // apps are few and not paged: the whole list is the "page"
+      loadAll: () => this.appService.getAll().pipe(map(response => {
+        const items = response.body ?? [];
+        return {items, total: items.length};
+      })),
+      update: item => this.appService.update(item as any),
+      noun: ['app', 'apps'],
+      confirm: this.confirm,
+      toast: this.toastService,
+    });
+    if (published) this.refresh();
   }
 }
