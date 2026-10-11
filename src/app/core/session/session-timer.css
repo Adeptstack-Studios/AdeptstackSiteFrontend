@@ -1,0 +1,83 @@
+.session-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.session-timer:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.session-timer:disabled {
+  cursor: progress;
+}
+
+.clock {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.extend {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* last five minutes */
+.warn {
+  border-color: transparent;
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+/* last minute */
+.urgent {
+  border-color: transparent;
+  background: var(--danger-soft);
+  color: var(--danger);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.warn:hover,
+.urgent:hover {
+  background: var(--panel-2);
+}
+
+.spin {
+  animation: spin .8s linear infinite;
+}
+
+@keyframes pulse {
+  50% { box-shadow: 0 0 0 4px var(--danger-soft); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* phones: the colour already says it is time to extend */
+@media (max-width: 600px) {
+  .session-timer {
+    padding: 0 10px;
+  }
+
+  .extend {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urgent,
+  .spin {
+    animation: none;
+  }
+}

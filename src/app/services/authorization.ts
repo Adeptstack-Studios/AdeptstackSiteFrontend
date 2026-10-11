@@ -32,6 +32,11 @@ export class AuthorizationService {
     return this.http.get<AdminPanelResponse>(environment.verifyLogin, { context: quietRequest() });
   }
 
+  /** Trades the current, still valid token for one with a fresh lifetime. */
+  refresh(): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(environment.refresh, null);
+  }
+
   me(): Observable<User> {
     return this.http.get<User>(environment.me, { context: quietRequest() });
   }

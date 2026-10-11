@@ -117,9 +117,13 @@
 .crumbs .current {
   color: var(--text);
   font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-actions {
+  flex-shrink: 0;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -292,3 +296,10 @@
   }
 }
 
+/* phones: the countdown needs the room, the page name alone is enough */
+
+@media (max-width: 600px) {
+  .crumbs > :not(.current) {
+    display: none;
+  }
+}

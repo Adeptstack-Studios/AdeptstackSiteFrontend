@@ -8,11 +8,12 @@ import {AuthorizationService} from '../services/authorization';
 import {LocalStorageService} from '../services/local-storage-service';
 import {ThemeService} from '../core/theme/theme-service';
 import {User} from '../models/user';
+import {SessionTimer} from '../core/session/session-timer';
 
 /** The console frame: sidebar, top bar and the page below it. */
 @Component({
   selector: 'app-admin-panel',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule, CdkMenuTrigger, CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule, CdkMenuTrigger, CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, SessionTimer],
   templateUrl: './admin-panel.html',
   styleUrl: './admin-panel.css'
 })

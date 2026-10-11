@@ -4,6 +4,7 @@ export const environment = {
   verifyLogin : 'https://api.adeptstack.net/api/auth/verifyLogin',
   register : 'https://api.adeptstack.net/api/auth/register',
   me : 'https://api.adeptstack.net/api/auth/me',
+  refresh : 'https://api.adeptstack.net/api/auth/refresh',
 
   newsGet: 'https://api.adeptstack.net/api/news/get',
   newsCreate: 'https://api.adeptstack.net/api/news/create',

@@ -1,0 +1,11 @@
+@if (session.secondsLeft() !== null) {
+  <button type="button" class="session-timer" [class]="state()" (click)="extend()"
+          [disabled]="session.extending()" [attr.aria-label]="label()" [title]="label()">
+    <lucide-icon [img]="session.extending() ? icons.RefreshCw : icons.Timer" [size]="15"
+                 [class.spin]="session.extending()" aria-hidden="true"></lucide-icon>
+    <span class="clock" aria-hidden="true">{{ clock() }}</span>
+    @if (state() !== 'ok') {
+      <span class="extend" aria-hidden="true">Extend</span>
+    }
+  </button>
+}

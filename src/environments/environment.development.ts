@@ -4,6 +4,7 @@ export const environment = {
   verifyLogin : 'http://localhost:8080/api/auth/verifyLogin',
   register : 'http://localhost:8080/api/auth/register',
   me : 'http://localhost:8080/api/auth/me',
+  refresh : 'http://localhost:8080/api/auth/refresh',
 
   newsGet: 'http://localhost:8080/api/news/get',
   newsCreate: 'http://localhost:8080/api/news/create',

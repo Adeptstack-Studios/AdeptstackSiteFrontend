@@ -37,6 +37,8 @@
       </nav>
 
       <div class="topbar-actions">
+        <app-session-timer></app-session-timer>
+
         <button type="button" class="icon-btn" (click)="theme.toggle()"
                 [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
                 [title]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
