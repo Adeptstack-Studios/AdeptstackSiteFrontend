@@ -1,7 +1,7 @@
 <div class="overlay" (click)="onCloseModal()">
-  <div class="popup" (click)="$event.stopPropagation()">
+  <div class="popup" role="dialog" aria-modal="true" aria-labelledby="post-title" (click)="$event.stopPropagation()">
     <div class="popup-header">
-      <h2>{{ post?.title }}</h2>
+      <h2 id="post-title">{{ post?.title }}</h2>
       @if (appName) {
         <p class="subtitle">{{ appName }}</p>
       }
@@ -15,40 +15,24 @@
     <div class="popup-footer">
       <div class="footer-meta">
         <span class="date">{{ post?.publishedAt | date:'mediumDate' }}</span>
-        <div class="visibility-picker" role="group" aria-label="Visibility">
-          @for (option of visibilityOptions; track option.value) {
-            <button type="button"
-                    class="visibility-option"
-                    [class.active]="currentVisibility === option.value"
-                    [class.is-public]="option.value === 'PUBLIC'"
-                    [class.is-unlisted]="option.value === 'UNLISTED'"
-                    [class.is-private]="option.value === 'PRIVATE'"
-                    [disabled]="isSavingVisibility"
-                    [title]="option.hint"
-                    (click)="setVisibility(option.value)">
-              {{ option.label }}
-            </button>
-          }
-        </div>
+        <app-visibility-picker [value]="currentVisibility" [disabled]="isSavingVisibility"
+                               (changed)="setVisibility($event)"/>
       </div>
 
       <div class="actions">
-        <button class="btn btn-push" (click)="sendPush()" [disabled]="isSendingPush || !post?.visible"
+        <button type="button" class="btn" (click)="sendPush()" [disabled]="isSendingPush || !post?.visible"
                 [title]="post?.visible ? 'Send a push notification for this post' : 'Make it visible first'">
-          {{ isSendingPush ? 'Sending...' : 'Send Push' }}
+          {{ isSendingPush ? 'Sending…' : 'Send push' }}
         </button>
         @if (isNews) {
-          <button class="btn btn-newsletter" (click)="sendNewsletter()" [disabled]="isSendingNewsletter || !post?.visible"
+          <button type="button" class="btn" (click)="sendNewsletter()" [disabled]="isSendingNewsletter || !post?.visible"
                   [title]="post?.visible ? 'Send the newsletter to all subscribers' : 'Make it visible first'">
-            {{ isSendingNewsletter ? 'Sending...' : 'Send Newsletter' }}
+            {{ isSendingNewsletter ? 'Sending…' : 'Send newsletter' }}
           </button>
         }
-        <button class="btn btn-edit" (click)="edit()">Edit</button>
-        <button class="btn btn-delete" (click)="delete()">Delete</button>
+        <button type="button" class="btn btn-delete" (click)="delete()">Delete</button>
+        <button type="button" class="btn btn-edit" (click)="edit()">Edit</button>
       </div>
     </div>
   </div>
 </div>
-@if (isOpened) {
-  <app-warning (delete)="isDelete($event)"></app-warning>
-}

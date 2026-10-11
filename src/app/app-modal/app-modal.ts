@@ -1,38 +1,30 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {News} from '../models/news';
-import {Changelogs} from '../models/changelogs';
-import {NewsService} from '../services/news-service';
-import {ChangelogsService} from '../services/changelogs-service';
 import {AppService} from '../services/app-service';
 import {ToastService} from '../services/toast-service';
 import {AppResponse} from '../models/app-response';
 import {DatePipe} from '@angular/common';
 import {MarkdownComponent} from 'ngx-markdown';
-import {Warning} from '../warning/warning';
+import {ConfirmService} from '../core/confirm/confirm-service';
+import {Visibility, VisibilityPicker} from '../shared/visibility-picker/visibility-picker';
 
 @Component({
   selector: 'app-app-modal',
   imports: [
     DatePipe,
     MarkdownComponent,
-    Warning
+    VisibilityPicker
   ],
   templateUrl: './app-modal.html',
-  styleUrl: './app-modal.css',
+  styleUrl: '../shared/styles/detail-popup.css',
 })
 export class AppModal {
   @Input() app?: AppResponse;
   @Output() closeModal = new EventEmitter<void>();
   @Output() onEditApp = new EventEmitter<number>();
-  appService: AppService;
-  toastService: ToastService;
 
-  constructor() {
-    this.appService = inject(AppService);
-    this.toastService = inject(ToastService);
-  }
-
-  isOpened = false;
+  private readonly appService = inject(AppService);
+  private readonly toastService = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
   onCloseModal() {
     this.closeModal.emit();
@@ -42,20 +34,13 @@ export class AppModal {
     this.onEditApp.emit(<number>this.app?.id);
   }
 
-
-  /** Public / Unlisted / Private, set directly in the popup. */
-  readonly visibilityOptions: { value: 'PUBLIC' | 'UNLISTED' | 'PRIVATE'; label: string; hint: string }[] = [
-    { value: 'PUBLIC', label: 'Public', hint: 'Listed everywhere' },
-    { value: 'UNLISTED', label: 'Unlisted', hint: 'Only via direct link and in the app' },
-    { value: 'PRIVATE', label: 'Private', hint: 'Admins only' }
-  ];
   isSavingVisibility = false;
 
-  get currentVisibility(): 'PUBLIC' | 'UNLISTED' | 'PRIVATE' {
+  get currentVisibility(): Visibility {
     return this.app?.visibility || 'PRIVATE';
   }
 
-  setVisibility(next: 'PUBLIC' | 'UNLISTED' | 'PRIVATE') {
+  setVisibility(next: Visibility) {
     const item = this.app;
     if (!item || this.isSavingVisibility || item.visibility === next) return;
 
@@ -69,31 +54,30 @@ export class AppModal {
         this.isSavingVisibility = false;
         this.toastService.success('Visibility set to ' + next.toLowerCase() + '.');
       },
-      error: (err) => {
+      error: () => {
+        // the interceptor reported the failure, the picker shows the saved state again
         item.visibility = previous;
         item.visible = previous !== 'PRIVATE';
         this.isSavingVisibility = false;
-        this.toastService.error('Could not change the visibility.');
-        console.error(err);
       }
     });
   }
 
-  delete() {
-    this.isOpened = true;
-  }
+  async delete() {
+    const id = this.app?.id;
+    if (id === undefined) return;
 
-  isDelete(isDelete: boolean) {
-    this.isOpened = false;
+    const confirmed = await this.confirm.ask({
+      title: 'Delete this app?',
+      message: `“${this.app?.name}” and its product page will be removed. This cannot be undone.`,
+      confirmLabel: 'Delete app',
+      danger: true,
+    });
+    if (!confirmed) return;
 
-    if (isDelete) {
-      this.appService.deleteById(<number>this.app?.id).subscribe({
-        next: () => {
-          this.onCloseModal();
-        }, error: (error) => {
-          console.log("error: " + error.message);
-        }
-      });
-    }
+    this.appService.deleteById(id).subscribe(() => {
+      this.toastService.success('App deleted.');
+      this.onCloseModal();
+    });
   }
 }

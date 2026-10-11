@@ -3,22 +3,24 @@ import {Observable} from 'rxjs';
 import {Changelogs} from '../models/changelogs';
 import {News} from '../models/news';
 import {DatePipe} from '@angular/common';
-import {Warning} from '../warning/warning';
 import {NewsService} from '../services/news-service';
 import {ChangelogsService} from '../services/changelogs-service';
 import {AppService} from '../services/app-service';
 import {ToastService} from '../services/toast-service';
 import {MarkdownComponent} from 'ngx-markdown';
+import {ConfirmService} from '../core/confirm/confirm-service';
+import {Visibility, VisibilityPicker} from '../shared/visibility-picker/visibility-picker';
+import {quietRequest} from '../core/errors/http-errors';
 
 @Component({
   selector: 'app-post-modal',
   imports: [
     DatePipe,
-    Warning,
-    MarkdownComponent
+    MarkdownComponent,
+    VisibilityPicker
   ],
   templateUrl: './post-modal.html',
-  styleUrl: './post-modal.css',
+  styleUrl: '../shared/styles/detail-popup.css',
 })
 export class PostModal implements OnInit, OnChanges {
 
@@ -26,19 +28,14 @@ export class PostModal implements OnInit, OnChanges {
   @Input() isNews: boolean = true;
   @Output() closeModal = new EventEmitter<void>();
   @Output() onEditPost = new EventEmitter<number>();
-  newsService: NewsService;
-  changelogsService: ChangelogsService;
-  appService: AppService;
-  toastService: ToastService;
+
+  private readonly newsService = inject(NewsService);
+  private readonly changelogsService = inject(ChangelogsService);
+  private readonly appService = inject(AppService);
+  private readonly toastService = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
   appName: string = '';
-
-  constructor() {
-    this.newsService = inject(NewsService);
-    this.changelogsService = inject(ChangelogsService);
-    this.appService = inject(AppService);
-    this.toastService = inject(ToastService);
-  }
 
   ngOnInit() {
     this.loadAppName();
@@ -52,22 +49,16 @@ export class PostModal implements OnInit, OnChanges {
 
   private loadAppName() {
     if (!this.isNews && this.post && 'appId' in this.post && this.post.appId) {
-      this.appService.getById(this.post.appId).subscribe({
-        next: (response) => {
-          if (response.body) {
-            this.appName = response.body.name || '';
-          }
-        },
-        error: () => {
-          this.appName = '';
-        }
+      // only a subtitle: if the app is gone, the popup simply shows none
+      this.appService.getById(this.post.appId, quietRequest()).subscribe({
+        next: (response) => this.appName = response.body?.name || '',
+        error: () => this.appName = ''
       });
     } else {
       this.appName = '';
     }
   }
 
-  isOpened = false;
   isSendingPush = false;
   isSendingNewsletter = false;
 
@@ -85,10 +76,7 @@ export class PostModal implements OnInit, OnChanges {
         this.toastService.success(response.body || 'Push sent.');
         this.isSendingPush = false;
       },
-      error: (err) => {
-        this.toastService.error(err.error?.message || err.error || 'Sending the push failed.');
-        this.isSendingPush = false;
-      }
+      error: () => this.isSendingPush = false
     });
   }
 
@@ -101,10 +89,7 @@ export class PostModal implements OnInit, OnChanges {
         this.toastService.success(response.body || 'Newsletter sent.');
         this.isSendingNewsletter = false;
       },
-      error: (err) => {
-        this.toastService.error(err.error?.message || err.error || 'Sending the newsletter failed.');
-        this.isSendingNewsletter = false;
-      }
+      error: () => this.isSendingNewsletter = false
     });
   }
 
@@ -116,20 +101,13 @@ export class PostModal implements OnInit, OnChanges {
     this.onEditPost.emit(<number>this.post?.id);
   }
 
-
-  /** Public / Unlisted / Private, set directly in the popup. */
-  readonly visibilityOptions: { value: 'PUBLIC' | 'UNLISTED' | 'PRIVATE'; label: string; hint: string }[] = [
-    { value: 'PUBLIC', label: 'Public', hint: 'Listed everywhere' },
-    { value: 'UNLISTED', label: 'Unlisted', hint: 'Only via direct link and in the app' },
-    { value: 'PRIVATE', label: 'Private', hint: 'Admins only' }
-  ];
   isSavingVisibility = false;
 
-  get currentVisibility(): 'PUBLIC' | 'UNLISTED' | 'PRIVATE' {
+  get currentVisibility(): Visibility {
     return this.post?.visibility || 'PRIVATE';
   }
 
-  setVisibility(next: 'PUBLIC' | 'UNLISTED' | 'PRIVATE') {
+  setVisibility(next: Visibility) {
     const item = this.post;
     if (!item || this.isSavingVisibility || item.visibility === next) return;
 
@@ -148,42 +126,35 @@ export class PostModal implements OnInit, OnChanges {
         this.isSavingVisibility = false;
         this.toastService.success('Visibility set to ' + next.toLowerCase() + '.');
       },
-      error: (err: unknown) => {
+      error: () => {
+        // the interceptor reported the failure, the picker shows the saved state again
         item.visibility = previous;
         item.visible = previous !== 'PRIVATE';
         this.isSavingVisibility = false;
-        this.toastService.error('Could not change the visibility.');
-        console.error(err);
       }
     });
   }
 
-  delete() {
-    this.isOpened = true;
-  }
+  async delete() {
+    const id = this.post?.id;
+    if (id === undefined) return;
 
-  isDelete(isDelete: boolean) {
-    this.isOpened = false;
+    const kind = this.isNews ? 'post' : 'changelog';
+    const confirmed = await this.confirm.ask({
+      title: `Delete this ${kind}?`,
+      message: `“${this.post?.title}” will be removed from the website and the app. This cannot be undone.`,
+      confirmLabel: `Delete ${kind}`,
+      danger: true,
+    });
+    if (!confirmed) return;
 
-    if (isDelete) {
-      if (this.isNews) {
-        this.newsService.deleteById(<number>this.post?.id).subscribe({
-          next: () => {
-            this.onCloseModal();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
-      else {
-        this.changelogsService.deleteById(<number>this.post?.id).subscribe({
-          next: () => {
-            this.onCloseModal();
-          }, error: (error) => {
-            console.log("error: " + error.message);
-          }
-        });
-      }
-    }
+    const request: Observable<unknown> = this.isNews
+      ? this.newsService.deleteById(id)
+      : this.changelogsService.deleteById(id);
+
+    request.subscribe(() => {
+      this.toastService.success(this.isNews ? 'Post deleted.' : 'Changelog deleted.');
+      this.onCloseModal();
+    });
   }
 }
