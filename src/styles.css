@@ -2,6 +2,8 @@
 @import '@fontsource-variable/geist-mono';
 /* positions the CDK menus and dialogs */
 @import '@angular/cdk/overlay-prebuilt.css';
+/* buttons, cards, tables and chips of the console pages */
+@import './styles/console.css';
 
 /*
  * Design tokens. Light values live on :root, dark values are the same tokens again.
