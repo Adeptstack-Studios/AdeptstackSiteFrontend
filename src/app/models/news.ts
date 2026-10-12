@@ -11,4 +11,8 @@ export class News {
   publishedAt?: Date;
   visible?: boolean;
   visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
+  /** The app this post is about, null for none. Sent on save to link or unlink. */
+  appId?: number | null;
+  appName?: string | null;
+  appSlug?: string | null;
 }

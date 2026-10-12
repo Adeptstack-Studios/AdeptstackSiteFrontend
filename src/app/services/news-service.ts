@@ -8,6 +8,10 @@ import {Facet, Page, toHttpParams, toPage} from '../models/listing';
 /** Filters for the news listing. Leave page and size out to get every match. */
 export interface NewsListQuery {
   category?: string;
+  /** linked app, id or slug */
+  app?: number | string;
+  /** PUBLIC, UNLISTED or PRIVATE */
+  visibility?: string;
   q?: string;
   /** e.g. "readingTime,desc" */
   sort?: string;
@@ -58,7 +62,7 @@ export class NewsService {
   /** Filtered, sorted and paged by the backend. As admin this includes private posts. */
   list(query: NewsListQuery): Observable<Page<News>> {
     const params = toHttpParams({
-      category: query.category, q: query.q, sort: query.sort,
+      category: query.category, app: query.app, visibility: query.visibility, q: query.q, sort: query.sort,
       page: query.page !== undefined ? query.page - 1 : undefined, size: query.size,
     });
     return this.http.get<News[]>(environment.newsGet, { observe: 'response', params }).pipe(map(toPage));

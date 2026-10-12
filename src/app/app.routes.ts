@@ -84,11 +84,30 @@ export const routes: Routes = [
         ]
       },
       {
-        path: 'news',
-        loadComponent: () => import('./admin-news/admin-news').then(m => m.AdminNews),
-        title: 'Blog' + TITLE, data: { label: 'Blog' }
+        path: 'blog',
+        data: { label: 'Blog' },
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/blog/post-list/post-list').then(m => m.PostList),
+            title: 'Blog' + TITLE
+          },
+          {
+            path: 'new',
+            loadComponent: () => import('./features/blog/post-editor/post-editor').then(m => m.PostEditor),
+            canDeactivate: [unsavedChangesGuard],
+            title: 'New post' + TITLE, data: { label: 'New post' }
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./features/blog/post-editor/post-editor').then(m => m.PostEditor),
+            canDeactivate: [unsavedChangesGuard],
+            title: 'Edit post' + TITLE, data: { label: 'Edit post' }
+          },
+        ]
       },
-      // releases live with their app now
+      // older addresses: the blog moved, releases live with their app now
+      { path: 'news', redirectTo: 'blog' },
       { path: 'changelogs', redirectTo: 'apps' },
     ]
   },

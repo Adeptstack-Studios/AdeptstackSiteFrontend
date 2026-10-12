@@ -15,6 +15,7 @@ interface AttentionItem {
   title: string;
   detail: string;
   link: string[];
+  query?: Record<string, string>;
 }
 
 const RANGES = [7, 30, 90];
@@ -56,7 +57,8 @@ export class Overview {
       kind: 'posts',
       title: `${overview.draftPosts} blog ${overview.draftPosts === 1 ? 'post is' : 'posts are'} still private`,
       detail: 'Publish or delete them on the blog page',
-      link: ['/news'],
+      link: ['/blog'],
+      query: {visibility: 'PRIVATE'},
     }] : [];
     const listings: AttentionItem[] = apps
       .filter(app => checklistDone(app) < app.checklist.length)

@@ -1,0 +1,140 @@
+<div class="c-scroll">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <header class="c-editor-bar">
+      <a class="c-btn c-editor-back" routerLink="/blog" aria-label="Back to the blog">
+        <lucide-icon [img]="icons.ArrowLeft" [size]="17" aria-hidden="true"></lucide-icon>
+      </a>
+      <div class="c-editor-title">
+        <h1>{{ isNew() ? 'New post' : 'Edit post' }}</h1>
+        <p class="c-sub">
+          Blog
+          @if (stored(); as post) {
+            · {{ post.visibility === 'PRIVATE' ? 'draft' : post.visibility?.toLowerCase() }}
+          }
+          @if (draftStatus()) {
+            · {{ draftStatus() }}
+          }
+        </p>
+      </div>
+      <div class="c-actions">
+        @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
+          <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked()" (click)="saveAsDraft()">Save draft</button>
+        }
+        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || blocked()"
+                [title]="blocked() ? 'Fix the points under “Before you publish” first' : ''">
+          {{ saving() ? 'Saving…' : primaryLabel() }}
+        </button>
+      </div>
+    </header>
+
+    @if (draft.restorable(); as kept) {
+      <div class="c-editor-restore" role="status">
+        <lucide-icon [img]="icons.CircleAlert" [size]="17" aria-hidden="true"></lucide-icon>
+        <span>Unsaved changes from {{ draftAge(kept.savedAt) }} were kept in this browser.</span>
+        <button type="button" class="c-btn c-btn-sm" (click)="restoreDraft()">Restore them</button>
+        <button type="button" class="c-link" (click)="draft.discard()">Discard</button>
+      </div>
+    }
+
+    @if (ready()) {
+      <div class="c-editor-layout">
+        <div class="c-editor-main">
+          <section class="c-card" aria-labelledby="post-heading">
+            <div class="c-card-head">
+              <h2 id="post-heading">Post</h2>
+              @if (websiteUrl(); as url) {
+                @if (isLive()) {
+                  <a class="c-link site-link" [href]="url" target="_blank" rel="noopener">
+                    View on the website <lucide-icon [img]="icons.ArrowUpRight" [size]="14" aria-hidden="true"></lucide-icon>
+                  </a>
+                }
+              }
+            </div>
+            <div class="fields-2">
+              <div>
+                <label class="c-label" for="title">Title</label>
+                <input id="title" class="c-input" formControlName="title">
+              </div>
+              <div>
+                <label class="c-label" for="slug">Address</label>
+                <div class="slug">
+                  <span class="mono c-muted">/blog/</span>
+                  <input id="slug" class="c-input mono" formControlName="slug" spellcheck="false"
+                         placeholder="made from the title">
+                </div>
+                @if (!isNew() && form.controls.slug.dirty) {
+                  <p class="c-hint">Links to the old address stop working.</p>
+                }
+              </div>
+            </div>
+            <div class="field">
+              <label class="c-label" for="description">Summary</label>
+              <input id="description" class="c-input" formControlName="description"
+                     placeholder="One or two sentences for the blog list and link previews">
+            </div>
+            <div class="fields-2 field">
+              <div>
+                <label class="c-label" for="category">Category</label>
+                <input id="category" class="c-input" formControlName="category" list="categories"
+                       placeholder="e.g. Release, Tutorial">
+                <datalist id="categories">
+                  @for (category of categories(); track category.name) {
+                    <option [value]="category.name">{{ category.count }} posts</option>
+                  }
+                </datalist>
+              </div>
+              <div>
+                <label class="c-label" for="appId">About an app <span class="c-muted">(optional)</span></label>
+                <select id="appId" class="c-input" formControlName="appId">
+                  <option value="">No app, a general post</option>
+                  @for (app of apps(); track app.id) {
+                    <option [value]="app.id">{{ app.name }}</option>
+                  }
+                </select>
+                <p class="c-hint">Linked posts show up on the app's dashboard.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="c-card c-card-flush" aria-labelledby="content-heading">
+            <div class="c-card-head">
+              <h2 id="content-heading">Text</h2>
+              <p class="c-sub">Markdown · preview on the right</p>
+            </div>
+            <app-markdown-editor [control]="form.controls.content" label="Post text in Markdown"
+                                 placeholder="## A heading&#10;&#10;The text of the post …"
+                                 style="--editor-height: 520px"></app-markdown-editor>
+          </section>
+        </div>
+
+        <aside class="c-editor-side">
+          <app-publishing-card [visibility]="form.controls.visibility" [push]="form.controls.push"
+                               [publishedAt]="form.controls.publishedAt" [live]="isLive()" dateLabel="Publish date"
+                               [pushPreview]="'“🚀 ' + (form.controls.title.value || '…') + ' 🔥”'">
+          </app-publishing-card>
+
+          <app-checks-card [checks]="checks()"></app-checks-card>
+
+          <app-cover-card [control]="form.controls.imageUrl"
+                          hint="Shown above the post, in the blog list and in link previews."></app-cover-card>
+
+          @if (stored()) {
+            <section class="c-card" aria-labelledby="delete-heading">
+              <div class="c-card-head"><h2 id="delete-heading">Delete</h2></div>
+              <p class="c-hint">Removes this post from the website and the app.</p>
+              <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deletePost()">
+                <lucide-icon [img]="icons.Trash2" [size]="15" aria-hidden="true"></lucide-icon>
+                Delete post
+              </button>
+            </section>
+          }
+        </aside>
+      </div>
+    } @else {
+      <div class="c-editor-layout">
+        <div class="c-editor-main"><div class="c-card"><div class="c-skeleton c-editor-loading"></div></div></div>
+        <aside class="c-editor-side"><div class="c-card"><div class="c-skeleton c-editor-loading"></div></div></aside>
+      </div>
+    }
+  </form>
+</div>

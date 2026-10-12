@@ -79,7 +79,7 @@
           <ul class="list">
             @for (item of shownAttention(); track $index) {
               <li>
-                <a class="row" [routerLink]="item.link">
+                <a class="row" [routerLink]="item.link" [queryParams]="item.query ?? {}">
                   <span class="badge" [class]="item.kind">
                     <lucide-icon [img]="item.kind === 'draft' ? icons.FilePen : item.kind === 'posts' ? icons.FileText : icons.Store"
                                  [size]="16" aria-hidden="true"></lucide-icon>

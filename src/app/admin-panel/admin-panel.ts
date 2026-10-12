@@ -47,7 +47,7 @@ export class AdminPanel {
   protected readonly nav = [
     {path: '/', label: 'Overview', icon: House, exact: true},
     {path: '/apps', label: 'All apps', icon: LayoutGrid, exact: true},
-    {path: '/news', label: 'Blog', icon: FileText, exact: false},
+    {path: '/blog', label: 'Blog', icon: FileText, exact: false},
   ];
   protected readonly icons = {
     ArrowUpRight, ChevronDown, ChevronLeft, ChevronsUpDown, Layers, LayoutDashboard, LogOut, Menu, Monitor, Moon, Store, Sun
