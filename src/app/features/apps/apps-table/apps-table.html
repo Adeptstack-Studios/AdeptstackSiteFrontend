@@ -1,0 +1,37 @@
+<div class="c-table-wrap">
+  <table class="c-table">
+    <thead>
+      <tr>
+        <th scope="col">App</th>
+        <th scope="col">Status</th>
+        <th scope="col">Latest</th>
+        <th scope="col">Beta</th>
+        <th scope="col" class="num">Releases</th>
+        <th scope="col" class="num">Mod downloads</th>
+        <th scope="col">Last release</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (app of apps(); track app.id) {
+        @let channels = mainAndBeta(app);
+        <tr class="c-row-link" (click)="open(app, $event)">
+          <td>
+            <div class="app-cell">
+              <app-tile [name]="app.name" [iconUrl]="app.iconUrl"></app-tile>
+              <div>
+                <a class="app-name" [routerLink]="['/apps', app.slug]">{{ app.name }}</a>
+                <div class="app-sub">{{ (app.platforms | platforms) || app.category || '–' }}</div>
+              </div>
+            </div>
+          </td>
+          <td><app-visibility-status [value]="app.visibility"></app-visibility-status></td>
+          <td class="c-version">{{ channels.main?.latest?.version ?? '–' }}</td>
+          <td class="c-version beta-version">{{ channels.beta?.latest?.version ?? '–' }}</td>
+          <td class="num">{{ app.releaseCount }}</td>
+          <td class="num">{{ app.downloadsFormatted ?? '–' }}</td>
+          <td class="c-muted">{{ app.lastReleaseAt | relativeDay }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

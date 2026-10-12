@@ -1,0 +1,42 @@
+<div class="c-scroll">
+  <div class="c-page">
+    <header class="c-page-head">
+      <div>
+        <h1>All apps</h1>
+        <p class="c-sub">
+          @if (apps(); as list) {
+            {{ list.length }} {{ list.length === 1 ? 'app' : 'apps' }}, the one with the latest release first
+          } @else {
+            Loading apps…
+          }
+        </p>
+      </div>
+      <div class="c-actions">
+        <label class="search">
+          <lucide-icon [img]="icons.Search" [size]="15" aria-hidden="true"></lucide-icon>
+          <span class="sr-only">Search apps</span>
+          <input class="c-input" type="search" placeholder="Search apps" [value]="search()"
+                 (input)="search.set($any($event.target).value)">
+        </label>
+        <a class="c-btn c-btn-primary" routerLink="/apps/new">
+          <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
+          Create app
+        </a>
+      </div>
+    </header>
+
+    <section class="c-card c-card-flush" aria-label="Apps">
+      @if (apps() === null) {
+        @for (row of [1, 2, 3, 4]; track row) {
+          <div class="c-skeleton skeleton-row"></div>
+        }
+      } @else if (shown().length) {
+        <app-apps-table [apps]="shown()"></app-apps-table>
+      } @else if (search()) {
+        <p class="c-empty">No app matches “{{ search() }}”.</p>
+      } @else {
+        <p class="c-empty">No apps yet. <a routerLink="/apps/new">Create the first one</a>.</p>
+      }
+    </section>
+  </div>
+</div>

@@ -1,0 +1,137 @@
+<div class="c-scroll">
+  <div class="c-page">
+    <header class="c-page-head">
+      <div>
+        <h1>{{ greeting }}{{ username() ? ', ' + username() : '' }}</h1>
+        <p class="c-sub">Here is how adeptstack.net and your apps are doing.</p>
+      </div>
+      <div class="c-actions">
+        <div class="c-seg" role="group" aria-label="Time range">
+          @for (days of ranges; track days) {
+            <button type="button" [attr.aria-pressed]="range() === days" (click)="setRange(days)">{{ days }}d</button>
+          }
+        </div>
+      </div>
+    </header>
+
+    <section class="c-grid-4" aria-label="Key figures">
+      @if (overview(); as o) {
+        <div class="c-card" style="--kpi: var(--accent)">
+          <div class="c-kpi-label">Public apps</div>
+          <div class="c-kpi-value">{{ o.publicApps }}</div>
+          <div class="c-kpi-note">{{ o.apps }} in total, {{ o.apps - o.publicApps }} unlisted or private</div>
+        </div>
+        <div class="c-card" style="--kpi: var(--good)">
+          <div class="c-kpi-label">Releases · last {{ o.rangeDays }} days</div>
+          <div class="c-kpi-value">{{ o.releasesInRange }}</div>
+          <div class="c-kpi-note">{{ o.releases }} releases in total</div>
+        </div>
+        <div class="c-card" style="--kpi: var(--beta)">
+          <div class="c-kpi-label">Blog posts</div>
+          <div class="c-kpi-value">{{ o.posts }}</div>
+          <div class="c-kpi-note">{{ o.draftPosts }} still private</div>
+        </div>
+        <div class="c-card" style="--kpi: #A78BFA">
+          <div class="c-kpi-label">Mod downloads</div>
+          <div class="c-kpi-value">{{ o.modDownloadsFormatted ?? '–' }}</div>
+          <div class="c-kpi-note">Modrinth + CurseForge, refreshed every 3 hours</div>
+        </div>
+      } @else {
+        @for (card of [1, 2, 3, 4]; track card) {
+          <div class="c-card"><div class="c-skeleton kpi-skeleton"></div></div>
+        }
+      }
+    </section>
+    <p class="stats-note">Page views, own downloads and store clicks follow with the statistics.</p>
+
+    <section class="c-card c-card-flush" aria-labelledby="apps-heading">
+      <div class="c-card-head">
+        <h2 id="apps-heading">Your apps</h2>
+        <p class="c-sub">Latest release first</p>
+        <div class="c-actions">
+          @if (apps(); as list) {
+            <a class="c-link" routerLink="/apps">View all {{ list.length }}</a>
+          }
+          <a class="c-btn c-btn-primary c-btn-sm" routerLink="/apps/new">
+            <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
+            Create app
+          </a>
+        </div>
+      </div>
+      @if (apps() === null) {
+        <div class="c-skeleton table-skeleton"></div>
+      } @else if (shownApps().length) {
+        <app-apps-table [apps]="shownApps()"></app-apps-table>
+      } @else {
+        <p class="c-empty">No apps yet.</p>
+      }
+    </section>
+
+    <div class="c-grid-2">
+      <section class="c-card" aria-labelledby="attention-heading">
+        <div class="c-card-head">
+          <h2 id="attention-heading">Needs your attention</h2>
+          @if (attention().length) {
+            <span class="count">{{ attention().length }}</span>
+          }
+        </div>
+        @if (overview() && apps()) {
+          <ul class="list">
+            @for (item of shownAttention(); track $index) {
+              <li>
+                <a class="row" [routerLink]="item.link">
+                  <span class="badge" [class]="item.kind">
+                    <lucide-icon [img]="item.kind === 'draft' ? icons.FilePen : item.kind === 'posts' ? icons.FileText : icons.Store"
+                                 [size]="16" aria-hidden="true"></lucide-icon>
+                  </span>
+                  <span class="row-text">
+                    <span class="row-title">{{ item.title }}</span>
+                    <span class="row-detail">{{ item.detail }}</span>
+                  </span>
+                  <lucide-icon class="chevron" [img]="icons.ChevronRight" [size]="16" aria-hidden="true"></lucide-icon>
+                </a>
+              </li>
+            } @empty {
+              <li class="c-empty">Nothing waiting. Every release is out and every store listing is complete.</li>
+            }
+          </ul>
+          @if (attention().length > shownAttention().length) {
+            <p class="more">and {{ attention().length - shownAttention().length }} more</p>
+          }
+        } @else {
+          <div class="c-skeleton list-skeleton"></div>
+        }
+      </section>
+
+      <section class="c-card" aria-labelledby="latest-heading">
+        <div class="c-card-head">
+          <h2 id="latest-heading">Latest releases</h2>
+          <p class="c-sub">Public and unlisted</p>
+        </div>
+        @if (overview(); as o) {
+          <ul class="list">
+            @for (release of o.latestReleases; track release.id) {
+              <li>
+                <a class="row" [routerLink]="['/apps', release.appSlug, 'releases', release.id]">
+                  <app-tile [name]="release.appName ?? ''" [iconUrl]="iconOf(release.appId)" [size]="30"></app-tile>
+                  <span class="row-text">
+                    <span class="row-title">{{ release.appName }} <span class="c-version">{{ release.version }}</span></span>
+                    <span class="row-detail">
+                      <app-visibility-status [value]="release.visibility"></app-visibility-status>
+                      · {{ release.publishedAt | relativeDay }}
+                    </span>
+                  </span>
+                  <app-channel-chip [name]="release.channel"></app-channel-chip>
+                </a>
+              </li>
+            } @empty {
+              <li class="c-empty">Nothing published yet.</li>
+            }
+          </ul>
+        } @else {
+          <div class="c-skeleton list-skeleton"></div>
+        }
+      </section>
+    </div>
+  </div>
+</div>
