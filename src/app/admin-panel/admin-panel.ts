@@ -4,8 +4,8 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, ChevronDown, ChevronLeft, ChevronsUpDown, FileText, House, Layers, LayoutDashboard, LayoutGrid,
-  LogOut, LucideAngularModule, Menu, Monitor, Moon, Store, Sun
+  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, FileText, House, Layers, LayoutDashboard,
+  LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun
 } from 'lucide-angular';
 import {AuthorizationService} from '../services/authorization';
 import {LocalStorageService} from '../services/local-storage-service';
@@ -48,9 +48,13 @@ export class AdminPanel {
     {path: '/', label: 'Overview', icon: House, exact: true},
     {path: '/apps', label: 'All apps', icon: LayoutGrid, exact: true},
     {path: '/blog', label: 'Blog', icon: FileText, exact: false},
+    {path: '/stats', label: 'Statistics', icon: ChartLine, exact: false},
+    {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
+    {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
   ];
   protected readonly icons = {
-    ArrowUpRight, ChevronDown, ChevronLeft, ChevronsUpDown, Layers, LayoutDashboard, LogOut, Menu, Monitor, Moon, Store, Sun
+    ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Layers, LayoutDashboard, LogOut, Menu,
+    Monitor, Moon, Store, Sun
   };
   protected readonly checklistDone = checklistDone;
 

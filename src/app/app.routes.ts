@@ -79,6 +79,16 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/apps/app-editor/app-editor').then(m => m.AppEditor),
                 title: 'Store listing' + TITLE, data: { label: 'Store listing' }
               },
+              {
+                path: 'stats',
+                loadComponent: () => import('./features/stats/app-stats-page').then(m => m.AppStatsPage),
+                title: 'Statistics' + TITLE, data: { label: 'Statistics' }
+              },
+              {
+                path: 'notifications',
+                loadComponent: () => import('./features/notifications/notifications-page').then(m => m.NotificationsPage),
+                title: 'Notifications' + TITLE, data: { label: 'Notifications' }
+              },
             ]
           },
         ]
@@ -105,6 +115,21 @@ export const routes: Routes = [
             title: 'Edit post' + TITLE, data: { label: 'Edit post' }
           },
         ]
+      },
+      {
+        path: 'stats',
+        loadComponent: () => import('./features/stats/stats-page').then(m => m.StatsPage),
+        title: 'Statistics' + TITLE, data: { label: 'Statistics' }
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications-page').then(m => m.NotificationsPage),
+        title: 'Notifications' + TITLE, data: { label: 'Notifications' }
+      },
+      {
+        path: 'newsletter',
+        loadComponent: () => import('./features/newsletter/newsletter-page').then(m => m.NewsletterPage),
+        title: 'Newsletter' + TITLE, data: { label: 'Newsletter' }
       },
       // older addresses: the blog moved, releases live with their app now
       { path: 'news', redirectTo: 'blog' },

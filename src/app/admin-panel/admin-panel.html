@@ -49,6 +49,16 @@
             </span>
           }
         </a>
+        <a class="nav-link" [routerLink]="['/apps', slug, 'stats']" routerLinkActive="active"
+           #appStats="routerLinkActive" [attr.aria-current]="appStats.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.ChartLine" [size]="17" aria-hidden="true"></lucide-icon>
+          Statistics
+        </a>
+        <a class="nav-link" [routerLink]="['/apps', slug, 'notifications']" routerLinkActive="active"
+           #appPushes="routerLinkActive" [attr.aria-current]="appPushes.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.Bell" [size]="17" aria-hidden="true"></lucide-icon>
+          Notifications
+        </a>
       </nav>
 
       <a class="site-link" [href]="'https://adeptstack.net/products/' + slug" target="_blank" rel="noopener">
