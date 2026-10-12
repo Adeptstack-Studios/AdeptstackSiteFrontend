@@ -1,33 +1,43 @@
 import {Component, computed, effect, inject, signal, untracked} from '@angular/core';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
-import {NgTemplateOutlet} from '@angular/common';
-import {map} from 'rxjs';
-import {ArrowLeft, Check, CircleAlert, ImageUp, LucideAngularModule, Trash2} from 'lucide-angular';
+import {HttpEventType} from '@angular/common/http';
+import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
+import {concatMap, from, map} from 'rxjs';
+import {
+  ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, LucideAngularModule,
+  Trash2, X
+} from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
 import {ConfirmService} from '../../../core/confirm/confirm-service';
 import {AppService} from '../../../services/app-service';
 import {FileService} from '../../../services/file-service';
 import {ToastService} from '../../../services/toast-service';
-import {App} from '../../../models/app';
+import {App, AppImage} from '../../../models/app';
 import {AppResponse} from '../../../models/app-response';
 import {checklistDone} from '../../../models/console';
 import {Visibility, VisibilityPicker} from '../../../shared/visibility-picker/visibility-picker';
-import {IMAGE_FILE_HINT, isImageFile} from '../../../shared/listing/upload-files';
+import {IMAGE_FILE_HINT, isImageFile, isVideoFile, VIDEO_FILE_HINT} from '../../../shared/listing/upload-files';
 import {AppTile} from '../../../shared/ui/app-tile';
 
-type ImageField = 'iconUrl' | 'image1Url' | 'image2Url' | 'image3Url';
+/** One screenshot in the form; textOpen only steers the editor and is never saved. */
+type ScreenshotGroup = FormGroup<{
+  url: FormControl<string>;
+  text: FormControl<string>;
+  textOpen: FormControl<boolean>;
+}>;
 
 /**
  * The store listing of an app (/apps/:slug/listing) and the form for a new one (/apps/new).
- * Phase 2 adds the preview as on the website; until then this is the plain form.
+ * Screenshots form the gallery on the product page; one with a text is also a feature there.
  */
 @Component({
   selector: 'app-app-editor',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, LucideAngularModule, VisibilityPicker, AppTile],
+  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
+    VisibilityPicker, AppTile],
   templateUrl: './app-editor.html',
-  styleUrl: './app-editor.css'
+  styleUrls: ['./app-editor.css', './app-media.css']
 })
 export class AppEditor {
   private readonly apps = inject(AppService);
@@ -37,16 +47,21 @@ export class AppEditor {
   private readonly router = inject(Router);
   protected readonly context = inject(AppContext);
 
-  protected readonly icons = {ArrowLeft, Check, CircleAlert, ImageUp, Trash2};
+  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, Trash2, X};
   protected readonly checklistDone = checklistDone;
-  protected readonly features = [1, 2, 3] as const;
 
   /** null while creating a new app */
   protected readonly stored = signal<AppResponse | null>(null);
   protected readonly ready = signal(false);
   protected readonly saving = signal(false);
-  protected readonly uploading = signal<ImageField | null>(null);
+  protected readonly uploadingIcon = signal(false);
+  /** e.g. {done: 1, total: 4} while screenshots upload one after another */
+  protected readonly screenshotUpload = signal<{ done: number; total: number } | null>(null);
+  /** 0–100 while the video uploads */
+  protected readonly videoProgress = signal<number | null>(null);
   protected readonly isNew = computed(() => !this.context.slug());
+  protected readonly busy = computed(() =>
+    this.uploadingIcon() || this.screenshotUpload() !== null || this.videoProgress() !== null);
   /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
   private slugFollowsName = true;
 
@@ -58,12 +73,8 @@ export class AppEditor {
     category: new FormControl('', {nonNullable: true, validators: Validators.required}),
     platforms: new FormControl('', {nonNullable: true, validators: Validators.required}),
     iconUrl: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    image1Url: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    feature1Desc: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    image2Url: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    feature2Desc: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    image3Url: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    feature3Desc: new FormControl('', {nonNullable: true, validators: Validators.required}),
+    images: new FormArray<ScreenshotGroup>([]),
+    videoUrl: new FormControl('', {nonNullable: true}),
     modrinthId: new FormControl('', {nonNullable: true}),
     curseforgeId: new FormControl('', {nonNullable: true}),
     highlighted: new FormControl(false, {nonNullable: true}),
@@ -71,6 +82,10 @@ export class AppEditor {
     publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
     visibility: new FormControl<Visibility>('PRIVATE', {nonNullable: true}),
   });
+
+  protected get screenshots() {
+    return this.form.controls.images;
+  }
 
   constructor() {
     effect(() => {
@@ -98,47 +113,128 @@ export class AppEditor {
       this.form.patchValue({
         name: app.name ?? '', slug: app.slug ?? '', slogan: app.slogan ?? '', description: app.description ?? '',
         category: app.category ?? '', platforms: app.platforms ?? '', iconUrl: app.iconUrl ?? '',
-        image1Url: app.image1Url ?? '', feature1Desc: app.feature1Desc ?? '',
-        image2Url: app.image2Url ?? '', feature2Desc: app.feature2Desc ?? '',
-        image3Url: app.image3Url ?? '', feature3Desc: app.feature3Desc ?? '',
+        videoUrl: app.videoUrl ?? '',
         modrinthId: app.modrinthId ?? '', curseforgeId: app.curseforgeId ?? '',
         highlighted: !!app.highlighted, legacy: !!app.legacy,
         publishedAt: app.publishedAt ? String(app.publishedAt).substring(0, 10) : today(),
         visibility: (app.visibility ?? 'PRIVATE') as Visibility,
       });
+      this.screenshots.clear();
+      (app.images ?? []).forEach(image => this.screenshots.push(screenshotGroup(image)));
       this.form.markAsPristine();
       this.ready.set(true);
     });
   }
 
-  protected imageControl(field: ImageField) {
-    return this.form.controls[field];
-  }
+  // icon
 
-  protected featureText(index: 1 | 2 | 3) {
-    return this.form.controls[`feature${index}Desc`];
-  }
-
-  protected onImageSelected(event: Event, field: ImageField) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
+  protected onIconSelected(event: Event) {
+    const file = takeFile(event);
     if (!file) return;
     if (!isImageFile(file)) {
       this.toast.error(IMAGE_FILE_HINT);
       return;
     }
-    this.uploading.set(field);
+    this.uploadingIcon.set(true);
     this.files.uploadImage(file).subscribe({
       next: response => {
-        this.form.controls[field].setValue(response.url);
+        this.form.controls.iconUrl.setValue(response.url);
         this.form.markAsDirty();
-        this.uploading.set(null);
-        this.toast.success('Image uploaded.');
+        this.uploadingIcon.set(false);
       },
-      error: () => this.uploading.set(null),
+      error: () => this.uploadingIcon.set(false),
     });
   }
+
+  // screenshots
+
+  /** Several files at once; they are added in the order they were chosen. */
+  protected onScreenshotsSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const chosen = [...(input.files ?? [])];
+    input.value = '';
+    const images = chosen.filter(isImageFile);
+    if (images.length < chosen.length) this.toast.error(`${chosen.length - images.length} skipped. ${IMAGE_FILE_HINT}`);
+    if (!images.length) return;
+
+    this.screenshotUpload.set({done: 0, total: images.length});
+    from(images).pipe(concatMap(file => this.files.uploadImage(file))).subscribe({
+      next: response => {
+        this.screenshots.push(screenshotGroup({url: response.url, text: null}));
+        this.form.markAsDirty();
+        this.screenshotUpload.update(state => state && {...state, done: state.done + 1});
+      },
+      error: () => this.screenshotUpload.set(null),
+      complete: () => {
+        const count = images.length;
+        this.screenshotUpload.set(null);
+        this.toast.success(count === 1 ? 'Screenshot added.' : `${count} screenshots added.`);
+      },
+    });
+  }
+
+  protected dropScreenshot(event: CdkDragDrop<unknown>) {
+    this.moveScreenshot(event.previousIndex, event.currentIndex);
+  }
+
+  /** The arrow buttons do the same as dragging, for the keyboard. */
+  protected moveScreenshot(from: number, to: number) {
+    if (from === to || to < 0 || to >= this.screenshots.length) return;
+    const moved = this.screenshots.at(from);
+    this.screenshots.removeAt(from, {emitEvent: false});
+    this.screenshots.insert(to, moved);
+    this.form.markAsDirty();
+  }
+
+  protected removeScreenshot(index: number) {
+    this.screenshots.removeAt(index);
+    this.form.markAsDirty();
+  }
+
+  protected openText(group: ScreenshotGroup) {
+    group.controls.textOpen.setValue(true);
+  }
+
+  protected removeText(group: ScreenshotGroup) {
+    group.patchValue({text: '', textOpen: false});
+    this.form.markAsDirty();
+  }
+
+  protected featureCount() {
+    return this.screenshots.controls.filter(group => group.controls.text.value.trim()).length;
+  }
+
+  // video
+
+  protected onVideoSelected(event: Event) {
+    const file = takeFile(event);
+    if (!file) return;
+    if (!isVideoFile(file)) {
+      this.toast.error(VIDEO_FILE_HINT);
+      return;
+    }
+    this.videoProgress.set(0);
+    this.files.uploadVideo(file).subscribe({
+      next: httpEvent => {
+        if (httpEvent.type === HttpEventType.UploadProgress && httpEvent.total) {
+          this.videoProgress.set(Math.round(100 * httpEvent.loaded / httpEvent.total));
+        } else if (httpEvent.type === HttpEventType.Response && httpEvent.body) {
+          this.form.controls.videoUrl.setValue(httpEvent.body.url);
+          this.form.markAsDirty();
+          this.videoProgress.set(null);
+          this.toast.success('Video uploaded.');
+        }
+      },
+      error: () => this.videoProgress.set(null),
+    });
+  }
+
+  protected removeVideo() {
+    this.form.controls.videoUrl.setValue('');
+    this.form.markAsDirty();
+  }
+
+  // saving
 
   protected save() {
     this.form.markAllAsTouched();
@@ -147,11 +243,13 @@ export class AppEditor {
       return;
     }
 
-    const value = this.form.getRawValue();
+    const {images, ...value} = this.form.getRawValue();
     const request: App = {
       ...value,
       id: this.stored()?.id ?? 0,
       slug: value.slug.trim(),
+      images: images.map(image => ({url: image.url, text: image.text.trim() || null})),
+      videoUrl: value.videoUrl || null,
       publishedAt: value.publishedAt as unknown as Date,
     };
 
@@ -194,9 +292,25 @@ export class AppEditor {
   }
 }
 
+function screenshotGroup(image: AppImage): ScreenshotGroup {
+  return new FormGroup({
+    url: new FormControl(image.url, {nonNullable: true}),
+    text: new FormControl(image.text ?? '', {nonNullable: true}),
+    textOpen: new FormControl(!!image.text?.trim(), {nonNullable: true}),
+  });
+}
+
+/** The chosen file; the input is reset so the same file can be chosen again. */
+function takeFile(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+  input.value = '';
+  return file;
+}
+
 /** "Create Train Doors" -> "create-train-doors" */
 function slugify(name: string) {
-  return name.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+  return name.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 

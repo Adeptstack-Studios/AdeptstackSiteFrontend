@@ -11,7 +11,7 @@
         <p class="c-sub">{{ isNew() ? 'New apps stay private until you make them visible' : form.controls.name.value }}</p>
       </div>
       <div class="c-actions">
-        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || uploading()">
+        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || busy()">
           {{ saving() ? 'Saving…' : isNew() ? 'Create app' : 'Save' }}
         </button>
       </div>
@@ -61,22 +61,127 @@
             </div>
           </section>
 
-          <section class="c-card" aria-labelledby="images-heading">
+          <section class="c-card" aria-labelledby="media-heading">
             <div class="c-card-head">
-              <h2 id="images-heading">Icon and features</h2>
-              <p class="c-sub">Three feature images with a text each, as on the product page</p>
+              <h2 id="media-heading">Icon, screenshots and video</h2>
             </div>
-            <div class="icon-row">
-              <ng-container *ngTemplateOutlet="imageField; context: {field: 'iconUrl', label: 'App icon'}"></ng-container>
+
+            <div class="icon-field">
+              <label class="image-drop icon-drop" [class.filled]="form.controls.iconUrl.value"
+                     [class.invalid]="form.controls.iconUrl.touched && form.controls.iconUrl.invalid">
+                @if (form.controls.iconUrl.value; as url) {
+                  <!-- a broken link shows the upload hint instead of the alt text -->
+                  <img [src]="url" alt="App icon" (error)="$any($event.target).hidden = true">
+                } @else {
+                  <lucide-icon [img]="icons.ImageUp" [size]="20" aria-hidden="true"></lucide-icon>
+                }
+                <span class="image-action">{{ uploadingIcon() ? 'Uploading…' : form.controls.iconUrl.value ? 'Replace' : 'Upload' }}</span>
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onIconSelected($event)"
+                       aria-label="Upload app icon">
+              </label>
+              <div>
+                <span class="c-label">App icon</span>
+                <p class="c-hint">Square, at least 256 × 256 px. Used on cards and for link previews.</p>
+              </div>
             </div>
-            @for (index of features; track index) {
-              <div class="feature">
-                <ng-container *ngTemplateOutlet="imageField; context: {field: 'image' + index + 'Url', label: 'Feature image ' + index}"></ng-container>
-                <div>
-                  <label class="c-label" [for]="'feature' + index">Feature {{ index }} text</label>
-                  <textarea [id]="'feature' + index" class="c-input" rows="4" [formControl]="featureText(index)"></textarea>
+
+            <div class="media-head">
+              <div>
+                <h3>Screenshots</h3>
+                <p class="c-hint">
+                  All screenshots form the gallery on the product page. Give one a text and it is also shown as a feature.
+                  {{ screenshots.length }} {{ screenshots.length === 1 ? 'screenshot' : 'screenshots' }}, {{ featureCount() }}
+                  {{ featureCount() === 1 ? 'feature' : 'features' }}.
+                </p>
+              </div>
+              <label class="c-btn c-btn-sm add-media" [class.disabled]="screenshotUpload()">
+                <lucide-icon [img]="icons.ImagePlus" [size]="15" aria-hidden="true"></lucide-icon>
+                @if (screenshotUpload(); as upload) {
+                  Uploading {{ upload.done + 1 }} of {{ upload.total }}…
+                } @else {
+                  Add screenshots
+                }
+                <input type="file" accept="image/png,image/jpeg,image/webp" multiple class="sr-only"
+                       (change)="onScreenshotsSelected($event)" [disabled]="!!screenshotUpload()">
+              </label>
+            </div>
+
+            <ol class="shots" cdkDropList (cdkDropListDropped)="dropScreenshot($event)" formArrayName="images">
+              @for (shot of screenshots.controls; track shot; let i = $index; let first = $first; let last = $last) {
+                <li class="shot" cdkDrag [formGroupName]="i">
+                  <button type="button" class="handle" cdkDragHandle [attr.aria-label]="'Drag screenshot ' + (i + 1)">
+                    <lucide-icon [img]="icons.GripVertical" [size]="16" aria-hidden="true"></lucide-icon>
+                  </button>
+                  <img class="thumb" [src]="shot.controls.url.value" [alt]="'Screenshot ' + (i + 1)">
+                  <div class="shot-body">
+                    <div class="shot-top">
+                      <span class="shot-number mono">#{{ i + 1 }}</span>
+                      @if (shot.controls.text.value.trim()) {
+                        <span class="feature-badge">Feature</span>
+                      }
+                      <span class="shot-actions">
+                        <button type="button" class="icon-btn" (click)="moveScreenshot(i, i - 1)" [disabled]="first"
+                                [attr.aria-label]="'Move screenshot ' + (i + 1) + ' up'">
+                          <lucide-icon [img]="icons.ArrowUp" [size]="15" aria-hidden="true"></lucide-icon>
+                        </button>
+                        <button type="button" class="icon-btn" (click)="moveScreenshot(i, i + 1)" [disabled]="last"
+                                [attr.aria-label]="'Move screenshot ' + (i + 1) + ' down'">
+                          <lucide-icon [img]="icons.ArrowDown" [size]="15" aria-hidden="true"></lucide-icon>
+                        </button>
+                        <button type="button" class="icon-btn danger" (click)="removeScreenshot(i)"
+                                [attr.aria-label]="'Remove screenshot ' + (i + 1)">
+                          <lucide-icon [img]="icons.Trash2" [size]="15" aria-hidden="true"></lucide-icon>
+                        </button>
+                      </span>
+                    </div>
+                    @if (shot.controls.textOpen.value) {
+                      <label class="sr-only" [for]="'shot-text-' + i">Feature text for screenshot {{ i + 1 }}</label>
+                      <textarea [id]="'shot-text-' + i" class="c-input" rows="4" formControlName="text"
+                                placeholder="## Heading&#10;&#10;What this screenshot shows, in Markdown"></textarea>
+                      <button type="button" class="c-link remove-text" (click)="removeText(shot)">Remove text</button>
+                    } @else {
+                      <button type="button" class="c-link" (click)="openText(shot)">+ Add feature text</button>
+                    }
+                  </div>
+                </li>
+              } @empty {
+                <li class="no-shots">No screenshots yet. Add a few, the first one is also the fallback for link previews.</li>
+              }
+            </ol>
+
+            <div class="media-head video-head">
+              <div>
+                <h3>Video <span class="c-muted optional">optional</span></h3>
+                <p class="c-hint">Shown first in the gallery. MP4 (H.264) plays everywhere and stays small.</p>
+              </div>
+            </div>
+            @if (form.controls.videoUrl.value; as video) {
+              <div class="video">
+                <video [src]="video" controls preload="metadata"></video>
+                <div class="video-actions">
+                  <label class="c-btn c-btn-sm">
+                    {{ videoProgress() !== null ? 'Uploading ' + videoProgress() + ' %' : 'Replace' }}
+                    <input type="file" accept="video/mp4,video/webm" class="sr-only" (change)="onVideoSelected($event)"
+                           [disabled]="videoProgress() !== null">
+                  </label>
+                  <button type="button" class="c-btn c-btn-sm" (click)="removeVideo()">
+                    <lucide-icon [img]="icons.X" [size]="15" aria-hidden="true"></lucide-icon>
+                    Remove video
+                  </button>
                 </div>
               </div>
+            } @else {
+              <label class="video-drop" [class.disabled]="videoProgress() !== null">
+                <lucide-icon [img]="icons.Film" [size]="20" aria-hidden="true"></lucide-icon>
+                @if (videoProgress() !== null) {
+                  <span>Uploading {{ videoProgress() }} %</span>
+                  <span class="progress" aria-hidden="true"><span [style.width.%]="videoProgress()"></span></span>
+                } @else {
+                  <span>Upload a video (.mp4 or .webm)</span>
+                }
+                <input type="file" accept="video/mp4,video/webm" class="sr-only" (change)="onVideoSelected($event)"
+                       [disabled]="videoProgress() !== null">
+              </label>
             }
           </section>
         </div>
@@ -147,20 +252,3 @@
     }
   </form>
 </div>
-
-<ng-template #imageField let-field="field" let-label="label">
-  <div class="image-field">
-    <span class="c-label">{{ label }}</span>
-    <label class="image-drop" [class.filled]="imageControl(field).value"
-           [class.invalid]="imageControl(field).touched && imageControl(field).invalid">
-      @if (imageControl(field).value; as url) {
-        <!-- a broken link shows the upload hint instead of the alt text -->
-        <img [src]="url" [alt]="label" (error)="$any($event.target).hidden = true">
-      } @else {
-        <lucide-icon [img]="icons.ImageUp" [size]="20" aria-hidden="true"></lucide-icon>
-      }
-      <span class="image-action">{{ uploading() === field ? 'Uploading…' : imageControl(field).value ? 'Replace' : 'Upload' }}</span>
-      <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onImageSelected($event, field)">
-    </label>
-  </div>
-</ng-template>
