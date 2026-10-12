@@ -1,6 +1,6 @@
 <div class="shell" [class.nav-open]="navOpen()">
   <aside class="sidebar" id="sidebar">
-    <a class="brand" routerLink="/news">
+    <a class="brand" routerLink="/">
       <span class="brand-mark"><img src="img/adeptstack_white.png" alt="" width="20" height="20"></span>
       <span class="brand-text">
         <span class="brand-name">adeptstack</span>
@@ -8,15 +8,65 @@
       </span>
     </a>
 
-    <nav class="nav" aria-label="Main">
-      @for (item of nav; track item.path) {
-        <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
-           [attr.aria-current]="link.isActive ? 'page' : null">
-          <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
-          {{ item.label }}
+    @if (context.slug(); as slug) {
+      <!-- inside one app: its own navigation, like a project in the Play Console -->
+      <a class="back-link" routerLink="/apps">
+        <lucide-icon [img]="icons.ChevronLeft" [size]="15" aria-hidden="true"></lucide-icon>
+        All apps
+      </a>
+
+      <button type="button" class="app-switch" [cdkMenuTriggerFor]="appMenu" (click)="openSwitcher()"
+              aria-label="Switch app">
+        <app-tile [name]="context.app()?.name ?? slug" [iconUrl]="context.app()?.iconUrl" [size]="34"></app-tile>
+        <span class="app-switch-text">
+          <span class="app-switch-name">{{ context.app()?.name ?? slug }}</span>
+          <span class="app-switch-sub">{{ (context.app()?.platforms | platforms) || context.app()?.category }}</span>
+        </span>
+        <lucide-icon [img]="icons.ChevronsUpDown" [size]="15" aria-hidden="true"></lucide-icon>
+      </button>
+
+      <nav class="nav" aria-label="App">
+        <a class="nav-link" [routerLink]="['/apps', slug]" routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: true}" #dash="routerLinkActive" [attr.aria-current]="dash.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.LayoutDashboard" [size]="17" aria-hidden="true"></lucide-icon>
+          Dashboard
         </a>
-      }
-    </nav>
+        <a class="nav-link" [routerLink]="['/apps', slug, 'releases']" routerLinkActive="active"
+           #rel="routerLinkActive" [attr.aria-current]="rel.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.Layers" [size]="17" aria-hidden="true"></lucide-icon>
+          Releases
+          @if (context.app(); as app) {
+            <span class="nav-count">{{ app.releaseCount }}</span>
+          }
+        </a>
+        <a class="nav-link" [routerLink]="['/apps', slug, 'listing']" routerLinkActive="active"
+           #listing="routerLinkActive" [attr.aria-current]="listing.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.Store" [size]="17" aria-hidden="true"></lucide-icon>
+          Store listing
+          @if (context.app(); as app) {
+            <span class="nav-count" [class.warn]="checklistDone(app) < app.checklist.length">
+              {{ checklistDone(app) }}/{{ app.checklist.length }}
+            </span>
+          }
+        </a>
+      </nav>
+
+      <a class="site-link" [href]="'https://adeptstack.net/products/' + slug" target="_blank" rel="noopener">
+        <span class="site-link-label">On the website</span>
+        <span class="site-link-path">/products/{{ slug }}</span>
+        <lucide-icon [img]="icons.ArrowUpRight" [size]="14" aria-hidden="true"></lucide-icon>
+      </a>
+    } @else {
+      <nav class="nav" aria-label="Main">
+        @for (item of nav; track item.path) {
+          <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
+             [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null">
+            <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+    }
   </aside>
 
   @if (navOpen()) {
@@ -31,9 +81,14 @@
       </button>
 
       <nav class="crumbs" aria-label="Breadcrumb">
-        <span>Console</span>
-        <span aria-hidden="true">/</span>
-        <span class="current" aria-current="page">{{ pageLabel() }}</span>
+        @for (crumb of crumbs(); track $index; let last = $last) {
+          @if (last) {
+            <span class="current" aria-current="page">{{ crumb.label }}</span>
+          } @else {
+            <a [routerLink]="crumb.url">{{ crumb.label }}</a>
+            <span aria-hidden="true">/</span>
+          }
+        }
       </nav>
 
       <div class="topbar-actions">
@@ -82,5 +137,19 @@
     <button type="button" class="menu-item danger" cdkMenuItem (cdkMenuItemTriggered)="logout()">
       <lucide-icon [img]="icons.LogOut" [size]="16" aria-hidden="true"></lucide-icon> Log out
     </button>
+  </div>
+</ng-template>
+
+<ng-template #appMenu>
+  <div class="menu app-menu" cdkMenu>
+    <div class="menu-label">Switch app</div>
+    @for (app of context.apps() ?? []; track app.id) {
+      <a class="menu-item" cdkMenuItem [routerLink]="['/apps', app.slug]" [class.current]="app.slug === context.slug()">
+        <app-tile [name]="app.name" [iconUrl]="app.iconUrl" [size]="22"></app-tile>
+        {{ app.name }}
+      </a>
+    } @empty {
+      <div class="menu-label">Loading…</div>
+    }
   </div>
 </ng-template>

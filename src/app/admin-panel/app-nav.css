@@ -1,0 +1,97 @@
+/* The sidebar while an app is open: back link, app switcher, counts and the link to the product page. */
+
+.nav-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-count.warn {
+  color: var(--warn);
+}
+
+/* app mode: back link, app switcher and the link to the product page */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px 0 -10px;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+.app-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-switch:hover,
+.app-switch[aria-expanded="true"] {
+  border-color: var(--line-strong);
+}
+
+.app-switch-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.app-switch-name,
+.app-switch-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-switch-name {
+  font-weight: 650;
+}
+
+.app-switch-sub {
+  min-height: 1.25em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.site-link {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+.site-link-label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.site-link-path {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
