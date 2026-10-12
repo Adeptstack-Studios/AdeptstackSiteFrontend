@@ -35,4 +35,8 @@ export const environment = {
   appsUpdate: 'https://api.adeptstack.net/api/apps/update',
   appsDelete: 'https://api.adeptstack.net/api/apps/delete',
   searchApps: 'https://api.adeptstack.net/api/apps/search?name=',
+  appsBase: 'https://api.adeptstack.net/api/apps',
+
+  consoleOverview: 'https://api.adeptstack.net/api/console/overview',
+  consoleApps: 'https://api.adeptstack.net/api/console/apps',
 };

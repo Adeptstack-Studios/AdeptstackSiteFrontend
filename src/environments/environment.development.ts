@@ -35,4 +35,8 @@ export const environment = {
   appsUpdate: 'http://localhost:8080/api/apps/update',
   appsDelete: 'http://localhost:8080/api/apps/delete',
   searchApps: 'http://localhost:8080/api/apps/search?name=',
+  appsBase: 'http://localhost:8080/api/apps',
+
+  consoleOverview: 'http://localhost:8080/api/console/overview',
+  consoleApps: 'http://localhost:8080/api/console/apps',
 };

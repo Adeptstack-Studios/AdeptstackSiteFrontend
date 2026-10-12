@@ -7,8 +7,11 @@ import {environment} from '../../environments/environment';
 
 /** Filters for the changelog listing. Leave page and size out to get every match. */
 export interface ChangelogListQuery {
-  app?: number;
+  /** id or slug */
+  app?: number | string;
   channel?: string;
+  /** PUBLIC, UNLISTED or PRIVATE */
+  visibility?: string;
   q?: string;
   /** e.g. "version,desc" */
   sort?: string;
@@ -59,14 +62,14 @@ export class ChangelogsService {
   /** Filtered, sorted and paged by the backend. As admin this includes private entries. */
   list(query: ChangelogListQuery): Observable<Page<Changelogs>> {
     const params = toHttpParams({
-      app: query.app, channel: query.channel, q: query.q, sort: query.sort,
+      app: query.app, channel: query.channel, visibility: query.visibility, q: query.q, sort: query.sort,
       page: query.page !== undefined ? query.page - 1 : undefined, size: query.size,
     });
     return this.http.get<Changelogs[]>(environment.changelogsGetAll, { observe: 'response', params }).pipe(map(toPage));
   }
 
   /** Channels in use with their changelog count, optionally only for one app. */
-  channels(app?: number): Observable<Facet[]> {
+  channels(app?: number | string): Observable<Facet[]> {
     return this.http.get<Facet[]>(environment.changelogsChannels, { params: toHttpParams({ app }) });
   }
 
