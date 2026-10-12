@@ -1,16 +1,19 @@
 import { Routes } from '@angular/router';
 import {Login} from './login/login';
 import {AuthGuard} from './guards/auth-guard';
+import {unsavedChangesGuard} from './core/unsaved/unsaved-changes';
+
+const TITLE = ' · Adeptstack Console';
 
 // Only the sign-in page ships with the first load; the console itself loads after signing in.
+// data.label names a route in the breadcrumb; data.isApp shows the open app's name there.
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: Login, title: 'Sign in · Adeptstack Console' },
+  { path: 'login', component: Login, title: 'Sign in' + TITLE },
   {
     path: 'register',
     loadComponent: () => import('./register/register').then(m => m.Register),
     canMatch: [AuthGuard], canActivate: [AuthGuard],
-    title: 'Register · Adeptstack Console'
+    title: 'Register' + TITLE
   },
   {
     path: '',
@@ -19,26 +22,74 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'news' },
-      // label: shown in the breadcrumb of the console frame
       {
-        path: 'news',
-        loadComponent: () => import('./admin-news/admin-news').then(m => m.AdminNews),
-        canMatch: [AuthGuard], canActivate: [AuthGuard],
-        title: 'Blog · Adeptstack Console', data: { label: 'Blog' }
-      },
-      {
-        path: 'changelogs',
-        loadComponent: () => import('./admin-changelogs/admin-changelogs').then(m => m.AdminChangelogs),
-        canMatch: [AuthGuard], canActivate: [AuthGuard],
-        title: 'Changelogs · Adeptstack Console', data: { label: 'Changelogs' }
+        path: '', pathMatch: 'full',
+        loadComponent: () => import('./features/overview/overview').then(m => m.Overview),
+        title: 'Overview' + TITLE, data: { label: 'Overview' }
       },
       {
         path: 'apps',
-        loadComponent: () => import('./admin-apps/admin-apps').then(m => m.AdminApps),
-        canMatch: [AuthGuard], canActivate: [AuthGuard],
-        title: 'Apps · Adeptstack Console', data: { label: 'Apps' }
+        data: { label: 'Apps' },
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/apps/app-list/app-list').then(m => m.AppList),
+            title: 'All apps' + TITLE
+          },
+          {
+            path: 'new',
+            loadComponent: () => import('./features/apps/app-editor/app-editor').then(m => m.AppEditor),
+            title: 'Create app' + TITLE, data: { label: 'Create app' }
+          },
+          {
+            path: ':slug',
+            loadComponent: () => import('./features/apps/app-scope').then(m => m.AppScope),
+            data: { isApp: true },
+            children: [
+              {
+                path: '',
+                loadComponent: () => import('./features/apps/app-dashboard/app-dashboard').then(m => m.AppDashboard),
+                title: 'Dashboard' + TITLE, data: { label: 'Dashboard' }
+              },
+              {
+                path: 'releases',
+                data: { label: 'Releases' },
+                children: [
+                  {
+                    path: '',
+                    loadComponent: () => import('./features/releases/release-list/release-list').then(m => m.ReleaseList),
+                    title: 'Releases' + TITLE
+                  },
+                  {
+                    path: 'new',
+                    loadComponent: () => import('./features/releases/release-editor/release-editor').then(m => m.ReleaseEditor),
+                    canDeactivate: [unsavedChangesGuard],
+                    title: 'New release' + TITLE, data: { label: 'New release' }
+                  },
+                  {
+                    path: ':id',
+                    loadComponent: () => import('./features/releases/release-editor/release-editor').then(m => m.ReleaseEditor),
+                    canDeactivate: [unsavedChangesGuard],
+                    title: 'Edit release' + TITLE, data: { label: 'Edit release' }
+                  },
+                ]
+              },
+              {
+                path: 'listing',
+                loadComponent: () => import('./features/apps/app-editor/app-editor').then(m => m.AppEditor),
+                title: 'Store listing' + TITLE, data: { label: 'Store listing' }
+              },
+            ]
+          },
+        ]
       },
+      {
+        path: 'news',
+        loadComponent: () => import('./admin-news/admin-news').then(m => m.AdminNews),
+        title: 'Blog' + TITLE, data: { label: 'Blog' }
+      },
+      // releases live with their app now
+      { path: 'changelogs', redirectTo: 'apps' },
     ]
   },
 ];

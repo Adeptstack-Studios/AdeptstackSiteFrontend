@@ -46,7 +46,7 @@ export class Login {
 
         this.authService.verifyLogin().subscribe({
           next: () => {
-            this.router.navigateByUrl("/news");
+            this.router.navigateByUrl("/");
           }, error: (error: HttpErrorResponse) => {
             this.localStorageService.remove("auth-key");
             this.signingIn = false;
