@@ -485,3 +485,281 @@ textarea.c-input {
   color: var(--muted);
   font-size: 12px;
 }
+
+/*
+ * Editor pages (release, blog post, store listing): a sticky bar with the save buttons,
+ * then the form on the left and settings on the right.
+ */
+
+.c-editor-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 32px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.c-editor-back {
+  width: 36px;
+  padding: 0;
+}
+
+.c-editor-bar h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.c-editor-bar .c-sub {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.c-editor-restore {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 1280px;
+  margin: 16px auto 0;
+  padding: 10px 14px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+}
+
+.c-editor-restore > lucide-icon {
+  color: var(--warn);
+}
+
+.c-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 32px 48px;
+  align-items: start;
+}
+
+.c-editor-main,
+.c-editor-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.c-editor-loading {
+  height: 260px;
+}
+
+@media (max-width: 1100px) {
+  .c-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .c-editor-bar,
+  .c-editor-layout {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* phones: the bar keeps only what is needed to save */
+@media (max-width: 600px) {
+  .c-editor-bar {
+    gap: 8px;
+  }
+
+  .c-editor-bar app-tile,
+  .c-editor-bar .c-sub {
+    display: none;
+  }
+
+  .c-editor-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .c-editor-bar h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .c-editor-bar .c-actions {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .c-editor-bar .c-btn {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}
+
+/* list pages (releases, blog): filter row, selection bar, checkbox column and pager */
+
+.c-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.c-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.c-chip-btn {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.c-chip-btn:hover {
+  background: var(--panel-2);
+}
+
+.c-chip-btn[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.c-chip-btn .n {
+  margin-left: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: .75;
+}
+
+.c-filter-fields {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.c-search {
+  position: relative;
+  width: 230px;
+}
+
+.c-search lucide-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.c-search .c-input {
+  padding-left: 34px;
+}
+
+.c-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.c-select select {
+  max-width: 180px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.c-select select option {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.c-select:focus-within {
+  border-color: var(--accent);
+}
+
+.c-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.c-selection-bar strong {
+  margin-right: 6px;
+}
+
+.c-selection-bar .c-link:last-child {
+  margin-left: auto;
+}
+
+.c-check-col {
+  width: 44px;
+  padding-right: 0 !important;
+}
+
+.c-check-col input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.c-row-title {
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.c-row-title:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+
+.c-ellipsis {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-pager {
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.c-list-skeleton {
+  height: 300px;
+  margin: 16px 20px;
+}
