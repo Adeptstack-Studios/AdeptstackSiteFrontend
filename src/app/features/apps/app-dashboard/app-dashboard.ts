@@ -3,8 +3,10 @@ import {RouterLink} from '@angular/router';
 import {Check, CircleAlert, LucideAngularModule, Plus, Store} from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
 import {ChangelogsService} from '../../../services/changelogs-service';
+import {NewsService} from '../../../services/news-service';
 import {AppChannel, checklistDone} from '../../../models/console';
 import {Changelogs} from '../../../models/changelogs';
+import {News} from '../../../models/news';
 import {channelKind, compareVersions} from '../../../shared/versions';
 import {AppTile} from '../../../shared/ui/app-tile';
 import {ChannelChip, VisibilityStatus} from '../../../shared/ui/status';
@@ -22,10 +24,12 @@ const CHANNEL_HINTS: Record<string, string> = {stable: 'Everyone gets this', bet
 })
 export class AppDashboard {
   private readonly changelogs = inject(ChangelogsService);
+  private readonly news = inject(NewsService);
   protected readonly context = inject(AppContext);
 
   protected readonly icons = {Check, CircleAlert, Plus, Store};
   protected readonly latest = signal<Changelogs[] | null>(null);
+  protected readonly posts = signal<News[] | null>(null);
   protected readonly checklistDone = checklistDone;
 
   /** The beta channel whose newest version is ahead of the main one, ready to be promoted. */
@@ -46,6 +50,9 @@ export class AppDashboard {
       this.latest.set(null);
       this.changelogs.list({app: slug, sort: 'publishedAt,desc', page: 1, size: 5})
         .subscribe(page => this.latest.set(page.items));
+      this.posts.set(null);
+      this.news.list({app: slug, sort: 'publishedAt,desc', page: 1, size: 4})
+        .subscribe(page => this.posts.set(page.items));
     });
   }
 

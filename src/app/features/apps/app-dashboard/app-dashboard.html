@@ -116,6 +116,7 @@
           }
         </section>
 
+        <div class="side">
         <section class="c-card" aria-labelledby="listing-heading">
           <div class="c-card-head">
             <h2 id="listing-heading">Store listing</h2>
@@ -138,6 +139,39 @@
             {{ checklistDone(app) < app.checklist.length ? 'Complete store listing' : 'Edit store listing' }}
           </a>
         </section>
+
+        <section class="c-card" aria-labelledby="posts-heading">
+          <div class="c-card-head">
+            <h2 id="posts-heading">Blog posts</h2>
+            @if (app.postCount) {
+              <a class="c-link" routerLink="/blog" [queryParams]="{app: app.slug}">All {{ app.postCount }}</a>
+            }
+          </div>
+          @if (posts(); as linked) {
+            <ul class="posts">
+              @for (post of linked; track post.id) {
+                <li>
+                  <a class="post-row" [routerLink]="['/blog', post.id]">
+                    <span class="post-title">{{ post.title }}</span>
+                    <span class="c-muted post-meta">
+                      {{ post.category }} ·
+                      {{ post.visibility === 'PRIVATE' ? 'Draft' : (post.publishedAt | date: 'MMM d, y') }}
+                    </span>
+                  </a>
+                </li>
+              } @empty {
+                <li class="c-muted no-posts">No post is linked to {{ app.name }} yet.</li>
+              }
+            </ul>
+          } @else {
+            <div class="c-skeleton posts-skeleton"></div>
+          }
+          <a class="c-btn c-btn-sm" routerLink="/blog/new" [queryParams]="{app: app.slug}">
+            <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
+            Write a post about {{ app.name }}
+          </a>
+        </section>
+        </div>
       </div>
     } @else {
       <div class="c-skeleton head-skeleton"></div>

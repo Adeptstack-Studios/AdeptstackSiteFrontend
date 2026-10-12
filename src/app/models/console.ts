@@ -42,6 +42,8 @@ export interface AppSummary {
   downloadsFormatted: string | null;
   releaseCount: number;
   draftCount: number;
+  /** blog posts linked to this app */
+  postCount: number;
   lastReleaseAt: string | null;
   /** The busiest channel first */
   channels: AppChannel[];
