@@ -1,9 +1,11 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChevronLeft, ChevronRight, LucideAngularModule} from 'lucide-angular';
 import {PAGE_SIZES, pageCount, pageWindow} from '../models/listing';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
+  imports: [LucideAngularModule],
   templateUrl: './pagination.html',
   styleUrl: './pagination.css'
 })
@@ -18,6 +20,7 @@ export class Pagination {
   @Output() sizeChange = new EventEmitter<number>();
 
   readonly sizes = PAGE_SIZES;
+  protected readonly icons = {ChevronLeft, ChevronRight};
 
   get pages() {
     return pageCount(this.total, this.size);

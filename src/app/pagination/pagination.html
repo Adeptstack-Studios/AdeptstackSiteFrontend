@@ -5,7 +5,7 @@
     @if (pages > 1) {
       <div class="pages">
         <button type="button" class="page-btn" [disabled]="page === 1" (click)="goTo(page - 1)" aria-label="Previous page">
-          <i class='bx bx-chevron-left'></i>
+          <lucide-icon [img]="icons.ChevronLeft" [size]="16" aria-hidden="true"></lucide-icon>
         </button>
         @for (entry of window; track $index) {
           @if (entry === 'gap') {
@@ -18,7 +18,7 @@
           }
         }
         <button type="button" class="page-btn" [disabled]="page === pages" (click)="goTo(page + 1)" aria-label="Next page">
-          <i class='bx bx-chevron-right'></i>
+          <lucide-icon [img]="icons.ChevronRight" [size]="16" aria-hidden="true"></lucide-icon>
         </button>
       </div>
     }

@@ -44,10 +44,6 @@
   transition: background .15s, border-color .15s;
 }
 
-.page-btn i {
-  font-size: 1.2rem;
-}
-
 .page-btn:hover:not(:disabled):not(.active) {
   background: var(--panel-2);
 }
