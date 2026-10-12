@@ -22,8 +22,8 @@ import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkRelease, NOTES_TEMPLATE, ReleaseDraft} from './release-checks';
 
-/** Channel names for an app without releases, until the stable/beta migration renames them. */
-const DEFAULT_CHANNELS = {stable: 'main', beta: 'develop'};
+/** Channel names for an app without releases. */
+const DEFAULT_CHANNELS = {stable: 'stable', beta: 'beta'};
 
 function releaseForm() {
   return new FormGroup({
