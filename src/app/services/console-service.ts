@@ -1,9 +1,10 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import {map, Observable} from 'rxjs';
 import {environment} from '../../environments/environment';
 import {AppSummary, ConsoleOverview, LinkSuggestion} from '../models/console';
-import {toHttpParams} from '../models/listing';
+import {Page, toHttpParams, toPage} from '../models/listing';
+import {AppStats, NewsletterStatus, PushLogEntry, StatsOverview} from '../models/stats';
 
 /** Read-only summaries made for the console; they include private entries. */
 @Injectable({
@@ -24,6 +25,26 @@ export class ConsoleService {
 
   app(idOrSlug: string | number): Observable<AppSummary> {
     return this.http.get<AppSummary>(`${environment.consoleApps}/${encodeURIComponent(idOrSlug)}`);
+  }
+
+  /** Page views, visitors by trait, downloads and store clicks of the last range days. */
+  stats(range: number): Observable<StatsOverview> {
+    return this.http.get<StatsOverview>(environment.consoleStats, {params: toHttpParams({range})});
+  }
+
+  appStats(idOrSlug: string | number, range: number): Observable<AppStats> {
+    return this.http.get<AppStats>(`${environment.consoleStats}/apps/${encodeURIComponent(idOrSlug)}`,
+      {params: toHttpParams({range})});
+  }
+
+  /** Sent pushes, newest first; with app only those announcing one of its releases. page is 1-based. */
+  pushes(page: number, size: number, app?: number): Observable<Page<PushLogEntry>> {
+    return this.http.get<PushLogEntry[]>(environment.consolePushes,
+      {observe: 'response', params: toHttpParams({app, page: page - 1, size})}).pipe(map(toPage));
+  }
+
+  newsletter(): Observable<NewsletterStatus> {
+    return this.http.get<NewsletterStatus>(environment.consoleNewsletter);
   }
 
   /** Per link field the newest value the app used, for the release assistant. */

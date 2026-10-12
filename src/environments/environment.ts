@@ -40,4 +40,7 @@ export const environment = {
 
   consoleOverview: 'https://api.adeptstack.net/api/console/overview',
   consoleApps: 'https://api.adeptstack.net/api/console/apps',
+  consoleStats: 'https://api.adeptstack.net/api/console/stats',
+  consolePushes: 'https://api.adeptstack.net/api/console/pushes',
+  consoleNewsletter: 'https://api.adeptstack.net/api/console/newsletter',
 };

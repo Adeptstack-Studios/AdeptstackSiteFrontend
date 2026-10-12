@@ -40,4 +40,7 @@ export const environment = {
 
   consoleOverview: 'http://localhost:8080/api/console/overview',
   consoleApps: 'http://localhost:8080/api/console/apps',
+  consoleStats: 'http://localhost:8080/api/console/stats',
+  consolePushes: 'http://localhost:8080/api/console/pushes',
+  consoleNewsletter: 'http://localhost:8080/api/console/newsletter',
 };
