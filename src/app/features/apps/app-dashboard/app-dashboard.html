@@ -67,27 +67,41 @@
         }
       </section>
 
-      <section class="c-grid-4" aria-label="Key figures">
-        <div class="c-card" style="--kpi: var(--accent)">
-          <div class="c-kpi-label">Releases</div>
-          <div class="c-kpi-value">{{ app.releaseCount }}</div>
-          <div class="c-kpi-note">{{ app.draftCount }} {{ app.draftCount === 1 ? 'draft' : 'drafts' }}</div>
+      <section class="c-grid-4" aria-label="Key figures, last 30 days">
+        @if (stats(); as s) {
+          <app-kpi-card label="Product page views" [value]="compact(s.totals.views)"
+                        [trend]="trend(s.totals.views, s.previous.views)" [spark]="views()"
+                        [note]="'Last 30 days · ' + s.productPath"></app-kpi-card>
+          <app-kpi-card label="Direct downloads" color="var(--beta)" [value]="compact(s.totals.downloads)"
+                        [trend]="trend(s.totals.downloads, s.previous.downloads)"
+                        [note]="compact(s.totals.uniqueDownloads) + ' by different visitors'"></app-kpi-card>
+          <app-kpi-card label="Store clicks" [value]="compact(s.totals.storeClicks)"
+                        [trend]="trend(s.totals.storeClicks, s.previous.storeClicks)"
+                        note="Went to a store or the web app"></app-kpi-card>
+          @if (app.downloads !== null) {
+            <app-kpi-card label="Mod downloads" color="var(--good)" [value]="app.downloadsFormatted ?? '–'"
+                          [note]="s.modDownloadsGained === null ? 'Modrinth + CurseForge' : '+' + compact(s.modDownloadsGained) + ' in 30 days'"></app-kpi-card>
+          } @else {
+            <app-kpi-card label="Download rate" color="var(--good)" [value]="rate() === null ? '–' : rate() + '%'"
+                          note="Downloads and store clicks per page view"></app-kpi-card>
+          }
+        } @else {
+          @for (card of [1, 2, 3, 4]; track card) {
+            <div class="c-card"><div class="c-skeleton kpi-skeleton"></div></div>
+          }
+        }
+      </section>
+
+      <section class="c-card" aria-labelledby="sources-heading">
+        <div class="c-card-head">
+          <h2 id="sources-heading">Downloads by source · 30 days</h2>
+          <a class="c-link" [routerLink]="['/apps', app.slug, 'stats']">Open statistics</a>
         </div>
-        <div class="c-card" style="--kpi: var(--beta)">
-          <div class="c-kpi-label">Channels</div>
-          <div class="c-kpi-value">{{ app.channels.length }}</div>
-          <div class="c-kpi-note">{{ channelNames(app.channels) || 'None yet' }}</div>
-        </div>
-        <div class="c-card" style="--kpi: #A78BFA">
-          <div class="c-kpi-label">Mod downloads</div>
-          <div class="c-kpi-value">{{ app.downloadsFormatted ?? '–' }}</div>
-          <div class="c-kpi-note">{{ app.downloads === null ? 'No Modrinth or CurseForge project' : 'Modrinth + CurseForge' }}</div>
-        </div>
-        <div class="c-card" style="--kpi: var(--good)">
-          <div class="c-kpi-label">Last release</div>
-          <div class="c-kpi-value">{{ app.lastReleaseAt | relativeDay }}</div>
-          <div class="c-kpi-note">{{ app.lastReleaseAt ? (app.lastReleaseAt | date: 'MMM d, y') : 'Nothing released yet' }}</div>
-        </div>
+        @if (stats()) {
+          <app-day-chart [days]="days()" [series]="sources()" type="bars" [height]="170"></app-day-chart>
+        } @else {
+          <div class="c-skeleton chart-skeleton"></div>
+        }
       </section>
 
       <div class="c-grid-main">

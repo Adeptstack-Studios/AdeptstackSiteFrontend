@@ -1,0 +1,96 @@
+<div class="c-scroll">
+  <div class="c-page">
+    <header class="c-page-head">
+      <div>
+        <h1>Statistics</h1>
+        <p class="c-sub">
+          {{ context.app()?.name }} · product page <span class="mono">{{ stats()?.productPath ?? '' }}</span>
+        </p>
+      </div>
+      <div class="c-actions">
+        <app-range-picker [(range)]="range"></app-range-picker>
+      </div>
+    </header>
+
+    @if (stats(); as s) {
+      <section class="c-grid-4" aria-label="Key figures">
+        <app-kpi-card label="Product page views" [value]="compact(s.totals.views)"
+                      [trend]="trend(s.totals.views, s.previous.views)" [spark]="views()"
+                      [note]="compact(s.totals.visitors) + ' visitors'"></app-kpi-card>
+        <app-kpi-card label="Direct downloads" color="var(--beta)" [value]="compact(s.totals.downloads)"
+                      [trend]="trend(s.totals.downloads, s.previous.downloads)" [spark]="sources()[0].values"
+                      [note]="compact(s.totals.uniqueDownloads) + ' by different visitors'"></app-kpi-card>
+        <app-kpi-card label="Store clicks" [value]="compact(s.totals.storeClicks)"
+                      [trend]="trend(s.totals.storeClicks, s.previous.storeClicks)" [spark]="sources()[1].values"
+                      note="Went to a store or the web app"></app-kpi-card>
+        @if (s.modDownloadsGained !== null) {
+          <app-kpi-card label="Mod downloads won" color="var(--good)" [value]="compact(s.modDownloadsGained)"
+                        note="Modrinth + CurseForge, from daily snapshots"></app-kpi-card>
+        } @else {
+          <app-kpi-card label="Download rate" color="var(--good)" [value]="rate() === null ? '–' : rate() + '%'"
+                        note="Downloads and store clicks per page view"></app-kpi-card>
+        }
+      </section>
+
+      <section class="c-card" aria-labelledby="sources-heading">
+        <div class="c-card-head">
+          <h2 id="sources-heading">Downloads by source</h2>
+          <div class="legend">
+            @for (one of sources(); track one.label) {
+              <span [style.--dot]="one.color">{{ one.label }}</span>
+            }
+          </div>
+        </div>
+        <app-day-chart [days]="days()" [series]="sources()" type="bars"></app-day-chart>
+      </section>
+
+      <div class="c-grid-main">
+        <section class="c-card c-card-flush" aria-labelledby="releases-heading">
+          <div class="c-card-head"><h2 id="releases-heading">Per release</h2></div>
+          @if (s.releases.length) {
+            <div class="c-table-wrap">
+              <table class="c-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Version</th>
+                    <th scope="col">Channel</th>
+                    <th scope="col" class="num">Downloads</th>
+                    <th scope="col" class="num">Different visitors</th>
+                    <th scope="col" class="num">Store clicks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (release of s.releases; track release.id) {
+                    <tr>
+                      <td>
+                        @if (release.channel) {
+                          <a class="c-version c-row-title" [routerLink]="['/apps', context.slug(), 'releases', release.id]">{{ release.version }}</a>
+                        } @else {
+                          <span class="c-muted">{{ release.version }}</span>
+                        }
+                      </td>
+                      <td>@if (release.channel) { <app-channel-chip [name]="release.channel"></app-channel-chip> }</td>
+                      <td class="num">{{ release.downloads }}</td>
+                      <td class="num">{{ release.uniqueDownloads }}</td>
+                      <td class="num">{{ release.storeClicks }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="c-empty">No download or store click in this range.</p>
+          }
+        </section>
+
+        <section class="c-card" aria-labelledby="targets-heading">
+          <div class="c-card-head"><h2 id="targets-heading">Where they went</h2></div>
+          <app-share-list [items]="targets()" color="var(--beta)" [showPercent]="true"
+                          emptyText="No download or store click yet."></app-share-list>
+        </section>
+      </div>
+    } @else {
+      <div class="c-card"><div class="c-skeleton skeleton"></div></div>
+    }
+  </div>
+</div>

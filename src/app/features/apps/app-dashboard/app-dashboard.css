@@ -156,6 +156,14 @@
   margin-bottom: 12px;
 }
 
+.kpi-skeleton {
+  height: 86px;
+}
+
+.chart-skeleton {
+  height: 190px;
+}
+
 .list-skeleton {
   height: 190px;
   margin: 16px 20px;

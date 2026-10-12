@@ -1,0 +1,74 @@
+<div class="c-scroll">
+  <div class="c-page">
+    <header class="c-page-head">
+      <div>
+        <h1>Statistics</h1>
+        <p class="c-sub">adeptstack.net, counted without cookies. Only daily sums are stored.</p>
+      </div>
+      <div class="c-actions">
+        <app-range-picker [(range)]="range"></app-range-picker>
+      </div>
+    </header>
+
+    @if (stats(); as s) {
+      <section class="c-grid-4" aria-label="Key figures">
+        <app-kpi-card label="Page views" [value]="compact(s.totals.views)" [trend]="trend(s.totals.views, s.previous.views)"
+                      [spark]="series()[0].values" note="All pages of the website"></app-kpi-card>
+        <app-kpi-card label="Visitors" color="var(--good)" [value]="compact(s.totals.visitors)"
+                      [trend]="trend(s.totals.visitors, s.previous.visitors)"
+                      note="Different visitors per day, added up"></app-kpi-card>
+        <app-kpi-card label="Downloads" color="var(--beta)" [value]="compact(s.totals.downloads)"
+                      [trend]="trend(s.totals.downloads, s.previous.downloads)" [spark]="series()[1].values"
+                      [note]="compact(s.totals.uniqueDownloads) + ' by different visitors'"></app-kpi-card>
+        <app-kpi-card label="Store clicks" color="#A78BFA" [value]="compact(s.totals.storeClicks)"
+                      [trend]="trend(s.totals.storeClicks, s.previous.storeClicks)" [spark]="series()[2].values"
+                      note="Play Store, Microsoft Store, Steam, Modrinth …"></app-kpi-card>
+      </section>
+
+      <section class="c-card" aria-labelledby="chart-heading">
+        <div class="c-card-head">
+          <h2 id="chart-heading">Last {{ s.rangeDays }} days</h2>
+          <div class="legend">
+            @for (one of series(); track one.label) {
+              <span [style.--dot]="one.color">{{ one.label }}</span>
+            }
+          </div>
+        </div>
+        <app-day-chart [days]="days()" [series]="series()"></app-day-chart>
+      </section>
+
+      <div class="c-grid-2">
+        <section class="c-card" aria-labelledby="pages-heading">
+          <div class="c-card-head"><h2 id="pages-heading">Most visited pages</h2></div>
+          <app-share-list [items]="pages()" [mono]="true"></app-share-list>
+        </section>
+        <section class="c-card" aria-labelledby="targets-heading">
+          <div class="c-card-head"><h2 id="targets-heading">Downloads and store clicks</h2></div>
+          <app-share-list [items]="targets()" color="var(--beta)" [showPercent]="true"
+                          emptyText="No download or store click yet."></app-share-list>
+        </section>
+      </div>
+
+      <section aria-label="Visitors by trait" class="traits">
+        @for (one of traits; track one.key) {
+          <div class="c-card">
+            <div class="c-card-head"><h2>{{ one.title }}</h2></div>
+            <app-share-list [items]="trait(one.key)" color="var(--good)" [showPercent]="true"></app-share-list>
+          </div>
+        }
+      </section>
+
+      <p class="note">
+        Visitors are recognised for one day only, with a value that cannot be traced back; one person on two days counts twice.
+        Bots, previews and browsers with Do Not Track or Global Privacy Control are not counted.
+      </p>
+    } @else {
+      <div class="c-grid-4">
+        @for (card of [1, 2, 3, 4]; track card) {
+          <div class="c-card"><div class="c-skeleton chart-skeleton" style="height: 90px"></div></div>
+        }
+      </div>
+      <div class="c-card"><div class="c-skeleton chart-skeleton"></div></div>
+    }
+  </div>
+</div>

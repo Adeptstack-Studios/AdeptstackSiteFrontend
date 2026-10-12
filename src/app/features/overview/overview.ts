@@ -4,6 +4,11 @@ import {ChevronRight, FilePen, FileText, LucideAngularModule, Plus, Store} from 
 import {ConsoleService} from '../../services/console-service';
 import {AuthorizationService} from '../../services/authorization';
 import {AppSummary, checklistDone, ConsoleOverview} from '../../models/console';
+import {StatsOverview, trend} from '../../models/stats';
+import {KpiCard} from '../../shared/charts/kpi-card';
+import {DayChart} from '../../shared/charts/day-chart';
+import {ShareList} from '../../shared/charts/share-list';
+import {compact} from '../../shared/charts/chart-series';
 import {AppsTable} from '../apps/apps-table/apps-table';
 import {AppTile} from '../../shared/ui/app-tile';
 import {ChannelChip, VisibilityStatus} from '../../shared/ui/status';
@@ -25,7 +30,8 @@ const SHOWN_ATTENTION = 6;
 /** Start page: the most important numbers, the apps and what needs to be done. */
 @Component({
   selector: 'app-overview',
-  imports: [RouterLink, LucideAngularModule, AppsTable, AppTile, ChannelChip, VisibilityStatus, RelativeDayPipe],
+  imports: [RouterLink, LucideAngularModule, AppsTable, AppTile, ChannelChip, VisibilityStatus, RelativeDayPipe,
+    KpiCard, DayChart, ShareList],
   templateUrl: './overview.html',
   styleUrl: './overview.css'
 })
@@ -36,6 +42,20 @@ export class Overview {
   protected readonly ranges = RANGES;
   protected readonly range = signal(30);
   protected readonly overview = signal<ConsoleOverview | null>(null);
+  protected readonly stats = signal<StatsOverview | null>(null);
+  protected readonly compact = compact;
+  protected readonly trend = trend;
+
+  protected readonly chartDays = computed(() => this.stats()?.days.map(day => day.day) ?? []);
+  protected readonly chartSeries = computed(() => {
+    const days = this.stats()?.days ?? [];
+    return [
+      {label: 'Page views', color: 'var(--accent)', values: days.map(day => day.views)},
+      {label: 'Downloads', color: 'var(--beta)', values: days.map(day => day.downloads)},
+    ];
+  });
+  protected readonly topPages = computed(() =>
+    (this.stats()?.topPages ?? []).slice(0, 6).map(page => ({name: page.path, value: page.views})));
   protected readonly apps = signal<AppSummary[] | null>(null);
   protected readonly username = signal('');
 
@@ -91,6 +111,7 @@ export class Overview {
 
   private load() {
     this.console.overview(this.range()).subscribe(overview => this.overview.set(overview));
+    this.console.stats(this.range()).subscribe(stats => this.stats.set(stats));
   }
 }
 

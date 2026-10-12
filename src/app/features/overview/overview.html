@@ -15,34 +15,41 @@
     </header>
 
     <section class="c-grid-4" aria-label="Key figures">
-      @if (overview(); as o) {
-        <div class="c-card" style="--kpi: var(--accent)">
-          <div class="c-kpi-label">Public apps</div>
-          <div class="c-kpi-value">{{ o.publicApps }}</div>
-          <div class="c-kpi-note">{{ o.apps }} in total, {{ o.apps - o.publicApps }} unlisted or private</div>
-        </div>
-        <div class="c-card" style="--kpi: var(--good)">
-          <div class="c-kpi-label">Releases · last {{ o.rangeDays }} days</div>
-          <div class="c-kpi-value">{{ o.releasesInRange }}</div>
-          <div class="c-kpi-note">{{ o.releases }} releases in total</div>
-        </div>
-        <div class="c-card" style="--kpi: var(--beta)">
-          <div class="c-kpi-label">Blog posts</div>
-          <div class="c-kpi-value">{{ o.posts }}</div>
-          <div class="c-kpi-note">{{ o.draftPosts }} still private</div>
-        </div>
-        <div class="c-card" style="--kpi: #A78BFA">
-          <div class="c-kpi-label">Mod downloads</div>
-          <div class="c-kpi-value">{{ o.modDownloadsFormatted ?? '–' }}</div>
-          <div class="c-kpi-note">Modrinth + CurseForge, refreshed every 3 hours</div>
-        </div>
+      @if (stats(); as s) {
+        <app-kpi-card label="Page views" [value]="compact(s.totals.views)" [trend]="trend(s.totals.views, s.previous.views)"
+                      [spark]="chartSeries()[0].values" note="All pages on adeptstack.net"></app-kpi-card>
+        <app-kpi-card label="Downloads" color="var(--beta)" [value]="compact(s.totals.downloads)"
+                      [trend]="trend(s.totals.downloads, s.previous.downloads)" [spark]="chartSeries()[1].values"
+                      [note]="'Own downloads, ' + compact(s.totals.uniqueDownloads) + ' by different visitors'"></app-kpi-card>
+        <app-kpi-card label="Store clicks" color="#A78BFA" [value]="compact(s.totals.storeClicks)"
+                      [trend]="trend(s.totals.storeClicks, s.previous.storeClicks)"
+                      note="Play Store, Microsoft Store, Steam, Modrinth …"></app-kpi-card>
+        <app-kpi-card label="Mod downloads" color="var(--good)" [value]="overview()?.modDownloadsFormatted ?? '–'"
+                      note="Modrinth + CurseForge, all time"></app-kpi-card>
       } @else {
         @for (card of [1, 2, 3, 4]; track card) {
           <div class="c-card"><div class="c-skeleton kpi-skeleton"></div></div>
         }
       }
     </section>
-    <p class="stats-note">Page views, own downloads and store clicks follow with the statistics.</p>
+
+    <div class="c-grid-main">
+      <section class="c-card" aria-labelledby="traffic-heading">
+        <div class="c-card-head">
+          <h2 id="traffic-heading">Page views &amp; downloads</h2>
+          <a class="c-link" routerLink="/stats">Open statistics</a>
+        </div>
+        @if (stats()) {
+          <app-day-chart [days]="chartDays()" [series]="chartSeries()" [height]="190"></app-day-chart>
+        } @else {
+          <div class="c-skeleton chart-skeleton"></div>
+        }
+      </section>
+      <section class="c-card" aria-labelledby="pages-heading">
+        <div class="c-card-head"><h2 id="pages-heading">Most visited pages</h2></div>
+        <app-share-list [items]="topPages()" [mono]="true"></app-share-list>
+      </section>
+    </div>
 
     <section class="c-card c-card-flush" aria-labelledby="apps-heading">
       <div class="c-card-head">
