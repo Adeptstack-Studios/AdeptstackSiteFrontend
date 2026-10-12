@@ -1,84 +1,87 @@
 <div class="c-scroll">
   <div class="c-page">
+    @let state = list.state();
     <header class="c-page-head">
       <div>
         <h1>Releases</h1>
         <p class="c-sub">
           @if (items() !== null) {
-            {{ total() }} {{ total() === 1 ? 'release' : 'releases' }}{{ state().channel || state().visibility || state().q ? ' match the filters' : '' }}
+            {{ total() }} {{ total() === 1 ? 'release' : 'releases' }}{{ list.filtered() ? ' match the filters' : '' }}
           } @else {
             Loading releases…
           }
         </p>
       </div>
       <div class="c-actions">
-        <a class="c-btn c-btn-primary" [routerLink]="['/apps', context.slug(), 'releases', 'new']" [queryParams]="state().channel ? {channel: state().channel} : {}">
+        <a class="c-btn c-btn-primary" [routerLink]="['/apps', context.slug(), 'releases', 'new']"
+           [queryParams]="state.channel ? {channel: state.channel} : {}">
           <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
           New release
         </a>
       </div>
     </header>
 
-    <div class="filters">
-      <div class="channel-chips" role="group" aria-label="Channel">
-        <button type="button" class="chip-btn" [attr.aria-pressed]="!state().channel" (click)="update({channel: '', page: 1})">
+    <div class="c-filters">
+      <div class="c-chips" role="group" aria-label="Channel">
+        <button type="button" class="c-chip-btn" [attr.aria-pressed]="!state.channel" (click)="list.update({channel: '', page: 1})">
           All channels <span class="n">{{ allCount() }}</span>
         </button>
         @for (channel of channels(); track channel.name) {
-          <button type="button" class="chip-btn" [attr.aria-pressed]="state().channel === channel.name"
-                  (click)="update({channel: channel.name, page: 1})">
+          <button type="button" class="c-chip-btn" [attr.aria-pressed]="state.channel === channel.name"
+                  (click)="list.update({channel: channel.name, page: 1})">
             {{ channel.name }} <span class="n">{{ channel.count }}</span>
           </button>
         }
       </div>
 
-      <div class="filter-fields">
-        <label class="search">
+      <div class="c-filter-fields">
+        <label class="c-search">
           <lucide-icon [img]="icons.Search" [size]="15" aria-hidden="true"></lucide-icon>
           <span class="sr-only">Search releases</span>
-          <input class="c-input" type="search" placeholder="Search version, title…" [value]="state().q"
+          <input class="c-input" type="search" placeholder="Search version, title…" [value]="state.q"
                  (input)="search($any($event.target).value)">
         </label>
-        <label class="select">
+        <label class="c-select">
           <span>Visibility</span>
-          <select [value]="state().visibility" (change)="update({visibility: $any($event.target).value, page: 1})">
+          <select (change)="list.update({visibility: $any($event.target).value, page: 1})">
             @for (option of visibilityOptions; track option.value) {
-              <option [value]="option.value" [selected]="state().visibility === option.value">{{ option.label }}</option>
+              <option [value]="option.value" [selected]="state.visibility === option.value">{{ option.label }}</option>
             }
           </select>
         </label>
-        <label class="select">
+        <label class="c-select">
           <span>Sort</span>
-          <select (change)="update({sort: $any($event.target).value, page: 1})">
+          <select (change)="list.update({sort: $any($event.target).value, page: 1})">
             @for (option of sortOptions; track option.value) {
-              <option [value]="option.value" [selected]="state().sort === option.value">{{ option.label }}</option>
+              <option [value]="option.value" [selected]="state.sort === option.value">{{ option.label }}</option>
             }
           </select>
         </label>
       </div>
     </div>
 
-    @if (selected().size) {
-      <div class="selection-bar" role="region" aria-label="Selected releases">
-        <strong aria-live="polite">{{ selected().size }} {{ selected().size === 1 ? 'release' : 'releases' }} selected</strong>
-        <button type="button" class="c-btn c-btn-primary c-btn-sm" [disabled]="busy()" (click)="sendPush()">Send one push</button>
-        <button type="button" class="c-btn c-btn-sm" [disabled]="busy()" (click)="setVisibility('PUBLIC')">Make public</button>
-        <button type="button" class="c-btn c-btn-sm" [disabled]="busy()" (click)="setVisibility('UNLISTED')">Make unlisted</button>
-        <button type="button" class="c-btn c-btn-sm" [disabled]="busy()" (click)="setVisibility('PRIVATE')">Make private</button>
-        <button type="button" class="c-link clear" (click)="clearSelection()">Clear</button>
+    @if (selection.size()) {
+      <div class="c-selection-bar" role="region" aria-label="Selected releases">
+        <strong aria-live="polite">{{ selection.size() }} {{ selection.size() === 1 ? 'release' : 'releases' }} selected</strong>
+        <button type="button" class="c-btn c-btn-primary c-btn-sm" [disabled]="selection.busy()" (click)="sendPush()">Send one push</button>
+        <button type="button" class="c-btn c-btn-sm" [disabled]="selection.busy()" (click)="setVisibility('PUBLIC')">Make public</button>
+        <button type="button" class="c-btn c-btn-sm" [disabled]="selection.busy()" (click)="setVisibility('UNLISTED')">Make unlisted</button>
+        <button type="button" class="c-btn c-btn-sm" [disabled]="selection.busy()" (click)="setVisibility('PRIVATE')">Make private</button>
+        <button type="button" class="c-link" (click)="selection.clear()">Clear</button>
       </div>
     }
 
     <section class="c-card c-card-flush" aria-label="Releases">
-      @if (items(); as list) {
-        @if (list.length) {
+      @if (items(); as rows) {
+        @if (rows.length) {
           <div class="c-table-wrap">
             <table class="c-table">
               <thead>
                 <tr>
-                  <th scope="col" class="check-col">
+                  <th scope="col" class="c-check-col">
                     <input type="checkbox" aria-label="Select all releases on this page"
-                           [checked]="allOnPageSelected()" [indeterminate]="someOnPageSelected()" (change)="togglePage()">
+                           [checked]="selection.allOf(rows)" [indeterminate]="selection.someOf(rows)"
+                           (change)="selection.togglePage(rows)">
                   </th>
                   <th scope="col">Version</th>
                   <th scope="col">Channel</th>
@@ -88,15 +91,15 @@
                 </tr>
               </thead>
               <tbody>
-                @for (release of list; track release.id) {
-                  <tr [class.selected]="selected().has(release.id!)">
-                    <td class="check-col">
+                @for (release of rows; track release.id) {
+                  <tr [class.selected]="selection.has(release)">
+                    <td class="c-check-col">
                       <input type="checkbox" [attr.aria-label]="'Select ' + release.version"
-                             [checked]="selected().has(release.id!)" (change)="toggle(release)">
+                             [checked]="selection.has(release)" (change)="selection.toggle(release)">
                     </td>
-                    <td><a class="c-version version-link" [routerLink]="['/apps', context.slug(), 'releases', release.id]">{{ release.version }}</a></td>
+                    <td><a class="c-version c-row-title" [routerLink]="['/apps', context.slug(), 'releases', release.id]">{{ release.version }}</a></td>
                     <td><app-channel-chip [name]="release.channel"></app-channel-chip></td>
-                    <td class="title-cell">{{ release.title }}</td>
+                    <td class="c-ellipsis">{{ release.title }}</td>
                     <td><app-visibility-status [value]="release.visibility"></app-visibility-status></td>
                     <td class="c-muted">{{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}</td>
                   </tr>
@@ -104,19 +107,19 @@
               </tbody>
             </table>
           </div>
-          <div class="pager">
-            <app-pagination [page]="state().page" [size]="state().size" [total]="total()" noun="releases"
-                            (pageChange)="update({page: $event})" (sizeChange)="update({size: $event, page: 1})"/>
+          <div class="c-pager">
+            <app-pagination [page]="state.page" [size]="state.size" [total]="total()" noun="releases"
+                            (pageChange)="list.update({page: $event})" (sizeChange)="list.update({size: $event, page: 1})"/>
           </div>
-        } @else if (state().channel || state().visibility || state().q) {
+        } @else if (list.filtered()) {
           <p class="c-empty">No release matches these filters.
-            <button type="button" class="c-link" (click)="update({channel: '', visibility: '', q: '', page: 1})">Show all releases</button>
+            <button type="button" class="c-link" (click)="list.clearFilters()">Show all releases</button>
           </p>
         } @else {
           <p class="c-empty">No releases yet. <a [routerLink]="['/apps', context.slug(), 'releases', 'new']">Create the first one</a>.</p>
         }
       } @else {
-        <div class="c-skeleton list-skeleton"></div>
+        <div class="c-skeleton c-list-skeleton"></div>
       }
     </section>
   </div>

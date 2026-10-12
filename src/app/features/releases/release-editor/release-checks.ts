@@ -1,5 +1,6 @@
 import {compareVersions, isVersionNumber} from '../../../shared/versions';
 import {LINK_FIELDS} from '../../../models/console';
+import {EditorCheck} from '../../../shared/editor/checks-card';
 
 /** What "Before you publish" looks at; plain values so it can be computed from the form. */
 export interface ReleaseDraft {
@@ -12,13 +13,6 @@ export interface ReleaseDraft {
   links: Record<string, string>;
 }
 
-export interface ReleaseCheck {
-  ok: boolean;
-  /** an error blocks saving, a warning only points something out */
-  severity: 'error' | 'warning';
-  text: string;
-}
-
 // built from lines so the "* " bullets keep their space for typing
 export const NOTES_TEMPLATE = ['## New Features', '', '* ', '', '## Changes', '', '* ', '', '## Fixes', '', '* ', ''].join('\n');
 
@@ -26,9 +20,9 @@ export const NOTES_TEMPLATE = ['## New Features', '', '* ', '', '## Changes', ''
  * @param channelVersions every other version already in the chosen channel
  * @param hasAppIcon       the app icon stands in for a missing cover image
  */
-export function checkRelease(draft: ReleaseDraft, channelVersions: string[], hasAppIcon: boolean): ReleaseCheck[] {
+export function checkRelease(draft: ReleaseDraft, channelVersions: string[], hasAppIcon: boolean): EditorCheck[] {
   const version = draft.version.trim();
-  const checks: ReleaseCheck[] = [];
+  const checks: EditorCheck[] = [];
 
   if (!version) {
     checks.push({ok: false, severity: 'error', text: 'Version is missing'});

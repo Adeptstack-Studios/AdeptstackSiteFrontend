@@ -1,21 +1,21 @@
 <div class="c-scroll">
   <form [formGroup]="form" (ngSubmit)="submit()">
-    <header class="bar">
-      <a class="c-btn back" [routerLink]="['/apps', context.slug(), 'releases']" aria-label="Back to releases">
+    <header class="c-editor-bar">
+      <a class="c-btn c-editor-back" [routerLink]="['/apps', context.slug(), 'releases']" aria-label="Back to releases">
         <lucide-icon [img]="icons.ArrowLeft" [size]="17" aria-hidden="true"></lucide-icon>
       </a>
       @if (context.app(); as app) {
         <app-tile [name]="app.name" [iconUrl]="app.iconUrl" [size]="32"></app-tile>
       }
-      <div class="bar-title">
+      <div class="c-editor-title">
         <h1>{{ isNew() ? 'New release' : 'Edit ' + (stored()?.version ?? 'release') }}</h1>
         <p class="c-sub">
           {{ context.app()?.name }}
           @if (stored(); as release) {
             · {{ release.visibility === 'PRIVATE' ? 'draft' : release.visibility?.toLowerCase() }}
           }
-          @if (localSaveText()) {
-            · {{ localSaveText() }}
+          @if (draftStatus()) {
+            · {{ draftStatus() }}
           }
         </p>
       </div>
@@ -30,18 +30,18 @@
       </div>
     </header>
 
-    @if (restorable(); as draft) {
-      <div class="restore" role="status">
+    @if (draft.restorable(); as kept) {
+      <div class="c-editor-restore" role="status">
         <lucide-icon [img]="icons.CircleAlert" [size]="17" aria-hidden="true"></lucide-icon>
-        <span>Unsaved changes from {{ draftAge(draft.savedAt) }} were kept in this browser.</span>
-        <button type="button" class="c-btn c-btn-sm" (click)="restoreLocalDraft()">Restore them</button>
-        <button type="button" class="c-link" (click)="discardLocalDraft()">Discard</button>
+        <span>Unsaved changes from {{ draftAge(kept.savedAt) }} were kept in this browser.</span>
+        <button type="button" class="c-btn c-btn-sm" (click)="restoreDraft()">Restore them</button>
+        <button type="button" class="c-link" (click)="draft.discard()">Discard</button>
       </div>
     }
 
     @if (ready()) {
-      <div class="layout">
-        <div class="main-col">
+      <div class="c-editor-layout">
+        <div class="c-editor-main">
           <section class="c-card" aria-labelledby="version-heading">
             <div class="c-card-head">
               <h2 id="version-heading">Version &amp; channel</h2>
@@ -107,14 +107,7 @@
                 }
               </div>
             </div>
-            <div class="notes">
-              <label class="sr-only" for="content">Release notes in Markdown</label>
-              <textarea id="content" class="notes-input" formControlName="content" spellcheck="true"></textarea>
-              <div class="notes-preview" aria-label="Preview">
-                <span class="preview-label">Preview</span>
-                <markdown [data]="form.controls.content.value"></markdown>
-              </div>
-            </div>
+            <app-markdown-editor [control]="form.controls.content" label="Release notes in Markdown"></app-markdown-editor>
           </section>
 
           <section class="c-card" aria-labelledby="downloads-heading">
@@ -142,9 +135,9 @@
                       }
                       <label class="c-btn c-btn-sm upload">
                         <lucide-icon [img]="icons.Upload" [size]="15" aria-hidden="true"></lucide-icon>
-                        {{ uploading() === 'file' ? 'Uploading…' : form.controls.links.controls.appUrl.value ? 'Replace' : 'Upload .exe / .msi' }}
+                        {{ uploadingFile() ? 'Uploading…' : form.controls.links.controls.appUrl.value ? 'Replace' : 'Upload .exe / .msi' }}
                         <input type="file" accept=".exe,.msi" class="sr-only" (change)="onFileSelected($event)"
-                               [disabled]="uploading() === 'file'">
+                               [disabled]="uploadingFile()">
                       </label>
                     </div>
                     <input [id]="link.field" class="sr-only" formControlName="appUrl" tabindex="-1" aria-hidden="true">
@@ -173,70 +166,15 @@
           </section>
         </div>
 
-        <aside class="side-col">
-          <section class="c-card" aria-labelledby="publish-heading">
-            <div class="c-card-head"><h2 id="publish-heading">Publishing</h2></div>
-            <div class="publish-options" role="radiogroup" aria-labelledby="publish-heading">
-              @for (option of publishOptions; track option.value) {
-                <label class="publish-option" [class.checked]="form.controls.visibility.value === option.value">
-                  <input type="radio" formControlName="visibility" [value]="option.value">
-                  <span class="c-status" [class]="option.value.toLowerCase()">{{ option.label }}</span>
-                  <span class="option-hint">{{ option.hint }}</span>
-                </label>
-              }
-            </div>
+        <aside class="c-editor-side">
+          <app-publishing-card [visibility]="form.controls.visibility" [push]="form.controls.push"
+                               [publishedAt]="form.controls.publishedAt" [live]="isLive()"
+                               [pushPreview]="'“' + context.app()?.name + ' v' + (form.controls.version.value || '…') + ' is OUT NOW!”'">
+          </app-publishing-card>
 
-            @if (form.controls.visibility.value !== 'PRIVATE') {
-              <label class="check">
-                <input type="checkbox" formControlName="push">
-                <span>
-                  <strong>Send a push {{ isLive() ? 'after saving' : 'after publishing' }}</strong>
-                  <span class="option-hint">“{{ context.app()?.name }} v{{ form.controls.version.value || '…' }} is OUT NOW!”</span>
-                </span>
-              </label>
-            }
+          <app-checks-card [checks]="checks()"></app-checks-card>
 
-            <div class="date-field">
-              <label class="c-label" for="publishedAt">Release date</label>
-              <input id="publishedAt" class="c-input" type="date" formControlName="publishedAt">
-            </div>
-          </section>
-
-          <section class="c-card" aria-labelledby="checks-heading">
-            <div class="c-card-head"><h2 id="checks-heading">Before you publish</h2></div>
-            <ul class="checks">
-              @for (check of checks(); track check.text) {
-                <li [class]="check.ok ? 'ok' : check.severity">
-                  <lucide-icon [img]="check.ok ? icons.Check : check.severity === 'error' ? icons.CircleX : icons.CircleAlert"
-                               [size]="16" aria-hidden="true"></lucide-icon>
-                  <span>{{ check.text }}<span class="sr-only">{{ check.ok ? ' (ok)' : check.severity === 'error' ? ' (must be fixed)' : ' (hint)' }}</span></span>
-                </li>
-              }
-            </ul>
-          </section>
-
-          <section class="c-card" aria-labelledby="cover-heading">
-            <div class="c-card-head"><h2 id="cover-heading">Cover image</h2></div>
-            @if (form.controls.imageUrl.value; as cover) {
-              <div class="cover">
-                <img [src]="cover" alt="Cover image">
-                <div class="cover-actions">
-                  <label class="c-btn c-btn-sm upload">
-                    {{ uploading() === 'cover' ? 'Uploading…' : 'Replace' }}
-                    <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onCoverSelected($event)">
-                  </label>
-                  <button type="button" class="c-btn c-btn-sm" (click)="removeCover()">Remove</button>
-                </div>
-              </div>
-            } @else {
-              <label class="drop">
-                <lucide-icon [img]="icons.ImageUp" [size]="22" aria-hidden="true"></lucide-icon>
-                {{ uploading() === 'cover' ? 'Uploading…' : 'Choose an image' }}
-                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onCoverSelected($event)">
-              </label>
-            }
-            <p class="c-hint">Also used for link previews (Discord, WhatsApp, …)</p>
-          </section>
+          <app-cover-card [control]="form.controls.imageUrl"></app-cover-card>
 
           @if (stored()) {
             <section class="c-card" aria-labelledby="danger-heading">
@@ -251,9 +189,9 @@
         </aside>
       </div>
     } @else {
-      <div class="layout">
-        <div class="main-col"><div class="c-card"><div class="c-skeleton loading"></div></div></div>
-        <aside class="side-col"><div class="c-card"><div class="c-skeleton loading"></div></div></aside>
+      <div class="c-editor-layout">
+        <div class="c-editor-main"><div class="c-card"><div class="c-skeleton c-editor-loading"></div></div></div>
+        <aside class="c-editor-side"><div class="c-card"><div class="c-skeleton c-editor-loading"></div></div></aside>
       </div>
     }
   </form>

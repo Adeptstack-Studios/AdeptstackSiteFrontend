@@ -1,87 +1,32 @@
-import {Component, computed, DestroyRef, effect, HostListener, inject, signal, untracked} from '@angular/core';
+import {Component, computed, effect, inject, signal, untracked} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
-import {debounceTime, forkJoin, map, Observable, of, switchMap} from 'rxjs';
-import {MarkdownComponent} from 'ngx-markdown';
-import {
-  ArrowLeft, Check, CircleAlert, CircleX, Download, ImageUp, LucideAngularModule, Plus, Trash2, Upload, X
-} from 'lucide-angular';
+import {forkJoin, map, Observable, of, switchMap} from 'rxjs';
+import {ArrowLeft, CircleAlert, Download, LucideAngularModule, Plus, Trash2, Upload, X} from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
-import {ConfirmService} from '../../../core/confirm/confirm-service';
-import {HasUnsavedChanges} from '../../../core/unsaved/unsaved-changes';
 import {ChangelogsService} from '../../../services/changelogs-service';
 import {ConsoleService} from '../../../services/console-service';
 import {FileService} from '../../../services/file-service';
-import {ToastService} from '../../../services/toast-service';
 import {Changelogs} from '../../../models/changelogs';
 import {AppSummary, LINK_FIELDS, LinkField, LinkSuggestion} from '../../../models/console';
 import {Visibility} from '../../../shared/visibility-picker/visibility-picker';
 import {channelKind, suggestVersions, VersionSuggestion} from '../../../shared/versions';
-import {IMAGE_FILE_HINT, INSTALLER_FILE_HINT, isImageFile, isInstallerFile} from '../../../shared/listing/upload-files';
+import {INSTALLER_FILE_HINT, isInstallerFile} from '../../../shared/listing/upload-files';
 import {AppTile} from '../../../shared/ui/app-tile';
-import {relativeDay} from '../../../shared/ui/relative-day';
+import {EditorPage, today} from '../../../shared/editor/editor-page';
+import {MarkdownEditor} from '../../../shared/editor/markdown-editor';
+import {PublishingCard} from '../../../shared/editor/publishing-card';
+import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
+import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkRelease, NOTES_TEMPLATE, ReleaseDraft} from './release-checks';
 
 /** Channel names for an app without releases, until the stable/beta migration renames them. */
 const DEFAULT_CHANNELS = {stable: 'main', beta: 'develop'};
-/** Work in progress is kept in this browser, so a closed tab or an expired session loses nothing. */
-const LOCAL_DRAFT_PREFIX = 'release-draft:';
-const LOCAL_SAVE_DELAY_MS = 1500;
 
-const PUBLISH_OPTIONS: { value: Visibility; label: string; hint: string }[] = [
-  {value: 'PRIVATE', label: 'Private draft', hint: 'Only visible here'},
-  {value: 'UNLISTED', label: 'Unlisted', hint: 'Reachable by link and in the app, not listed'},
-  {value: 'PUBLIC', label: 'Public', hint: 'Listed on adeptstack.net and in the app'},
-];
-
-interface LocalDraft {
-  savedAt: number;
-  value: ReturnType<ReleaseEditor['form']['getRawValue']>;
-}
-
-/** Creates and edits releases of the open app: /apps/:slug/releases/new and /apps/:slug/releases/:id */
-@Component({
-  selector: 'app-release-editor',
-  imports: [ReactiveFormsModule, RouterLink, CdkMenuTrigger, CdkMenu, CdkMenuItem, MarkdownComponent,
-    LucideAngularModule, AppTile],
-  templateUrl: './release-editor.html',
-  styleUrls: ['./release-editor.css', './release-editor-side.css']
-})
-export class ReleaseEditor implements HasUnsavedChanges {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly changelogs = inject(ChangelogsService);
-  private readonly console = inject(ConsoleService);
-  private readonly files = inject(FileService);
-  private readonly toast = inject(ToastService);
-  private readonly confirm = inject(ConfirmService);
-  protected readonly context = inject(AppContext);
-
-  protected readonly icons = {ArrowLeft, Check, CircleAlert, CircleX, Download, ImageUp, Plus, Trash2, Upload, X};
-  protected readonly publishOptions = PUBLISH_OPTIONS;
-  protected readonly linkFields = LINK_FIELDS;
-
-  /** null for a new release */
-  protected readonly releaseId = signal<number | null>(null);
-  /** the release as stored, for an existing one */
-  protected readonly stored = signal<Changelogs | null>(null);
-  protected readonly ready = signal(false);
-  protected readonly saving = signal(false);
-  protected readonly uploading = signal<'cover' | 'file' | null>(null);
-  protected readonly suggestions = signal<LinkSuggestion[]>([]);
-  /** every release of the app, for duplicate and "higher than" checks */
-  private readonly allReleases = signal<Changelogs[]>([]);
-  /** link rows shown even while empty, because they were added */
-  protected readonly addedLinks = signal<LinkField[]>([]);
-  protected readonly localSavedAt = signal<number | null>(null);
-  protected readonly restorable = signal<LocalDraft | null>(null);
-  protected readonly customChannel = signal(false);
-  /** the title follows the version until it is edited by hand */
-  private titleFollowsVersion = true;
-
-  readonly form = new FormGroup({
+function releaseForm() {
+  return new FormGroup({
     version: new FormControl('', {nonNullable: true, validators: Validators.required}),
     channel: new FormControl('', {nonNullable: true, validators: Validators.required}),
     title: new FormControl('', {nonNullable: true, validators: Validators.required}),
@@ -94,6 +39,44 @@ export class ReleaseEditor implements HasUnsavedChanges {
     publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
     push: new FormControl(true, {nonNullable: true}),
   });
+}
+
+type ReleaseFormValue = ReturnType<ReturnType<typeof releaseForm>['getRawValue']>;
+
+/** Creates and edits releases of the open app: /apps/:slug/releases/new and /apps/:slug/releases/:id */
+@Component({
+  selector: 'app-release-editor',
+  imports: [ReactiveFormsModule, RouterLink, CdkMenuTrigger, CdkMenu, CdkMenuItem, LucideAngularModule, AppTile,
+    MarkdownEditor, PublishingCard, ChecksCard, CoverCard],
+  templateUrl: './release-editor.html',
+  styleUrl: './release-editor.css'
+})
+export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly changelogs = inject(ChangelogsService);
+  private readonly console = inject(ConsoleService);
+  private readonly files = inject(FileService);
+  protected readonly context = inject(AppContext);
+
+  protected readonly icons = {ArrowLeft, CircleAlert, Download, Plus, Trash2, Upload, X};
+  protected readonly linkFields = LINK_FIELDS;
+
+  /** null for a new release */
+  protected readonly releaseId = signal<number | null>(null);
+  /** the release as stored, for an existing one */
+  protected readonly stored = signal<Changelogs | null>(null);
+  protected readonly uploadingFile = signal(false);
+  protected readonly suggestions = signal<LinkSuggestion[]>([]);
+  /** every release of the app, for duplicate and "higher than" checks */
+  private readonly allReleases = signal<Changelogs[]>([]);
+  /** link rows shown even while empty, because they were added */
+  protected readonly addedLinks = signal<LinkField[]>([]);
+  protected readonly customChannel = signal(false);
+  /** the title follows the version until it is edited by hand */
+  private titleFollowsVersion = true;
+
+  readonly form = releaseForm();
 
   private readonly value = toSignal(this.form.valueChanges.pipe(map(() => this.form.getRawValue())),
     {initialValue: this.form.getRawValue()});
@@ -128,7 +111,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
     const draft: ReleaseDraft = {...value, links: value.links};
     return checkRelease(draft, others, !!this.context.app()?.iconUrl);
   });
-  protected readonly blocked = computed(() => this.checks().some(check => !check.ok && check.severity === 'error'));
+  protected readonly blocked = computed(() => hasBlockingCheck(this.checks()));
 
   /** The newest release in the chosen channel, to copy its notes from. */
   protected readonly copySource = computed(() => {
@@ -152,7 +135,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
   });
 
   constructor() {
-    const destroyRef = inject(DestroyRef);
+    super();
 
     // start once the app is known; for an existing release also once it is loaded
     effect(() => {
@@ -174,12 +157,11 @@ export class ReleaseEditor implements HasUnsavedChanges {
       if (visibility === 'PRIVATE') this.form.controls.push.setValue(false);
     });
 
-    this.form.valueChanges.pipe(debounceTime(LOCAL_SAVE_DELAY_MS), takeUntilDestroyed()).subscribe(() => {
-      if (this.ready() && this.form.dirty) this.saveLocally();
-    });
-    destroyRef.onDestroy(() => {
-      if (this.ready() && this.form.dirty) this.saveLocally();
-    });
+    this.keepDrafts();
+  }
+
+  protected draftKey() {
+    return `release-draft:${this.context.slug()}:${this.releaseId() ?? 'new'}`;
   }
 
   // lifecycle of the page
@@ -215,10 +197,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
       } else {
         this.startNew(app, suggestions, promoted, query.get('channel'));
       }
-
-      this.form.markAsPristine();
-      this.ready.set(true);
-      this.offerLocalDraft();
+      this.loaded();
     });
   }
 
@@ -257,6 +236,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
   }
 
   private fill(release: Changelogs) {
+    const draft = release.visibility === 'PRIVATE' || !release.visibility;
     this.form.patchValue({
       version: release.version ?? '',
       channel: release.channel ?? '',
@@ -266,12 +246,20 @@ export class ReleaseEditor implements HasUnsavedChanges {
       imageUrl: release.imageUrl === this.context.app()?.iconUrl ? '' : release.imageUrl ?? '',
       links: pickLinks(release),
       // a draft is opened to be published eventually: the choice starts at Public, like a new release
-      visibility: release.visibility === 'PRIVATE' || !release.visibility ? 'PUBLIC' : release.visibility as Visibility,
-      push: release.visibility === 'PRIVATE' || !release.visibility,
-      publishedAt: release.visibility === 'PRIVATE' || !release.publishedAt
-        ? today() : String(release.publishedAt).substring(0, 10),
+      visibility: draft ? 'PUBLIC' : release.visibility as Visibility,
+      push: draft,
+      publishedAt: draft || !release.publishedAt ? today() : String(release.publishedAt).substring(0, 10),
     });
     this.customChannel.set(!this.channelOptions().includes(release.channel ?? ''));
+  }
+
+  protected override restoreDraft() {
+    const value = super.restoreDraft();
+    if (value) {
+      this.addedLinks.set(LINK_FIELDS.map(({field}) => field).filter(field => value.links[field]));
+      this.titleFollowsVersion = false;
+    }
+    return value;
   }
 
   // version, channel, notes
@@ -321,7 +309,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
     });
   }
 
-  // links and uploads
+  // links and the installer
 
   protected suggestionFor(field: LinkField) {
     return this.suggestions().find(suggestion => suggestion.field === field) ?? null;
@@ -360,42 +348,16 @@ export class ReleaseEditor implements HasUnsavedChanges {
       this.toast.error(INSTALLER_FILE_HINT);
       return;
     }
-    this.uploading.set('file');
+    this.uploadingFile.set(true);
     this.files.uploadApp(file).subscribe({
       next: response => {
         this.form.controls.links.controls.appUrl.setValue(response.url);
         this.form.markAsDirty();
-        this.uploading.set(null);
+        this.uploadingFile.set(false);
         this.toast.success(`${file.name} uploaded.`);
       },
-      error: () => this.uploading.set(null),
+      error: () => this.uploadingFile.set(false),
     });
-  }
-
-  protected onCoverSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-    if (!isImageFile(file)) {
-      this.toast.error(IMAGE_FILE_HINT);
-      return;
-    }
-    this.uploading.set('cover');
-    this.files.uploadImage(file).subscribe({
-      next: response => {
-        this.form.controls.imageUrl.setValue(response.url);
-        this.form.markAsDirty();
-        this.uploading.set(null);
-        this.toast.success('Cover image uploaded.');
-      },
-      error: () => this.uploading.set(null),
-    });
-  }
-
-  protected removeCover() {
-    this.form.controls.imageUrl.setValue('');
-    this.form.markAsDirty();
   }
 
   // saving
@@ -442,8 +404,7 @@ export class ReleaseEditor implements HasUnsavedChanges {
     ).subscribe({
       next: saved => {
         this.saving.set(false);
-        this.discardLocalDraft();
-        this.form.markAsPristine();
+        this.settled();
         this.context.refresh().subscribe();
         this.toast.success(savedMessage(saved, visibility, push, this.isNew()));
 
@@ -472,100 +433,11 @@ export class ReleaseEditor implements HasUnsavedChanges {
     });
     if (!ok) return;
     this.changelogs.deleteById(stored.id!).subscribe(() => {
-      this.discardLocalDraft();
-      this.form.markAsPristine();
+      this.settled();
       this.context.refresh().subscribe();
       this.toast.success(`${stored.version} deleted.`);
       this.router.navigate(['/apps', this.context.slug(), 'releases']);
     });
-  }
-
-  // unsaved work
-
-  async canLeave(): Promise<boolean> {
-    if (!this.form.dirty || this.saving()) return true;
-    this.saveLocally();
-    return this.confirm.ask({
-      title: 'Leave without saving?',
-      message: 'Your changes are kept in this browser and offered again when you come back to this release.',
-      confirmLabel: 'Leave',
-    });
-  }
-
-  @HostListener('window:beforeunload', ['$event'])
-  protected warnBeforeUnload(event: BeforeUnloadEvent) {
-    if (this.form.dirty) {
-      this.saveLocally();
-      event.preventDefault();
-    }
-  }
-
-  protected localSaveText() {
-    const savedAt = this.localSavedAt();
-    if (!savedAt) return this.form.dirty ? 'unsaved changes' : '';
-    const seconds = Math.round((Date.now() - savedAt) / 1000);
-    return `kept in this browser ${seconds < 60 ? 'just now' : this.draftAge(savedAt)}`;
-  }
-
-  protected restoreLocalDraft() {
-    const draft = this.restorable();
-    if (!draft) return;
-    try {
-      this.form.setValue(draft.value);
-    } catch {
-      // saved by an older version of this page with other fields
-      this.toast.error('These changes can not be restored anymore.');
-      this.discardLocalDraft();
-      return;
-    }
-    this.addedLinks.set(LINK_FIELDS.map(({field}) => field).filter(field => draft.value.links[field]));
-    this.titleFollowsVersion = false;
-    this.form.markAsDirty();
-    this.restorable.set(null);
-    this.toast.info('Your unsaved changes are back.');
-  }
-
-  protected discardLocalDraft() {
-    this.restorable.set(null);
-    this.localSavedAt.set(null);
-    try {
-      localStorage.removeItem(this.localKey());
-    } catch {
-      // storage may be blocked; there is nothing to clean up then
-    }
-  }
-
-  private localKey() {
-    return `${LOCAL_DRAFT_PREFIX}${this.context.slug()}:${this.releaseId() ?? 'new'}`;
-  }
-
-  private saveLocally() {
-    const draft: LocalDraft = {savedAt: Date.now(), value: this.form.getRawValue()};
-    try {
-      localStorage.setItem(this.localKey(), JSON.stringify(draft));
-      this.localSavedAt.set(draft.savedAt);
-    } catch {
-      // full or blocked storage: the leave warning still protects the work
-    }
-  }
-
-  private offerLocalDraft() {
-    try {
-      const raw = localStorage.getItem(this.localKey());
-      if (!raw) return;
-      const draft = JSON.parse(raw) as LocalDraft;
-      const same = JSON.stringify(draft.value) === JSON.stringify(this.form.getRawValue());
-      if (same) localStorage.removeItem(this.localKey()); else this.restorable.set(draft);
-    } catch {
-      // unreadable leftovers are simply ignored
-    }
-  }
-
-  protected draftAge(savedAt: number) {
-    const minutes = Math.round((Date.now() - savedAt) / 60000);
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes} min ago`;
-    return relativeDay(new Date(savedAt)).toLowerCase();
   }
 }
 
@@ -573,11 +445,6 @@ function pickLinks(release: Changelogs): Partial<Record<LinkField, string>> {
   return Object.fromEntries(LINK_FIELDS
     .map(({field}) => [field, (release as Record<string, unknown>)[field]])
     .filter(([, url]) => typeof url === 'string' && url)) as Partial<Record<LinkField, string>>;
-}
-
-function today() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 function savedMessage(saved: Changelogs, visibility: Visibility, push: boolean, created: boolean) {
