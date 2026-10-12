@@ -1,0 +1,275 @@
+<div class="c-scroll">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <header class="bar">
+      <a class="c-btn back" [routerLink]="['/apps', context.slug(), 'releases']" aria-label="Back to releases">
+        <lucide-icon [img]="icons.ArrowLeft" [size]="17" aria-hidden="true"></lucide-icon>
+      </a>
+      @if (context.app(); as app) {
+        <app-tile [name]="app.name" [iconUrl]="app.iconUrl" [size]="32"></app-tile>
+      }
+      <div class="bar-title">
+        <h1>{{ isNew() ? 'New release' : 'Edit ' + (stored()?.version ?? 'release') }}</h1>
+        <p class="c-sub">
+          {{ context.app()?.name }}
+          @if (stored(); as release) {
+            · {{ release.visibility === 'PRIVATE' ? 'draft' : release.visibility?.toLowerCase() }}
+          }
+          @if (localSaveText()) {
+            · {{ localSaveText() }}
+          }
+        </p>
+      </div>
+      <div class="c-actions">
+        @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
+          <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked()" (click)="saveAsDraft()">Save draft</button>
+        }
+        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || blocked()"
+                [title]="blocked() ? 'Fix the points under “Before you publish” first' : ''">
+          {{ saving() ? 'Saving…' : primaryLabel() }}
+        </button>
+      </div>
+    </header>
+
+    @if (restorable(); as draft) {
+      <div class="restore" role="status">
+        <lucide-icon [img]="icons.CircleAlert" [size]="17" aria-hidden="true"></lucide-icon>
+        <span>Unsaved changes from {{ draftAge(draft.savedAt) }} were kept in this browser.</span>
+        <button type="button" class="c-btn c-btn-sm" (click)="restoreLocalDraft()">Restore them</button>
+        <button type="button" class="c-link" (click)="discardLocalDraft()">Discard</button>
+      </div>
+    }
+
+    @if (ready()) {
+      <div class="layout">
+        <div class="main-col">
+          <section class="c-card" aria-labelledby="version-heading">
+            <div class="c-card-head">
+              <h2 id="version-heading">Version &amp; channel</h2>
+              @if (latestLine()) {
+                <p class="c-sub">Latest: <span class="mono">{{ latestLine() }}</span></p>
+              }
+            </div>
+
+            @if (isNew()) {
+              <div class="suggestions" role="group" aria-label="Suggested versions">
+                @for (suggestion of versionSuggestions(); track suggestion.version) {
+                  <button type="button" class="suggestion" [attr.aria-pressed]="form.controls.version.value === suggestion.version"
+                          (click)="pickVersion(suggestion)">
+                    <span class="mono">{{ suggestion.version }}</span>
+                    <span class="suggestion-label">{{ suggestion.label }}</span>
+                  </button>
+                }
+              </div>
+            }
+
+            <div class="fields-3">
+              <div>
+                <label class="c-label" for="version">Version</label>
+                <input id="version" class="c-input mono" formControlName="version" autocomplete="off" spellcheck="false">
+              </div>
+              <div>
+                <span class="c-label" id="channel-label">Channel</span>
+                <div class="c-seg channel-seg" role="group" aria-labelledby="channel-label">
+                  @for (channel of channelOptions(); track channel) {
+                    <button type="button" [attr.aria-pressed]="!customChannel() && form.controls.channel.value === channel"
+                            (click)="pickChannel(channel)">{{ channel }}</button>
+                  }
+                  <button type="button" [attr.aria-pressed]="customChannel()" (click)="useCustomChannel()">Other</button>
+                </div>
+                @if (customChannel()) {
+                  <input class="c-input mono custom-channel" formControlName="channel" placeholder="Channel name"
+                         aria-label="Channel name" spellcheck="false">
+                }
+              </div>
+              <div>
+                <label class="c-label" for="title">Title</label>
+                <input id="title" class="c-input" formControlName="title">
+              </div>
+            </div>
+
+            <div class="summary">
+              <label class="c-label" for="description">Summary</label>
+              <input id="description" class="c-input" formControlName="description"
+                     placeholder="One sentence for lists and link previews, e.g. “Faster startup and weekly reports”">
+            </div>
+          </section>
+
+          <section class="c-card c-card-flush" aria-labelledby="notes-heading">
+            <div class="c-card-head">
+              <h2 id="notes-heading">Release notes</h2>
+              <p class="c-sub">Markdown · preview on the right</p>
+              <div class="c-actions">
+                <button type="button" class="c-btn c-btn-sm" (click)="insertTemplate()">Insert template</button>
+                @if (copySource(); as source) {
+                  @if (source.id !== releaseId()) {
+                    <button type="button" class="c-btn c-btn-sm" (click)="copyNotes()">Copy from {{ source.version }}</button>
+                  }
+                }
+              </div>
+            </div>
+            <div class="notes">
+              <label class="sr-only" for="content">Release notes in Markdown</label>
+              <textarea id="content" class="notes-input" formControlName="content" spellcheck="true"></textarea>
+              <div class="notes-preview" aria-label="Preview">
+                <span class="preview-label">Preview</span>
+                <markdown [data]="form.controls.content.value"></markdown>
+              </div>
+            </div>
+          </section>
+
+          <section class="c-card" aria-labelledby="downloads-heading">
+            <div class="c-card-head">
+              <h2 id="downloads-heading">Downloads</h2>
+              <p class="c-sub">Store links come over from the last release, change only what is new</p>
+            </div>
+
+            <div class="links" formGroupName="links">
+              @for (link of shownLinks(); track link.field) {
+                <div class="link-row">
+                  <label class="c-label" [for]="link.field">{{ link.label }}</label>
+                  @if (link.field === 'appUrl') {
+                    <div class="file-field">
+                      @if (form.controls.links.controls.appUrl.value; as url) {
+                        <lucide-icon [img]="icons.Download" [size]="17" aria-hidden="true"></lucide-icon>
+                        <span class="file-name" [title]="url">{{ fileName(url) }}</span>
+                      } @else {
+                        <span class="c-muted">No file yet</span>
+                        @if (suggestionFor('appUrl'); as last) {
+                          <button type="button" class="c-link" (click)="useLastFile()">
+                            Use {{ fileName(last.url) }} from {{ last.version }}
+                          </button>
+                        }
+                      }
+                      <label class="c-btn c-btn-sm upload">
+                        <lucide-icon [img]="icons.Upload" [size]="15" aria-hidden="true"></lucide-icon>
+                        {{ uploading() === 'file' ? 'Uploading…' : form.controls.links.controls.appUrl.value ? 'Replace' : 'Upload .exe / .msi' }}
+                        <input type="file" accept=".exe,.msi" class="sr-only" (change)="onFileSelected($event)"
+                               [disabled]="uploading() === 'file'">
+                      </label>
+                    </div>
+                    <input [id]="link.field" class="sr-only" formControlName="appUrl" tabindex="-1" aria-hidden="true">
+                  } @else {
+                    <input [id]="link.field" class="c-input" [formControlName]="link.field" type="url"
+                           placeholder="https://" spellcheck="false">
+                  }
+                  <button type="button" class="remove" (click)="removeLink(link.field)" [attr.aria-label]="'Remove ' + link.label">
+                    <lucide-icon [img]="icons.X" [size]="15" aria-hidden="true"></lucide-icon>
+                  </button>
+                  @if (suggestionFor(link.field); as suggestion) {
+                    @if (link.field !== 'appUrl' && suggestion.url === form.controls.links.controls[link.field].value) {
+                      <p class="c-hint link-hint">Taken over from {{ suggestion.version }}</p>
+                    }
+                  }
+                </div>
+              }
+            </div>
+
+            @if (addableLinks().length) {
+              <button type="button" class="c-btn c-btn-sm add-link" [cdkMenuTriggerFor]="linkMenu">
+                <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
+                Add download or store link
+              </button>
+            }
+          </section>
+        </div>
+
+        <aside class="side-col">
+          <section class="c-card" aria-labelledby="publish-heading">
+            <div class="c-card-head"><h2 id="publish-heading">Publishing</h2></div>
+            <div class="publish-options" role="radiogroup" aria-labelledby="publish-heading">
+              @for (option of publishOptions; track option.value) {
+                <label class="publish-option" [class.checked]="form.controls.visibility.value === option.value">
+                  <input type="radio" formControlName="visibility" [value]="option.value">
+                  <span class="c-status" [class]="option.value.toLowerCase()">{{ option.label }}</span>
+                  <span class="option-hint">{{ option.hint }}</span>
+                </label>
+              }
+            </div>
+
+            @if (form.controls.visibility.value !== 'PRIVATE') {
+              <label class="check">
+                <input type="checkbox" formControlName="push">
+                <span>
+                  <strong>Send a push {{ isLive() ? 'after saving' : 'after publishing' }}</strong>
+                  <span class="option-hint">“{{ context.app()?.name }} v{{ form.controls.version.value || '…' }} is OUT NOW!”</span>
+                </span>
+              </label>
+            }
+
+            <div class="date-field">
+              <label class="c-label" for="publishedAt">Release date</label>
+              <input id="publishedAt" class="c-input" type="date" formControlName="publishedAt">
+            </div>
+          </section>
+
+          <section class="c-card" aria-labelledby="checks-heading">
+            <div class="c-card-head"><h2 id="checks-heading">Before you publish</h2></div>
+            <ul class="checks">
+              @for (check of checks(); track check.text) {
+                <li [class]="check.ok ? 'ok' : check.severity">
+                  <lucide-icon [img]="check.ok ? icons.Check : check.severity === 'error' ? icons.CircleX : icons.CircleAlert"
+                               [size]="16" aria-hidden="true"></lucide-icon>
+                  <span>{{ check.text }}<span class="sr-only">{{ check.ok ? ' (ok)' : check.severity === 'error' ? ' (must be fixed)' : ' (hint)' }}</span></span>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="c-card" aria-labelledby="cover-heading">
+            <div class="c-card-head"><h2 id="cover-heading">Cover image</h2></div>
+            @if (form.controls.imageUrl.value; as cover) {
+              <div class="cover">
+                <img [src]="cover" alt="Cover image">
+                <div class="cover-actions">
+                  <label class="c-btn c-btn-sm upload">
+                    {{ uploading() === 'cover' ? 'Uploading…' : 'Replace' }}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onCoverSelected($event)">
+                  </label>
+                  <button type="button" class="c-btn c-btn-sm" (click)="removeCover()">Remove</button>
+                </div>
+              </div>
+            } @else {
+              <label class="drop">
+                <lucide-icon [img]="icons.ImageUp" [size]="22" aria-hidden="true"></lucide-icon>
+                {{ uploading() === 'cover' ? 'Uploading…' : 'Choose an image' }}
+                <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onCoverSelected($event)">
+              </label>
+            }
+            <p class="c-hint">Also used for link previews (Discord, WhatsApp, …)</p>
+          </section>
+
+          @if (stored()) {
+            <section class="c-card" aria-labelledby="danger-heading">
+              <div class="c-card-head"><h2 id="danger-heading">Delete</h2></div>
+              <p class="c-hint">Removes this release from the website and the app.</p>
+              <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deleteRelease()">
+                <lucide-icon [img]="icons.Trash2" [size]="15" aria-hidden="true"></lucide-icon>
+                Delete release
+              </button>
+            </section>
+          }
+        </aside>
+      </div>
+    } @else {
+      <div class="layout">
+        <div class="main-col"><div class="c-card"><div class="c-skeleton loading"></div></div></div>
+        <aside class="side-col"><div class="c-card"><div class="c-skeleton loading"></div></div></aside>
+      </div>
+    }
+  </form>
+</div>
+
+<ng-template #linkMenu>
+  <div class="c-menu" cdkMenu>
+    @for (link of addableLinks(); track link.field) {
+      <button type="button" class="c-menu-item" cdkMenuItem (cdkMenuItemTriggered)="addLink(link.field)">
+        <span>{{ link.label }}</span>
+        @if (suggestionFor(link.field); as suggestion) {
+          <span class="menu-hint">last used in {{ suggestion.version }}</span>
+        } @else if (link.hint) {
+          <span class="menu-hint">{{ link.hint }}</span>
+        }
+      </button>
+    }
+  </div>
+</ng-template>
