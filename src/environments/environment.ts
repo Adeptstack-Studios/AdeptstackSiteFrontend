@@ -29,6 +29,7 @@ export const environment = {
 
   uploadApp: 'https://api.adeptstack.net/api/files/uploadApp',
   uploadImage: 'https://api.adeptstack.net/api/files/uploadImage',
+  uploadVideo: 'https://api.adeptstack.net/api/files/uploadVideo',
 
   appsGet: 'https://api.adeptstack.net/api/apps/get',
   appsCreate: 'https://api.adeptstack.net/api/apps/create',

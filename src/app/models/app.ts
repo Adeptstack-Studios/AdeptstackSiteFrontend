@@ -1,3 +1,9 @@
+/** A screenshot of an app; text is Markdown and makes it a feature too. */
+export interface AppImage {
+  url: string;
+  text: string | null;
+}
+
 export class App {
   id?: number;
   name?: string;
@@ -14,6 +20,12 @@ export class App {
   curseforgeId?: string;
   visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
 
+  /** Screenshots in gallery order; one with a text is also a feature on the product page */
+  images?: AppImage[];
+  /** Optional uploaded video, shown first in the gallery */
+  videoUrl?: string | null;
+
+  /** The first three screenshots again, for older clients */
   image1Url?: string;
   image2Url?: string;
   image3Url?: string;

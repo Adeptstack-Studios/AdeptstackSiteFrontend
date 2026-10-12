@@ -1,4 +1,5 @@
 import {Changelogs} from './changelogs';
+import {AppImage} from './app';
 
 export class AppResponse {
   id?: number;
@@ -18,6 +19,12 @@ export class AppResponse {
   downloads?: number;
   downloadsFormatted?: string;
 
+  /** Screenshots in gallery order; one with a text is also a feature on the product page */
+  images?: AppImage[];
+  /** Optional uploaded video, shown first in the gallery */
+  videoUrl?: string | null;
+
+  /** The first three screenshots again, for older clients */
   image1Url?: string;
   image2Url?: string;
   image3Url?: string;
