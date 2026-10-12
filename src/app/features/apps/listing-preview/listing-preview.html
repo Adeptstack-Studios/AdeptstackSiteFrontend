@@ -1,0 +1,71 @@
+@let page = listing();
+<div class="site" aria-label="Preview of the product page">
+  <p class="note">Preview · close to how adeptstack.net shows this app</p>
+
+  @if (page.legacy) {
+    <div class="legacy">
+      <lucide-icon [img]="icons.TriangleAlert" [size]="18" aria-hidden="true"></lucide-icon>
+      <div>
+        <strong>Legacy Software</strong>
+        <p>This application is no longer actively developed and only receives security-related or limited updates.</p>
+      </div>
+    </div>
+  }
+
+  <header class="head">
+    <div class="icon">
+      @if (page.iconUrl) {
+        <img [src]="page.iconUrl" [alt]="page.name + ' icon'">
+      }
+    </div>
+    <div class="head-text">
+      @if (page.category) {
+        <span class="category">{{ page.category }}</span>
+      }
+      <h2>{{ page.name || 'App name' }}</h2>
+      <p class="slogan">{{ page.slogan || 'Slogan' }}</p>
+      @if (platforms().length) {
+        <div class="platforms">
+          @for (platform of platforms(); track platform) {
+            <span>{{ platform }}</span>
+          }
+        </div>
+      }
+      <span class="download">
+        <lucide-icon [img]="icons.Download" [size]="18" aria-hidden="true"></lucide-icon>
+        Download
+      </span>
+      <p class="download-hint">The buttons come from the latest release.</p>
+    </div>
+  </header>
+
+  @if (page.description) {
+    <section class="description">
+      <markdown [data]="page.description"></markdown>
+    </section>
+  }
+
+  @if (page.videoUrl || page.images.length) {
+    <section class="gallery" aria-label="Gallery">
+      @if (page.videoUrl) {
+        <div class="shot video">
+          <video [src]="page.videoUrl" [poster]="page.images[0]?.url ?? ''" controls preload="none"></video>
+        </div>
+      }
+      @for (image of page.images; track $index) {
+        <div class="shot"><img [src]="image.url" [alt]="'Screenshot ' + ($index + 1)"></div>
+      }
+    </section>
+  }
+
+  @if (features().length) {
+    <section class="features">
+      @for (feature of features(); track $index; let odd = $odd) {
+        <div class="feature" [class.reverse]="odd">
+          <div class="shot"><img [src]="feature.url" [alt]="'Feature ' + ($index + 1)"></div>
+          <div class="feature-text"><markdown [data]="feature.text"></markdown></div>
+        </div>
+      }
+    </section>
+  }
+</div>

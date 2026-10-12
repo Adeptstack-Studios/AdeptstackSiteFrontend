@@ -1,10 +1,10 @@
 import {Component, computed, effect, inject, signal, untracked} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router, RouterLink} from '@angular/router';
 import {HttpEventType} from '@angular/common/http';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
-import {concatMap, from, map} from 'rxjs';
+import {concatMap, from, map, startWith} from 'rxjs';
 import {
   ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, LucideAngularModule,
   Trash2, X
@@ -20,6 +20,10 @@ import {checklistDone} from '../../../models/console';
 import {Visibility, VisibilityPicker} from '../../../shared/visibility-picker/visibility-picker';
 import {IMAGE_FILE_HINT, isImageFile, isVideoFile, VIDEO_FILE_HINT} from '../../../shared/listing/upload-files';
 import {AppTile} from '../../../shared/ui/app-tile';
+import {SLUG_PATTERN, slugify} from '../../../shared/slug';
+import {today} from '../../../shared/editor/editor-page';
+import {ListingPreview, ListingPreviewData} from '../listing-preview/listing-preview';
+import {listingChecklist} from './listing-checklist';
 
 /** One screenshot in the form; textOpen only steers the editor and is never saved. */
 type ScreenshotGroup = FormGroup<{
@@ -35,7 +39,7 @@ type ScreenshotGroup = FormGroup<{
 @Component({
   selector: 'app-app-editor',
   imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
-    VisibilityPicker, AppTile],
+    VisibilityPicker, AppTile, ListingPreview],
   templateUrl: './app-editor.html',
   styleUrls: ['./app-editor.css', './app-media.css']
 })
@@ -60,6 +64,8 @@ export class AppEditor {
   /** 0–100 while the video uploads */
   protected readonly videoProgress = signal<number | null>(null);
   protected readonly isNew = computed(() => !this.context.slug());
+  /** the form, or the product page as the website shows it */
+  protected readonly mode = signal<'edit' | 'preview'>('edit');
   protected readonly busy = computed(() =>
     this.uploadingIcon() || this.screenshotUpload() !== null || this.videoProgress() !== null);
   /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
@@ -67,7 +73,7 @@ export class AppEditor {
 
   readonly form = new FormGroup({
     name: new FormControl('', {nonNullable: true, validators: Validators.required}),
-    slug: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.pattern(/^[a-z0-9]+(-[a-z0-9]+)*$/)]}),
+    slug: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.pattern(SLUG_PATTERN)]}),
     slogan: new FormControl('', {nonNullable: true, validators: Validators.required}),
     description: new FormControl('', {nonNullable: true, validators: Validators.required}),
     category: new FormControl('', {nonNullable: true, validators: Validators.required}),
@@ -82,6 +88,11 @@ export class AppEditor {
     publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
     visibility: new FormControl<Visibility>('PRIVATE', {nonNullable: true}),
   });
+
+  private readonly value = toSignal(this.form.valueChanges.pipe(startWith(null), map(() => this.form.getRawValue())),
+    {requireSync: true});
+  protected readonly checklist = computed(() => listingChecklist(this.value()));
+  protected readonly previewData = computed<ListingPreviewData>(() => this.value());
 
   protected get screenshots() {
     return this.form.controls.images;
@@ -306,15 +317,4 @@ function takeFile(event: Event) {
   const file = input.files?.[0] ?? null;
   input.value = '';
   return file;
-}
-
-/** "Create Train Doors" -> "create-train-doors" */
-function slugify(name: string) {
-  return name.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
-function today() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
