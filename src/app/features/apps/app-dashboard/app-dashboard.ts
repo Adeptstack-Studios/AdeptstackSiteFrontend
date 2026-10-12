@@ -10,7 +10,7 @@ import {News} from '../../../models/news';
 import {channelKind, compareVersions} from '../../../shared/versions';
 import {AppTile} from '../../../shared/ui/app-tile';
 import {ChannelChip, VisibilityStatus} from '../../../shared/ui/status';
-import {RelativeDayPipe} from '../../../shared/ui/relative-day';
+import {isUpcoming, RelativeDayPipe} from '../../../shared/ui/relative-day';
 import {DatePipe} from '@angular/common';
 
 const CHANNEL_HINTS: Record<string, string> = {stable: 'Everyone gets this', beta: 'Opt-in testers'};
@@ -31,6 +31,7 @@ export class AppDashboard {
   protected readonly latest = signal<Changelogs[] | null>(null);
   protected readonly posts = signal<News[] | null>(null);
   protected readonly checklistDone = checklistDone;
+  protected readonly isUpcoming = isUpcoming;
 
   /** The beta channel whose newest version is ahead of the main one, ready to be promoted. */
   protected readonly promotable = computed(() => {

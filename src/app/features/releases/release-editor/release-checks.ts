@@ -1,6 +1,7 @@
 import {compareVersions, isVersionNumber} from '../../../shared/versions';
 import {LINK_FIELDS} from '../../../models/console';
 import {EditorCheck} from '../../../shared/editor/checks-card';
+import {isUpcoming} from '../../../shared/ui/relative-day';
 
 /** What "Before you publish" looks at; plain values so it can be computed from the form. */
 export interface ReleaseDraft {
@@ -11,6 +12,10 @@ export interface ReleaseDraft {
   content: string;
   imageUrl: string;
   links: Record<string, string>;
+  /** yyyy-MM-dd */
+  publishedAt: string;
+  push: boolean;
+  visibility: string;
 }
 
 // built from lines so the "* " bullets keep their space for typing
@@ -65,6 +70,14 @@ export function checkRelease(draft: ReleaseDraft, channelVersions: string[], has
     checks.push(hasAppIcon
       ? {ok: false, severity: 'warning', text: 'No cover image: the app icon is used for link previews'}
       : {ok: false, severity: 'error', text: 'Upload a cover image, the app has no icon to fall back to'});
+  }
+
+  if (draft.visibility !== 'PRIVATE' && isUpcoming(draft.publishedAt)) {
+    const date = new Date(draft.publishedAt + 'T00:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+    checks.push({ok: true, severity: 'warning', text: `Coming soon on the website until ${date}, downloads stay hidden until then`});
+    if (draft.push) {
+      checks.push({ok: false, severity: 'warning', text: 'The push goes out right away, before the release can be downloaded'});
+    }
   }
 
   return checks;

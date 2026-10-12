@@ -15,6 +15,7 @@ import {Pagination} from '../../../pagination/pagination';
 import {ChannelChip, VisibilityStatus} from '../../../shared/ui/status';
 import {UrlListState, VISIBILITY_FILTERS} from '../../../shared/listing/url-list';
 import {Selection} from '../../../shared/listing/selection';
+import {isUpcoming} from '../../../shared/ui/relative-day';
 
 /** All releases of one app, filtered by channel and visibility, with actions on several at once. */
 @Component({
@@ -42,6 +43,7 @@ export class ReleaseList {
     channel: '', visibility: '', q: '', sort: 'publishedAt,desc', page: 1, size: DEFAULT_PAGE_SIZE,
   }, inject(DestroyRef));
   protected readonly selection = new Selection<Changelogs>();
+  protected readonly isUpcoming = isUpcoming;
 
   protected readonly items = signal<Changelogs[] | null>(null);
   protected readonly total = signal(0);

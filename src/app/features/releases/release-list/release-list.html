@@ -101,7 +101,12 @@
                     <td><app-channel-chip [name]="release.channel"></app-channel-chip></td>
                     <td class="c-ellipsis">{{ release.title }}</td>
                     <td><app-visibility-status [value]="release.visibility"></app-visibility-status></td>
-                    <td class="c-muted">{{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}</td>
+                    <td class="c-muted">
+                      {{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}
+                      @if (release.visibility !== 'PRIVATE' && isUpcoming(release.publishedAt + '')) {
+                        <span class="c-chip coming">coming soon</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>

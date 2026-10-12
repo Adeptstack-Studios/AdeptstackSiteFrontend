@@ -235,6 +235,12 @@
   color: var(--beta);
 }
 
+.c-chip.coming {
+  margin-left: 6px;
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
 .c-status {
   display: inline-flex;
   align-items: center;

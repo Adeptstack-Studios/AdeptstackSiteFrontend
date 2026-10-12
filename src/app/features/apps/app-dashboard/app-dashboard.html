@@ -40,6 +40,8 @@
             <p class="c-muted meta">
               @if (channel.latest.visibility === 'PRIVATE') {
                 Not published yet
+              } @else if (isUpcoming(channel.latest.publishedAt)) {
+                Coming soon: out on {{ channel.latest.publishedAt | date: 'MMM d, y' }}, the website shows no downloads until then
               } @else {
                 Published {{ channel.latest.publishedAt | date: 'MMM d, y' }}
               }

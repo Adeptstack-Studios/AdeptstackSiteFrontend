@@ -21,6 +21,14 @@ export function relativeDay(value: string | Date | null | undefined, today = new
   return `${Math.round(days / 365)} years ago`;
 }
 
+/** After today: such a release is "coming soon" on the website, without download links. */
+export function isUpcoming(value: string | Date | null | undefined, today = new Date()): boolean {
+  if (!value) return false;
+  const date = typeof value === 'string' ? new Date(value + (value.length === 10 ? 'T00:00:00' : '')) : value;
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).getTime();
+  return date.getTime() >= endOfToday;
+}
+
 @Pipe({name: 'relativeDay'})
 export class RelativeDayPipe implements PipeTransform {
   transform(value: string | Date | null | undefined): string {
