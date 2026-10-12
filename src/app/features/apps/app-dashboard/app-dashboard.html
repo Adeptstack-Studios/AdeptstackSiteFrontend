@@ -1,0 +1,150 @@
+<div class="c-scroll">
+  <div class="c-page">
+    @if (context.app(); as app) {
+      <header class="c-page-head">
+        <app-tile [name]="app.name" [iconUrl]="app.iconUrl" [size]="56"></app-tile>
+        <div class="title">
+          <h1>{{ app.name }}</h1>
+          <p class="c-sub">
+            <app-visibility-status [value]="app.visibility"></app-visibility-status>
+            @if (app.category) { <span>· {{ app.category }}</span> }
+            @if (app.slogan) { <span>· {{ app.slogan }}</span> }
+          </p>
+        </div>
+        <div class="c-actions">
+          <a class="c-btn" [routerLink]="['/apps', app.slug, 'listing']">
+            <lucide-icon [img]="icons.Store" [size]="16" aria-hidden="true"></lucide-icon>
+            Store listing
+          </a>
+          <a class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">
+            <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
+            New release
+          </a>
+        </div>
+      </header>
+
+      <section class="c-grid-2" aria-label="Channels">
+        @for (channel of app.channels; track channel.name) {
+          <div class="c-card channel">
+            <div class="c-card-head">
+              <app-channel-chip [name]="channel.name"></app-channel-chip>
+              <span class="c-muted">{{ hint(channel) }}</span>
+              <a class="c-link" [routerLink]="['/apps', app.slug, 'releases']" [queryParams]="{channel: channel.name}">
+                All {{ channel.name }} releases
+              </a>
+            </div>
+            <div class="version-line">
+              <span class="big-version">{{ channel.latest.version }}</span>
+              <app-visibility-status [value]="channel.latest.visibility" privateLabel="Draft · private"></app-visibility-status>
+            </div>
+            <p class="c-muted meta">
+              @if (channel.latest.visibility === 'PRIVATE') {
+                Not published yet
+              } @else {
+                Published {{ channel.latest.publishedAt | date: 'MMM d, y' }}
+              }
+              · {{ channel.count }} {{ channel.count === 1 ? 'release' : 'releases' }} in this channel
+            </p>
+            <div class="channel-actions">
+              @if (channel.latest.visibility === 'PRIVATE') {
+                <a class="c-btn c-btn-sm" [routerLink]="['/apps', app.slug, 'releases', channel.latest.id]">Continue editing</a>
+              } @else if (promotable()?.main === channel) {
+                <a class="c-btn c-btn-sm" [routerLink]="['/apps', app.slug, 'releases', 'new']"
+                   [queryParams]="{promote: promotable()!.beta.latest.id}">
+                  Promote {{ promotable()!.beta.latest.version }} to {{ channel.name }}
+                </a>
+              }
+              <a class="c-link" [routerLink]="['/apps', app.slug, 'releases', channel.latest.id]">View</a>
+            </div>
+          </div>
+        } @empty {
+          <div class="c-card c-empty">
+            <p>No releases yet.</p>
+            <a class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">Create the first release</a>
+          </div>
+        }
+      </section>
+
+      <section class="c-grid-4" aria-label="Key figures">
+        <div class="c-card" style="--kpi: var(--accent)">
+          <div class="c-kpi-label">Releases</div>
+          <div class="c-kpi-value">{{ app.releaseCount }}</div>
+          <div class="c-kpi-note">{{ app.draftCount }} {{ app.draftCount === 1 ? 'draft' : 'drafts' }}</div>
+        </div>
+        <div class="c-card" style="--kpi: var(--beta)">
+          <div class="c-kpi-label">Channels</div>
+          <div class="c-kpi-value">{{ app.channels.length }}</div>
+          <div class="c-kpi-note">{{ channelNames(app.channels) || 'None yet' }}</div>
+        </div>
+        <div class="c-card" style="--kpi: #A78BFA">
+          <div class="c-kpi-label">Mod downloads</div>
+          <div class="c-kpi-value">{{ app.downloadsFormatted ?? '–' }}</div>
+          <div class="c-kpi-note">{{ app.downloads === null ? 'No Modrinth or CurseForge project' : 'Modrinth + CurseForge' }}</div>
+        </div>
+        <div class="c-card" style="--kpi: var(--good)">
+          <div class="c-kpi-label">Last release</div>
+          <div class="c-kpi-value">{{ app.lastReleaseAt | relativeDay }}</div>
+          <div class="c-kpi-note">{{ app.lastReleaseAt ? (app.lastReleaseAt | date: 'MMM d, y') : 'Nothing released yet' }}</div>
+        </div>
+      </section>
+
+      <div class="c-grid-main">
+        <section class="c-card c-card-flush" aria-labelledby="latest-heading">
+          <div class="c-card-head">
+            <h2 id="latest-heading">Latest releases</h2>
+            <a class="c-link" [routerLink]="['/apps', app.slug, 'releases']">All releases</a>
+          </div>
+          @if (latest(); as releases) {
+            <ul class="releases">
+              @for (release of releases; track release.id) {
+                <li>
+                  <a class="release-row" [routerLink]="['/apps', app.slug, 'releases', release.id]">
+                    <span class="c-version">{{ release.version }}</span>
+                    <app-channel-chip [name]="release.channel"></app-channel-chip>
+                    <app-visibility-status [value]="release.visibility" privateLabel="Draft"></app-visibility-status>
+                    <span class="c-muted date">
+                      {{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}
+                    </span>
+                  </a>
+                </li>
+              } @empty {
+                <li class="c-empty">No releases yet.</li>
+              }
+            </ul>
+          } @else {
+            <div class="c-skeleton list-skeleton"></div>
+          }
+        </section>
+
+        <section class="c-card" aria-labelledby="listing-heading">
+          <div class="c-card-head">
+            <h2 id="listing-heading">Store listing</h2>
+            <span class="c-muted mono done">{{ checklistDone(app) }} of {{ app.checklist.length }}</span>
+          </div>
+          <div class="progress" role="progressbar" aria-label="Store listing complete"
+               [attr.aria-valuenow]="checklistDone(app)" aria-valuemin="0" [attr.aria-valuemax]="app.checklist.length">
+            <span [style.width.%]="100 * checklistDone(app) / app.checklist.length"></span>
+          </div>
+          <ul class="checklist">
+            @for (item of app.checklist; track item.key) {
+              <li [class.missing]="!item.done">
+                <lucide-icon [img]="item.done ? icons.Check : icons.CircleAlert" [size]="16" aria-hidden="true"></lucide-icon>
+                {{ item.label }}
+                <span class="sr-only">{{ item.done ? 'done' : 'missing' }}</span>
+              </li>
+            }
+          </ul>
+          <a class="c-link" [routerLink]="['/apps', app.slug, 'listing']">
+            {{ checklistDone(app) < app.checklist.length ? 'Complete store listing' : 'Edit store listing' }}
+          </a>
+        </section>
+      </div>
+    } @else {
+      <div class="c-skeleton head-skeleton"></div>
+      <div class="c-grid-2">
+        <div class="c-card"><div class="c-skeleton list-skeleton"></div></div>
+        <div class="c-card"><div class="c-skeleton list-skeleton"></div></div>
+      </div>
+    }
+  </div>
+</div>
