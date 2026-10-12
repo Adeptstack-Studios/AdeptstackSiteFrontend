@@ -1,0 +1,166 @@
+<div class="c-scroll">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <header class="bar">
+      <a class="c-btn back" [routerLink]="isNew() ? '/apps' : ['/apps', context.slug()]"
+         [attr.aria-label]="isNew() ? 'Back to all apps' : 'Back to the dashboard'">
+        <lucide-icon [img]="icons.ArrowLeft" [size]="17" aria-hidden="true"></lucide-icon>
+      </a>
+      <app-tile [name]="form.controls.name.value || 'New app'" [iconUrl]="form.controls.iconUrl.value"></app-tile>
+      <div class="bar-title">
+        <h1>{{ isNew() ? 'Create app' : 'Store listing' }}</h1>
+        <p class="c-sub">{{ isNew() ? 'New apps stay private until you make them visible' : form.controls.name.value }}</p>
+      </div>
+      <div class="c-actions">
+        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || uploading()">
+          {{ saving() ? 'Saving…' : isNew() ? 'Create app' : 'Save' }}
+        </button>
+      </div>
+    </header>
+
+    @if (ready()) {
+      <div class="layout">
+        <div class="main-col">
+          <section class="c-card" aria-labelledby="basics-heading">
+            <div class="c-card-head"><h2 id="basics-heading">Name and texts</h2></div>
+            <div class="grid-2">
+              <div>
+                <label class="c-label" for="name">Name</label>
+                <input id="name" class="c-input" formControlName="name">
+              </div>
+              <div>
+                <label class="c-label" for="slug">Address</label>
+                <div class="slug">
+                  <span class="mono c-muted">/products/</span>
+                  <input id="slug" class="c-input mono" formControlName="slug" spellcheck="false">
+                </div>
+                @if (form.controls.slug.touched && form.controls.slug.errors?.['pattern']) {
+                  <p class="c-error">Lowercase letters, numbers and dashes only.</p>
+                } @else if (!isNew() && form.controls.slug.dirty) {
+                  <p class="c-hint">Links to the old address stop working.</p>
+                }
+              </div>
+            </div>
+            <div class="field">
+              <label class="c-label" for="slogan">Slogan</label>
+              <input id="slogan" class="c-input" formControlName="slogan">
+            </div>
+            <div class="field">
+              <label class="c-label" for="description">Description</label>
+              <textarea id="description" class="c-input" formControlName="description" rows="6"></textarea>
+              <p class="c-hint">Markdown, shown on the product page.</p>
+            </div>
+            <div class="grid-2 field">
+              <div>
+                <label class="c-label" for="category">Category</label>
+                <input id="category" class="c-input" formControlName="category" placeholder="e.g. Productivity">
+              </div>
+              <div>
+                <label class="c-label" for="platforms">Platforms</label>
+                <input id="platforms" class="c-input" formControlName="platforms" placeholder="e.g. Windows;Android">
+              </div>
+            </div>
+          </section>
+
+          <section class="c-card" aria-labelledby="images-heading">
+            <div class="c-card-head">
+              <h2 id="images-heading">Icon and features</h2>
+              <p class="c-sub">Three feature images with a text each, as on the product page</p>
+            </div>
+            <div class="icon-row">
+              <ng-container *ngTemplateOutlet="imageField; context: {field: 'iconUrl', label: 'App icon'}"></ng-container>
+            </div>
+            @for (index of features; track index) {
+              <div class="feature">
+                <ng-container *ngTemplateOutlet="imageField; context: {field: 'image' + index + 'Url', label: 'Feature image ' + index}"></ng-container>
+                <div>
+                  <label class="c-label" [for]="'feature' + index">Feature {{ index }} text</label>
+                  <textarea [id]="'feature' + index" class="c-input" rows="4" [formControl]="featureText(index)"></textarea>
+                </div>
+              </div>
+            }
+          </section>
+        </div>
+
+        <aside class="side-col">
+          <section class="c-card" aria-labelledby="visibility-heading">
+            <div class="c-card-head"><h2 id="visibility-heading">On the website</h2></div>
+            <app-visibility-picker [value]="form.controls.visibility.value"
+                                   (changed)="form.controls.visibility.setValue($event); form.markAsDirty()"></app-visibility-picker>
+            <label class="check">
+              <input type="checkbox" formControlName="highlighted">
+              Highlighted on the start page
+            </label>
+            <label class="check">
+              <input type="checkbox" formControlName="legacy">
+              Legacy product, no longer developed
+            </label>
+            <div class="field">
+              <label class="c-label" for="publishedAt">Released on</label>
+              <input id="publishedAt" class="c-input" type="date" formControlName="publishedAt">
+            </div>
+          </section>
+
+          <section class="c-card" aria-labelledby="mods-heading">
+            <div class="c-card-head"><h2 id="mods-heading">Mod downloads</h2></div>
+            <p class="c-hint first">Only for Minecraft mods. The downloads are fetched every 3 hours.</p>
+            <div class="field">
+              <label class="c-label" for="modrinthId">Modrinth project ID or slug</label>
+              <input id="modrinthId" class="c-input mono" formControlName="modrinthId" spellcheck="false">
+            </div>
+            <div class="field">
+              <label class="c-label" for="curseforgeId">CurseForge project ID</label>
+              <input id="curseforgeId" class="c-input mono" formControlName="curseforgeId" inputmode="numeric">
+            </div>
+          </section>
+
+          @if (context.app(); as app) {
+            <section class="c-card" aria-labelledby="checklist-heading">
+              <div class="c-card-head">
+                <h2 id="checklist-heading">Checklist</h2>
+                <span class="c-muted mono done">{{ checklistDone(app) }} of {{ app.checklist.length }}</span>
+              </div>
+              <ul class="checklist">
+                @for (item of app.checklist; track item.key) {
+                  <li [class.missing]="!item.done">
+                    <lucide-icon [img]="item.done ? icons.Check : icons.CircleAlert" [size]="16" aria-hidden="true"></lucide-icon>
+                    {{ item.label }}
+                  </li>
+                }
+              </ul>
+              <p class="c-hint">As last saved.</p>
+            </section>
+
+            <section class="c-card" aria-labelledby="delete-heading">
+              <div class="c-card-head"><h2 id="delete-heading">Delete</h2></div>
+              <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deleteApp()">
+                <lucide-icon [img]="icons.Trash2" [size]="15" aria-hidden="true"></lucide-icon>
+                Delete app
+              </button>
+            </section>
+          }
+        </aside>
+      </div>
+    } @else {
+      <div class="layout">
+        <div class="main-col"><div class="c-card"><div class="c-skeleton loading"></div></div></div>
+      </div>
+    }
+  </form>
+</div>
+
+<ng-template #imageField let-field="field" let-label="label">
+  <div class="image-field">
+    <span class="c-label">{{ label }}</span>
+    <label class="image-drop" [class.filled]="imageControl(field).value"
+           [class.invalid]="imageControl(field).touched && imageControl(field).invalid">
+      @if (imageControl(field).value; as url) {
+        <!-- a broken link shows the upload hint instead of the alt text -->
+        <img [src]="url" [alt]="label" (error)="$any($event.target).hidden = true">
+      } @else {
+        <lucide-icon [img]="icons.ImageUp" [size]="20" aria-hidden="true"></lucide-icon>
+      }
+      <span class="image-action">{{ uploading() === field ? 'Uploading…' : imageControl(field).value ? 'Replace' : 'Upload' }}</span>
+      <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onImageSelected($event, field)">
+    </label>
+  </div>
+</ng-template>
