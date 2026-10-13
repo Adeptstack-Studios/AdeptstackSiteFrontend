@@ -48,4 +48,7 @@ export const environment = {
   teamMembers: 'http://localhost:8080/api/team/members',
   teamInvites: 'http://localhost:8080/api/team/invites',
   activity: 'http://localhost:8080/api/activity',
+  reviews: 'http://localhost:8080/api/reviews',
+  contentCheck: 'http://localhost:8080/api/content-check',
+  contentRules: 'http://localhost:8080/api/content-rules',
 };

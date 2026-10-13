@@ -2,7 +2,7 @@ import {Component, computed, inject, signal} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {forkJoin, map, Observable, of, switchMap} from 'rxjs';
+import {forkJoin, map, Observable, of} from 'rxjs';
 import {ArrowLeft, ArrowUpRight, CircleAlert, LucideAngularModule, Trash2} from 'lucide-angular';
 import {NewsService} from '../../../services/news-service';
 import {ConsoleService} from '../../../services/console-service';
@@ -18,6 +18,10 @@ import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkPost} from './post-checks';
 import {EditOnly} from '../../../shared/ui/edit-only';
+import {ReviewService} from '../../../services/review-service';
+import {ReviewDetail, submittedReview} from '../../../models/review';
+import {ReviewBanner} from '../../../shared/review/review-banner';
+import {CurrentUser} from '../../../core/auth/current-user';
 
 function postForm() {
   return new FormGroup({
@@ -40,7 +44,7 @@ type PostFormValue = ReturnType<ReturnType<typeof postForm>['getRawValue']>;
 /** Writes and edits blog posts: /blog/new and /blog/:id */
 @Component({
   selector: 'app-post-editor',
-  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule, MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly],
+  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule, MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly, ReviewBanner],
   templateUrl: './post-editor.html',
   styles: `
     .fields-2 {
@@ -77,6 +81,8 @@ export class PostEditor extends EditorPage<PostFormValue> {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly news = inject(NewsService);
+  private readonly reviews = inject(ReviewService);
+  private readonly currentUser = inject(CurrentUser);
   private readonly console = inject(ConsoleService);
 
   protected readonly icons = {ArrowLeft, ArrowUpRight, CircleAlert, Trash2};
@@ -98,12 +104,19 @@ export class PostEditor extends EditorPage<PostFormValue> {
 
   protected readonly isNew = computed(() => this.postId() === null);
   protected readonly isLive = computed(() => !!this.stored() && this.stored()!.visibility !== 'PRIVATE');
+  /** a change of it waiting for review, or sent back */
+  protected readonly openReview = signal<ReviewDetail | null>(null);
+  private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
+  /** someone else's change waits for review: only they can change this entry until then */
+  protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly checks = computed(() => checkPost(this.value(), this.takenSlugs()));
   protected readonly blocked = computed(() => hasBlockingCheck(this.checks()));
 
+  /** a draft that stays private is saved; everything that touches the website is reviewed first */
   protected readonly primaryLabel = computed(() => {
-    if (this.isLive()) return 'Save changes';
-    return this.value().visibility === 'PRIVATE' ? 'Save draft' : 'Publish post';
+    if (this.lockedByOther()) return 'Waiting for review';
+    if (!this.isLive() && this.value().visibility === 'PRIVATE') return 'Save draft';
+    return this.myReview() ? 'Submit again' : 'Submit for review';
   });
 
   constructor() {
@@ -136,17 +149,25 @@ export class PostEditor extends EditorPage<PostFormValue> {
 
     forkJoin({
       post: post$,
+      review: id !== null ? this.reviews.openFor('POST', id) : of(null),
       apps: this.console.apps(),
       categories: this.news.categories(),
       posts: this.news.list({}).pipe(map(page => page.items)),
-    }).subscribe(({post, apps, categories, posts}) => {
+    }).subscribe(({post, review, apps, categories, posts}) => {
+      this.openReview.set(review);
       this.apps.set([...apps].sort((a, b) => a.name.localeCompare(b.name)));
       this.categories.set(categories);
       this.takenSlugs.set(posts.filter(other => other.id !== id).map(other => other.slug ?? ''));
 
       if (post) {
         this.stored.set(post);
-        this.fill(post);
+        // the author goes on with what they submitted, not with the live version
+        if (review?.payload && this.myReview()) {
+          this.fill({...post, ...review.payload} as News);
+          this.form.controls.push.setValue(review.review.push);
+        } else {
+          this.fill(post);
+        }
       } else {
         // "Link a post" on an app dashboard opens this with the app chosen
         const app = apps.find(other => other.slug === this.route.snapshot.queryParamMap.get('app'));
@@ -215,29 +236,48 @@ export class PostEditor extends EditorPage<PostFormValue> {
     const push = value.push && visibility !== 'PRIVATE';
 
     this.saving.set(true);
-    const save$ = this.isNew() ? this.news.create(request) : this.news.update(request);
-    save$.pipe(
-      map(response => response.body!),
-      switchMap(saved => push ? this.news.sendPush([saved.id!]).pipe(map(() => saved)) : of(saved)),
-    ).subscribe({
-      next: saved => {
+    const save$ = this.isNew() ? this.news.create(request, push) : this.news.update(request, push);
+    save$.subscribe({
+      next: response => {
         this.saving.set(false);
         this.settled();
-        this.toast.success(visibility === 'PRIVATE'
-          ? 'Draft saved.'
-          : `“${saved.title}” is ${visibility.toLowerCase()} now${push ? ' and the push is out' : ''}.`);
-
-        if (visibility === 'PRIVATE') {
-          this.stored.set(saved);
+        const review = submittedReview(response);
+        if (review) {
+          this.reviews.refreshCounts();
+          this.toast.success(`“${request.title}” is submitted for review. It goes live once an owner approves it.`);
           if (this.isNew()) {
-            this.postId.set(saved.id!);
-            this.router.navigate(['/blog', saved.id], {replaceUrl: true});
+            // stored as a private draft meanwhile, under its own address
+            this.router.navigate(['/blog', review.targetId], {replaceUrl: true});
+          } else {
+            this.reloadReview();
           }
-        } else {
-          this.router.navigate(['/blog']);
+          return;
+        }
+
+        const saved = response.body!;
+        this.toast.success('Draft saved.');
+        // saving privately takes back an own submission
+        this.openReview.set(null);
+        this.stored.set(saved);
+        if (this.isNew()) {
+          this.postId.set(saved.id!);
+          this.router.navigate(['/blog', saved.id], {replaceUrl: true});
         }
       },
       error: () => this.saving.set(false),
+    });
+  }
+
+  /** After submitting or withdrawing: the stored post and its open review as they are now. */
+  protected reloadReview() {
+    const id = this.postId();
+    if (id === null) return;
+    forkJoin({
+      post: this.news.getById(id).pipe(map(response => response.body)),
+      review: this.reviews.openFor('POST', id),
+    }).subscribe(({post, review}) => {
+      this.stored.set(post);
+      this.openReview.set(review);
     });
   }
 
@@ -246,13 +286,20 @@ export class PostEditor extends EditorPage<PostFormValue> {
     if (!stored) return;
     const ok = await this.confirm.ask({
       title: 'Delete this post?',
-      message: `“${stored.title}” is removed from the website and the app. This cannot be undone.`,
-      confirmLabel: 'Delete post', danger: true,
+      message: stored.visibility === 'PRIVATE'
+        ? `The draft “${stored.title}” is deleted. This cannot be undone.`
+        : `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`,
+      confirmLabel: stored.visibility === 'PRIVATE' ? 'Delete post' : 'Submit deletion', danger: true,
     });
     if (!ok) return;
-    this.news.deleteById(stored.id!).subscribe(() => {
+    this.news.deleteById(stored.id!).subscribe(response => {
       this.settled();
-      this.toast.success('Post deleted.');
+      if (submittedReview(response)) {
+        this.reviews.refreshCounts();
+        this.toast.success('Deleting the post is submitted for review. It stays live until an owner approves.');
+      } else {
+        this.toast.success('Post deleted.');
+      }
       this.router.navigate(['/blog']);
     });
   }

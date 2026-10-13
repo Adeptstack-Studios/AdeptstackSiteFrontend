@@ -15,14 +15,15 @@
           <button type="button" [attr.aria-pressed]="mode() === 'edit'" (click)="mode.set('edit')">Edit</button>
           <button type="button" [attr.aria-pressed]="mode() === 'preview'" (click)="mode.set('preview')">Preview</button>
         </div>
-        <button appEditOnly type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || busy()">
-          {{ saving() ? 'Saving…' : isNew() ? 'Create app' : 'Save' }}
+        <button appEditOnly type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || busy() || lockedByOther()">
+          {{ saving() ? 'Saving…' : saveLabel() }}
         </button>
       </div>
     </header>
 
     @if (ready()) {
       <div class="c-editor-layout">
+        <app-review-banner [detail]="openReview()" (withdrawn)="reloadReview()"></app-review-banner>
         <div class="c-editor-main">
           @if (mode() === 'preview') {
             <app-listing-preview [listing]="previewData()"></app-listing-preview>

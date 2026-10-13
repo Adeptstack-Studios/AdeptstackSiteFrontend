@@ -29,7 +29,7 @@ const PUBLISH_OPTIONS: { value: Visibility; label: string; hint: string }[] = [
         <label class="check">
           <input type="checkbox" [formControl]="push()">
           <span>
-            <strong>Send a push {{ live() ? 'after saving' : 'after publishing' }}</strong>
+            <strong>Send a push once it is live</strong>
             <span class="hint">{{ pushPreview() }}</span>
           </span>
         </label>

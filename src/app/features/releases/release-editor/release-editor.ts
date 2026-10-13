@@ -3,7 +3,7 @@ import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
-import {forkJoin, map, Observable, of, switchMap} from 'rxjs';
+import {forkJoin, map, Observable, of} from 'rxjs';
 import {ArrowLeft, CircleAlert, Download, LucideAngularModule, Plus, Trash2, Upload, X} from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
 import {ChangelogsService} from '../../../services/changelogs-service';
@@ -22,6 +22,10 @@ import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkRelease, NOTES_TEMPLATE, ReleaseDraft} from './release-checks';
 import {EditOnly} from '../../../shared/ui/edit-only';
+import {ReviewService} from '../../../services/review-service';
+import {ReviewDetail, submittedReview} from '../../../models/review';
+import {ReviewBanner} from '../../../shared/review/review-banner';
+import {CurrentUser} from '../../../core/auth/current-user';
 
 /** Channel names for an app without releases. */
 const DEFAULT_CHANNELS = {stable: 'stable', beta: 'beta'};
@@ -48,7 +52,7 @@ type ReleaseFormValue = ReturnType<ReturnType<typeof releaseForm>['getRawValue']
 @Component({
   selector: 'app-release-editor',
   imports: [ReactiveFormsModule, RouterLink, CdkMenuTrigger, CdkMenu, CdkMenuItem, LucideAngularModule, AppTile,
-    MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly],
+    MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly, ReviewBanner],
   templateUrl: './release-editor.html',
   styleUrl: './release-editor.css'
 })
@@ -56,6 +60,8 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly changelogs = inject(ChangelogsService);
+  private readonly reviews = inject(ReviewService);
+  private readonly currentUser = inject(CurrentUser);
   private readonly console = inject(ConsoleService);
   private readonly files = inject(FileService);
   protected readonly context = inject(AppContext);
@@ -67,6 +73,11 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   protected readonly releaseId = signal<number | null>(null);
   /** the release as stored, for an existing one */
   protected readonly stored = signal<Changelogs | null>(null);
+  /** a change of it waiting for review, or sent back */
+  protected readonly openReview = signal<ReviewDetail | null>(null);
+  private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
+  /** someone else's change waits for review: only they can change this entry until then */
+  protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly uploadingFile = signal(false);
   protected readonly suggestions = signal<LinkSuggestion[]>([]);
   /** every release of the app, for duplicate and "higher than" checks */
@@ -128,11 +139,11 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   protected readonly addableLinks = computed(() =>
     LINK_FIELDS.filter(link => !this.shownLinks().includes(link)));
 
+  /** a draft that stays private is saved; everything that touches the website is reviewed first */
   protected readonly primaryLabel = computed(() => {
-    const value = this.value();
-    if (this.isLive()) return 'Save changes';
-    if (value.visibility === 'PRIVATE') return 'Save draft';
-    return `Publish ${value.version.trim() || 'release'}`;
+    if (this.lockedByOther()) return 'Waiting for review';
+    if (!this.isLive() && this.value().visibility === 'PRIVATE') return 'Save draft';
+    return this.myReview() ? 'Submit again' : 'Submit for review';
   });
 
   constructor() {
@@ -184,16 +195,24 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
 
     forkJoin({
       release: release$,
+      review: id !== null ? this.reviews.openFor('RELEASE', id) : of(null),
       promoted: promoted$,
       suggestions: this.console.linkSuggestions(app.slug),
       releases: this.changelogs.list({app: app.slug}).pipe(map(page => page.items)),
-    }).subscribe(({release, promoted, suggestions, releases}) => {
+    }).subscribe(({release, review, promoted, suggestions, releases}) => {
       this.suggestions.set(suggestions);
       this.allReleases.set(releases);
+      this.openReview.set(review);
 
       if (release) {
         this.stored.set(release);
-        this.fill(release);
+        // the author goes on with what they submitted, not with the live version
+        if (review?.payload && this.myReview()) {
+          this.fill({...release, ...review.payload} as Changelogs);
+          this.form.controls.push.setValue(review.review.push);
+        } else {
+          this.fill(release);
+        }
         this.titleFollowsVersion = false;
       } else {
         this.startNew(app, suggestions, promoted, query.get('channel'));
@@ -396,31 +415,49 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
     const push = value.push && visibility !== 'PRIVATE';
 
     this.saving.set(true);
-    const save$ = this.isNew() ? this.changelogs.create(request) : this.changelogs.update(request);
-    save$.pipe(
-      map(response => response.body!),
-      switchMap(saved => push
-        ? this.changelogs.sendPush([saved.id!]).pipe(map(() => saved))
-        : of(saved)),
-    ).subscribe({
-      next: saved => {
+    const save$ = this.isNew() ? this.changelogs.create(request, push) : this.changelogs.update(request, push);
+    save$.subscribe({
+      next: response => {
         this.saving.set(false);
         this.settled();
         this.context.refresh().subscribe();
-        this.toast.success(savedMessage(saved, visibility, push, this.isNew()));
-
-        if (visibility === 'PRIVATE') {
-          // a draft stays open for more work, now under its own address
-          this.stored.set(saved);
+        const review = submittedReview(response);
+        if (review) {
+          this.reviews.refreshCounts();
+          this.toast.success(`${request.version} is submitted for review. It goes live once an owner approves it.`);
           if (this.isNew()) {
-            this.releaseId.set(saved.id!);
-            this.router.navigate(['/apps', app.slug, 'releases', saved.id], {replaceUrl: true});
+            // stored as a private draft meanwhile, under its own address
+            this.router.navigate(['/apps', app.slug, 'releases', review.targetId], {replaceUrl: true});
+          } else {
+            this.reloadReview();
           }
-        } else {
-          this.router.navigate(['/apps', app.slug, 'releases']);
+          return;
+        }
+
+        const saved = response.body!;
+        this.toast.success(this.isNew() ? `Draft ${saved.version} saved.` : 'Draft saved.');
+        // saving privately takes back an own submission
+        this.openReview.set(null);
+        this.stored.set(saved);
+        if (this.isNew()) {
+          this.releaseId.set(saved.id!);
+          this.router.navigate(['/apps', app.slug, 'releases', saved.id], {replaceUrl: true});
         }
       },
       error: () => this.saving.set(false),
+    });
+  }
+
+  /** After submitting or withdrawing: the stored release and its open review as they are now. */
+  protected reloadReview() {
+    const id = this.releaseId();
+    if (id === null) return;
+    forkJoin({
+      release: this.changelogs.getById(id).pipe(map(response => response.body)),
+      review: this.reviews.openFor('RELEASE', id),
+    }).subscribe(({release, review}) => {
+      this.stored.set(release);
+      this.openReview.set(review);
     });
   }
 
@@ -429,14 +466,21 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
     if (!stored) return;
     const ok = await this.confirm.ask({
       title: `Delete ${stored.version}?`,
-      message: `“${stored.title}” is removed from the website and the app. This cannot be undone.`,
-      confirmLabel: 'Delete release', danger: true,
+      message: stored.visibility === 'PRIVATE'
+        ? `The draft “${stored.title}” is deleted. This cannot be undone.`
+        : `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`,
+      confirmLabel: stored.visibility === 'PRIVATE' ? 'Delete release' : 'Submit deletion', danger: true,
     });
     if (!ok) return;
-    this.changelogs.deleteById(stored.id!).subscribe(() => {
+    this.changelogs.deleteById(stored.id!).subscribe(response => {
       this.settled();
       this.context.refresh().subscribe();
-      this.toast.success(`${stored.version} deleted.`);
+      if (submittedReview(response)) {
+        this.reviews.refreshCounts();
+        this.toast.success(`Deleting ${stored.version} is submitted for review. It stays live until an owner approves.`);
+      } else {
+        this.toast.success(`${stored.version} deleted.`);
+      }
       this.router.navigate(['/apps', this.context.slug(), 'releases']);
     });
   }
@@ -448,8 +492,3 @@ function pickLinks(release: Changelogs): Partial<Record<LinkField, string>> {
     .filter(([, url]) => typeof url === 'string' && url)) as Partial<Record<LinkField, string>>;
 }
 
-function savedMessage(saved: Changelogs, visibility: Visibility, push: boolean, created: boolean) {
-  if (visibility === 'PRIVATE') return created ? `Draft ${saved.version} saved.` : 'Draft saved.';
-  const where = visibility === 'PUBLIC' ? 'public' : 'unlisted';
-  return `${saved.version} is ${where} now${push ? ' and the push is out' : ''}.`;
-}

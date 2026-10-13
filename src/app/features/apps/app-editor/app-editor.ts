@@ -4,7 +4,7 @@ import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from
 import {Router, RouterLink} from '@angular/router';
 import {HttpEventType} from '@angular/common/http';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
-import {concatMap, from, map, startWith} from 'rxjs';
+import {concatMap, forkJoin, from, map, startWith} from 'rxjs';
 import {
   ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, LucideAngularModule,
   Trash2, X
@@ -25,6 +25,10 @@ import {today} from '../../../shared/editor/editor-page';
 import {ListingPreview, ListingPreviewData} from '../listing-preview/listing-preview';
 import {listingChecklist} from './listing-checklist';
 import {EditOnly} from '../../../shared/ui/edit-only';
+import {ReviewService} from '../../../services/review-service';
+import {ReviewDetail, submittedReview} from '../../../models/review';
+import {ReviewBanner} from '../../../shared/review/review-banner';
+import {CurrentUser} from '../../../core/auth/current-user';
 
 /** One screenshot in the form; textOpen only steers the editor and is never saved. */
 type ScreenshotGroup = FormGroup<{
@@ -40,12 +44,14 @@ type ScreenshotGroup = FormGroup<{
 @Component({
   selector: 'app-app-editor',
   imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
-    VisibilityPicker, AppTile, ListingPreview, EditOnly],
+    VisibilityPicker, AppTile, ListingPreview, EditOnly, ReviewBanner],
   templateUrl: './app-editor.html',
   styleUrls: ['./app-editor.css', './app-media.css']
 })
 export class AppEditor {
   private readonly apps = inject(AppService);
+  private readonly reviews = inject(ReviewService);
+  private readonly currentUser = inject(CurrentUser);
   private readonly files = inject(FileService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
@@ -57,6 +63,11 @@ export class AppEditor {
 
   /** null while creating a new app */
   protected readonly stored = signal<AppResponse | null>(null);
+  /** a change of the listing waiting for review, or sent back */
+  protected readonly openReview = signal<ReviewDetail | null>(null);
+  private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
+  /** someone else's change waits for review: only they can change this entry until then */
+  protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly ready = signal(false);
   protected readonly saving = signal(false);
   protected readonly uploadingIcon = signal(false);
@@ -93,6 +104,14 @@ export class AppEditor {
   private readonly value = toSignal(this.form.valueChanges.pipe(startWith(null), map(() => this.form.getRawValue())),
     {requireSync: true});
   protected readonly checklist = computed(() => listingChecklist(this.value()));
+  /** a private listing that stays private is saved; anything on the website is reviewed first */
+  protected readonly saveLabel = computed(() => {
+    if (this.lockedByOther()) return 'Waiting for review';
+    const goesLive = this.value().visibility !== 'PRIVATE' || (this.stored()?.visibility ?? 'PRIVATE') !== 'PRIVATE';
+    if (this.isNew()) return goesLive ? 'Create and submit' : 'Create app';
+    if (!goesLive) return 'Save';
+    return this.myReview() ? 'Submit again' : 'Submit for review';
+  });
   protected readonly previewData = computed<ListingPreviewData>(() => this.value());
 
   protected get screenshots() {
@@ -119,8 +138,14 @@ export class AppEditor {
   }
 
   private load(id: number) {
-    this.apps.getById(id).pipe(map(response => response.body!)).subscribe(app => {
-      this.stored.set(app);
+    forkJoin({
+      app: this.apps.getById(id).pipe(map(response => response.body!)),
+      review: this.reviews.openFor('APP', id),
+    }).subscribe(({app: stored, review}) => {
+      this.stored.set(stored);
+      this.openReview.set(review);
+      // the author goes on with what they submitted, not with the live listing
+      const app = (review?.payload && this.myReview() ? {...stored, ...review.payload} : stored) as AppResponse;
       this.slugFollowsName = false;
       this.form.patchValue({
         name: app.name ?? '', slug: app.slug ?? '', slogan: app.slogan ?? '', description: app.description ?? '',
@@ -136,6 +161,14 @@ export class AppEditor {
       this.form.markAsPristine();
       this.ready.set(true);
     });
+  }
+
+  /** After submitting or withdrawing: the open review as it is now. */
+  protected reloadReview() {
+    const app = this.stored();
+    if (!app?.id) return;
+    this.reviews.openFor('APP', app.id).subscribe(review => this.openReview.set(review));
+    this.apps.getById(app.id).subscribe(response => this.stored.set(response.body));
   }
 
   // icon
@@ -271,6 +304,19 @@ export class AppEditor {
       next: response => {
         this.saving.set(false);
         this.form.markAsPristine();
+        const review = submittedReview(response);
+        if (review) {
+          this.reviews.refreshCounts();
+          if (this.isNew()) {
+            this.toast.success(`${request.name} is created as a private draft and submitted for review.`);
+            this.router.navigate(['/apps', request.slug]);
+          } else {
+            this.toast.success('The store listing is submitted for review. It changes once an owner approves it.');
+            this.reloadReview();
+          }
+          return;
+        }
+        this.openReview.set(null);
         const saved = response.body!;
         if (this.isNew()) {
           this.toast.success(`${saved.name} created. It stays private until you make it visible.`);
@@ -293,11 +339,19 @@ export class AppEditor {
     if (!app) return;
     const ok = await this.confirm.ask({
       title: `Delete ${app.name}?`,
-      message: 'The app disappears from the website and the Adeptstack app. This cannot be undone.',
-      confirmLabel: 'Delete app', danger: true,
+      message: app.visibility === 'PRIVATE'
+        ? 'The private app is deleted. This cannot be undone.'
+        : 'The app is live, so deleting it is submitted for review first. Once approved it disappears from the website and the Adeptstack app.',
+      confirmLabel: app.visibility === 'PRIVATE' ? 'Delete app' : 'Submit deletion', danger: true,
     });
     if (!ok) return;
-    this.apps.deleteById(app.id!).subscribe(() => {
+    this.apps.deleteById(app.id!).subscribe(response => {
+      if (submittedReview(response)) {
+        this.reviews.refreshCounts();
+        this.toast.success(`Deleting ${app.name} is submitted for review. It stays live until an owner approves.`);
+        this.reloadReview();
+        return;
+      }
       this.toast.success(`${app.name} deleted.`);
       this.router.navigate(['/apps']);
     });

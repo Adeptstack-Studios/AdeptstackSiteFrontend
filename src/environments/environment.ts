@@ -48,4 +48,7 @@ export const environment = {
   teamMembers: 'https://api.adeptstack.net/api/team/members',
   teamInvites: 'https://api.adeptstack.net/api/team/invites',
   activity: 'https://api.adeptstack.net/api/activity',
+  reviews: 'https://api.adeptstack.net/api/reviews',
+  contentCheck: 'https://api.adeptstack.net/api/content-check',
+  contentRules: 'https://api.adeptstack.net/api/content-rules',
 };

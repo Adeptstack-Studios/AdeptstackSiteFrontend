@@ -74,14 +74,18 @@ export class Selection<T extends Selectable> {
     }
     if (visibility === 'PUBLIC' && !await options.confirm.ask({
       title: `Publish ${items.length} ${items.length === 1 ? one : many}?`,
-      message: 'They will be listed on adeptstack.net and in the app. No push is sent.',
-      confirmLabel: 'Publish',
+      message: 'They are submitted for review and listed on adeptstack.net and in the app once an owner approves. No push is sent.',
+      confirmLabel: 'Submit for review',
     })) return false;
 
     this.busy.set(true);
     return new Promise(resolve => forkJoin(items.map(item => options.update({...item, visibility}))).subscribe({
-      next: () => {
-        options.toast.success(`${items.length} ${items.length === 1 ? `${one} is` : `${many} are`} ${visibility.toLowerCase()} now.`);
+      next: results => {
+        // live entries and publishing go to review first (202)
+        const submitted = results.filter(result => (result as { status?: number } | null)?.status === 202).length;
+        options.toast.success(submitted
+          ? `${submitted} ${submitted === 1 ? one : many} submitted for review. They change once an owner approves.`
+          : `${items.length} ${items.length === 1 ? `${one} is` : `${many} are`} ${visibility.toLowerCase()} now.`);
         this.busy.set(false);
         this.clear();
         resolve(true);
@@ -93,12 +97,12 @@ export class Selection<T extends Selectable> {
     }));
   }
 
-  /** One push for all selected entries; the backend names it after the newest. */
-  sendPush(send: (ids: number[]) => Observable<{ body: string | null }>, toast: ToastService) {
+  /** One push for all selected entries, submitted for review; the backend names it after the newest. */
+  sendPush(send: (ids: number[]) => Observable<unknown>, toast: ToastService) {
     this.busy.set(true);
     send(this.ids()).subscribe({
-      next: response => {
-        toast.success(response.body ?? 'Push sent.');
+      next: () => {
+        toast.success('The push is submitted for review. It goes out once an owner approves it.');
         this.busy.set(false);
         this.clear();
       },

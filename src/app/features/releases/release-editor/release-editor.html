@@ -21,9 +21,9 @@
       </div>
       <div appEditOnly class="c-actions">
         @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
-          <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked()" (click)="saveAsDraft()">Save draft</button>
+          <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked() || lockedByOther()" (click)="saveAsDraft()">Save draft</button>
         }
-        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || blocked()"
+        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || blocked() || lockedByOther()"
                 [title]="blocked() ? 'Fix the points under “Before you publish” first' : ''">
           {{ saving() ? 'Saving…' : primaryLabel() }}
         </button>
@@ -41,6 +41,7 @@
 
     @if (ready()) {
       <div class="c-editor-layout">
+        <app-review-banner [detail]="openReview()" (withdrawn)="reloadReview()"></app-review-banner>
         <div class="c-editor-main">
           <section class="c-card" aria-labelledby="version-heading">
             <div class="c-card-head">

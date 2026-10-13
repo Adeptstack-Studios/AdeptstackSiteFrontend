@@ -4,6 +4,7 @@ import {map, Observable} from 'rxjs';
 import {Changelogs} from '../models/changelogs';
 import {Facet, Page, toHttpParams, toPage} from '../models/listing';
 import {environment} from '../../environments/environment';
+import {ReviewSummary} from '../models/review';
 
 /** Filters for the changelog listing. Leave page and size out to get every match. */
 export interface ChangelogListQuery {
@@ -30,12 +31,14 @@ export class ChangelogsService {
     this.http = inject(HttpClient);
   }
 
-  create(c: Changelogs): Observable<HttpResponse<Changelogs>> {
-    return this.http.post<Changelogs>(environment.changelogsCreate, c, { observe: 'response' });
+  /** A draft is saved (201); going live is submitted for review instead (202 with the submission). */
+  create(c: Changelogs, push = false): Observable<HttpResponse<Changelogs>> {
+    return this.http.post<Changelogs>(environment.changelogsCreate, c, { observe: 'response', params: { push } });
   }
 
-  update(c: Changelogs): Observable<HttpResponse<Changelogs>> {
-    return this.http.put<Changelogs>(environment.changelogsUpdate + "/" + c.id, c, { observe: 'response' });
+  /** push: send the push once the release is live. 202 when the change was submitted for review. */
+  update(c: Changelogs, push = false): Observable<HttpResponse<Changelogs>> {
+    return this.http.put<Changelogs>(environment.changelogsUpdate + "/" + c.id, c, { observe: 'response', params: { push } });
   }
 
   deleteById(id: number): Observable<HttpResponse<Changelogs>> {
@@ -50,9 +53,9 @@ export class ChangelogsService {
     return this.http.get<Changelogs[]>(environment.searchByChangelogs + app + "&title=" + query, { observe: 'response' });
   }
 
-  /** Sends one push for the given changelogs, named after the newest of them. */
-  sendPush(ids: number[]): Observable<HttpResponse<string>> {
-    return this.http.post(environment.changelogsPush, { ids }, { observe: 'response', responseType: 'text' });
+  /** Submits one push for the given changelogs for review; it is named after the newest of them. */
+  sendPush(ids: number[]): Observable<HttpResponse<ReviewSummary>> {
+    return this.http.post<ReviewSummary>(environment.changelogsPush, { ids }, { observe: 'response' });
   }
 
   getById(id: number): Observable<HttpResponse<Changelogs>> {
