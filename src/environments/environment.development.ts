@@ -2,9 +2,10 @@ export const environment = {
   production: false,
   login : 'http://localhost:8080/api/auth/login',
   verifyLogin : 'http://localhost:8080/api/auth/verifyLogin',
-  register : 'http://localhost:8080/api/auth/register',
   me : 'http://localhost:8080/api/auth/me',
   refresh : 'http://localhost:8080/api/auth/refresh',
+  password : 'http://localhost:8080/api/auth/password',
+  invite : 'http://localhost:8080/api/auth/invite/',
 
   newsGet: 'http://localhost:8080/api/news/get',
   newsCreate: 'http://localhost:8080/api/news/create',
@@ -43,4 +44,8 @@ export const environment = {
   consoleStats: 'http://localhost:8080/api/console/stats',
   consolePushes: 'http://localhost:8080/api/console/pushes',
   consoleNewsletter: 'http://localhost:8080/api/console/newsletter',
+
+  teamMembers: 'http://localhost:8080/api/team/members',
+  teamInvites: 'http://localhost:8080/api/team/invites',
+  activity: 'http://localhost:8080/api/activity',
 };

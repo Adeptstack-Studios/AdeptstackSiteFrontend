@@ -29,6 +29,25 @@ export function isUpcoming(value: string | Date | null | undefined, today = new 
   return date.getTime() >= endOfToday;
 }
 
+/** "just now", "5 min ago", "3 h ago", then like relativeDay; for timestamps such as sign-ins and log entries. */
+export function relativeTime(value: string | Date | null | undefined, now = new Date()): string {
+  if (!value) return '–';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return '–';
+  const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 12 * 60) return `${Math.floor(minutes / 60)} h ago`;
+  return relativeDay(date, now);
+}
+
+@Pipe({name: 'relativeTime'})
+export class RelativeTimePipe implements PipeTransform {
+  transform(value: string | Date | null | undefined): string {
+    return relativeTime(value);
+  }
+}
+
 @Pipe({name: 'relativeDay'})
 export class RelativeDayPipe implements PipeTransform {
   transform(value: string | Date | null | undefined): string {

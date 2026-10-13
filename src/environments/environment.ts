@@ -2,9 +2,10 @@ export const environment = {
   production: true,
   login : 'https://api.adeptstack.net/api/auth/login',
   verifyLogin : 'https://api.adeptstack.net/api/auth/verifyLogin',
-  register : 'https://api.adeptstack.net/api/auth/register',
   me : 'https://api.adeptstack.net/api/auth/me',
   refresh : 'https://api.adeptstack.net/api/auth/refresh',
+  password : 'https://api.adeptstack.net/api/auth/password',
+  invite : 'https://api.adeptstack.net/api/auth/invite/',
 
   newsGet: 'https://api.adeptstack.net/api/news/get',
   newsCreate: 'https://api.adeptstack.net/api/news/create',
@@ -43,4 +44,8 @@ export const environment = {
   consoleStats: 'https://api.adeptstack.net/api/console/stats',
   consolePushes: 'https://api.adeptstack.net/api/console/pushes',
   consoleNewsletter: 'https://api.adeptstack.net/api/console/newsletter',
+
+  teamMembers: 'https://api.adeptstack.net/api/team/members',
+  teamInvites: 'https://api.adeptstack.net/api/team/invites',
+  activity: 'https://api.adeptstack.net/api/activity',
 };

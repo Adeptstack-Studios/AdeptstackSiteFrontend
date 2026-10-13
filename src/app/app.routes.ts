@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import {Login} from './login/login';
 import {AuthGuard} from './guards/auth-guard';
 import {unsavedChangesGuard} from './core/unsaved/unsaved-changes';
+import {ownerGuard, signedInGuard} from './core/auth/guards';
 
 const TITLE = ' · Adeptstack Console';
 
@@ -10,10 +11,16 @@ const TITLE = ' · Adeptstack Console';
 export const routes: Routes = [
   { path: 'login', component: Login, title: 'Sign in' + TITLE },
   {
-    path: 'register',
-    loadComponent: () => import('./register/register').then(m => m.Register),
-    canMatch: [AuthGuard], canActivate: [AuthGuard],
-    title: 'Register' + TITLE
+    // the token follows after #, so it never reaches a server log
+    path: 'join',
+    loadComponent: () => import('./features/team/join-page').then(m => m.JoinPage),
+    title: 'Join the team' + TITLE
+  },
+  {
+    path: 'welcome',
+    loadComponent: () => import('./features/account/welcome-page').then(m => m.WelcomePage),
+    canActivate: [signedInGuard],
+    title: 'Choose your password' + TITLE
   },
   {
     path: '',
@@ -130,6 +137,17 @@ export const routes: Routes = [
         path: 'newsletter',
         loadComponent: () => import('./features/newsletter/newsletter-page').then(m => m.NewsletterPage),
         title: 'Newsletter' + TITLE, data: { label: 'Newsletter' }
+      },
+      {
+        path: 'team',
+        loadComponent: () => import('./features/team/team-page').then(m => m.TeamPage),
+        canActivate: [ownerGuard],
+        title: 'Team' + TITLE, data: { label: 'Team & roles' }
+      },
+      {
+        path: 'account',
+        loadComponent: () => import('./features/account/account-page').then(m => m.AccountPage),
+        title: 'Account' + TITLE, data: { label: 'Account' }
       },
       // older addresses: the blog moved, releases live with their app now
       { path: 'news', redirectTo: 'blog' },

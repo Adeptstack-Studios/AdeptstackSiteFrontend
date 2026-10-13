@@ -4,14 +4,14 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, FileText, House, Layers, LayoutDashboard,
-  LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun
+  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, FileText, House, Layers,
+  LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
 } from 'lucide-angular';
-import {AuthorizationService} from '../services/authorization';
 import {LocalStorageService} from '../services/local-storage-service';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
 import {User} from '../models/user';
+import {CurrentUser} from '../core/auth/current-user';
 import {checklistDone} from '../models/console';
 import {SessionTimer} from '../core/session/session-timer';
 import {AppTile} from '../shared/ui/app-tile';
@@ -34,13 +34,13 @@ interface RouteStep {
   styleUrls: ['./admin-panel.css', './app-nav.css']
 })
 export class AdminPanel {
-  private readonly auth = inject(AuthorizationService);
   private readonly storage = inject(LocalStorageService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
   protected readonly context = inject(AppContext);
+  protected readonly currentUser = inject(CurrentUser);
 
-  protected readonly user = signal<User | undefined>(undefined);
+  protected readonly user = this.currentUser.user;
   protected readonly navOpen = signal(false);
   private readonly steps = signal<RouteStep[]>([]);
 
@@ -52,9 +52,13 @@ export class AdminPanel {
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
   ];
+  /** Team & roles only shows up for owners */
+  protected readonly navItems = computed(() => this.currentUser.isOwner()
+    ? [...this.nav, {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
+    : this.nav);
   protected readonly icons = {
-    ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Layers, LayoutDashboard, LogOut, Menu,
-    Monitor, Moon, Store, Sun
+    ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, Layers, LayoutDashboard,
+    LogOut, Menu, Monitor, Moon, Store, Sun, UserRound, Users
   };
   protected readonly checklistDone = checklistDone;
 
@@ -66,7 +70,7 @@ export class AdminPanel {
   });
 
   constructor() {
-    this.auth.me().subscribe(user => this.user.set(user));
+    this.currentUser.ensure().subscribe();
 
     this.updateSteps();
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed()).subscribe(() => {
@@ -85,7 +89,7 @@ export class AdminPanel {
 
   protected logout() {
     this.storage.remove('auth-key');
-    this.user.set(undefined);
+    this.currentUser.clear();
     this.router.navigateByUrl('/login');
   }
 

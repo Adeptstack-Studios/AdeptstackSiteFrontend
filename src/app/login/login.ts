@@ -7,6 +7,7 @@ import {Router} from '@angular/router';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../services/toast-service';
 import {errorMessage} from '../core/errors/http-errors';
+import {CurrentUser} from '../core/auth/current-user';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class Login {
   private readonly localStorageService = inject(LocalStorageService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly currentUser = inject(CurrentUser);
 
   request: LoginRequest = new LoginRequest();
   signingIn = false;
@@ -43,6 +45,12 @@ export class Login {
     this.authService.login(this.request).subscribe({
       next: (response) => {
         this.localStorageService.set("auth-key", response.token);
+        this.currentUser.clear();
+        // a start password from an owner is replaced before anything else
+        if (response.mustChangePassword) {
+          this.router.navigateByUrl("/welcome");
+          return;
+        }
 
         this.authService.verifyLogin().subscribe({
           next: () => {

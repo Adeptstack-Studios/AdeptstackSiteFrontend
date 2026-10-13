@@ -68,7 +68,7 @@
       </a>
     } @else {
       <nav class="nav" aria-label="Main">
-        @for (item of nav; track item.path) {
+        @for (item of navItems(); track item.path) {
           <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
              [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null">
             <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
@@ -102,6 +102,11 @@
       </nav>
 
       <div class="topbar-actions">
+        @if (currentUser.role() === 'VIEWER') {
+          <span class="viewer-badge" title="Your role can look at everything, but not change anything.">
+            <lucide-icon [img]="icons.Eye" [size]="14" aria-hidden="true"></lucide-icon> View only
+          </span>
+        }
         <app-session-timer></app-session-timer>
 
         <button type="button" class="icon-btn" (click)="theme.toggle()"
@@ -128,6 +133,15 @@
 
 <ng-template #userMenu>
   <div class="menu" cdkMenu>
+    <a class="menu-item" cdkMenuItem routerLink="/account">
+      <lucide-icon [img]="icons.UserRound" [size]="16" aria-hidden="true"></lucide-icon> Account
+    </a>
+    @if (currentUser.isOwner()) {
+      <a class="menu-item" cdkMenuItem routerLink="/team">
+        <lucide-icon [img]="icons.Users" [size]="16" aria-hidden="true"></lucide-icon> Team &amp; roles
+      </a>
+    }
+    <div class="menu-separator" role="separator"></div>
     <div class="menu-label" id="theme-label">Theme</div>
     <div cdkMenuGroup aria-labelledby="theme-label">
       <button type="button" class="menu-item" cdkMenuItemRadio [cdkMenuItemChecked]="theme.mode() === 'system'"
