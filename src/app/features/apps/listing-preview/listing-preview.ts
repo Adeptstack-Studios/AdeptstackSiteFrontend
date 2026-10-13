@@ -13,7 +13,6 @@ export interface ListingPreviewData {
   legacy: boolean;
   videoUrl: string;
   backgroundUrl: string;
-  backgroundVideo: boolean;
   images: { url: string; text: string }[];
 }
 

@@ -47,7 +47,6 @@ function listingForm() {
     images: new FormArray<ScreenshotGroup>([]),
     videoUrl: new FormControl('', {nonNullable: true}),
     backgroundUrl: new FormControl('', {nonNullable: true}),
-    backgroundVideo: new FormControl(false, {nonNullable: true}),
     modrinthId: new FormControl('', {nonNullable: true}),
     curseforgeId: new FormControl('', {nonNullable: true}),
     highlighted: new FormControl(false, {nonNullable: true}),
@@ -140,17 +139,6 @@ export class AppEditor extends EditorPage<ListingFormValue> {
     this.form.controls.name.valueChanges.pipe(takeUntilDestroyed()).subscribe(name => {
       if (this.slugFollowsName) this.form.controls.slug.setValue(slugify(name), {emitEvent: false});
     });
-    // only a video can play in the background
-    this.form.controls.videoUrl.valueChanges.pipe(startWith(this.form.controls.videoUrl.value), takeUntilDestroyed())
-      .subscribe(video => {
-        const toggle = this.form.controls.backgroundVideo;
-        if (video) {
-          toggle.enable({emitEvent: false});
-        } else {
-          toggle.setValue(false, {emitEvent: false});
-          toggle.disable({emitEvent: false});
-        }
-      });
     this.keepDrafts();
   }
 
@@ -186,7 +174,6 @@ export class AppEditor extends EditorPage<ListingFormValue> {
         category: app.category ?? '', platforms: app.platforms ?? '', iconUrl: app.iconUrl ?? '',
         videoUrl: app.videoUrl ?? '',
         backgroundUrl: app.backgroundUrl ?? '',
-        backgroundVideo: !!app.backgroundVideo && !!app.videoUrl,
         modrinthId: app.modrinthId ?? '', curseforgeId: app.curseforgeId ?? '',
         highlighted: !!app.highlighted, legacy: !!app.legacy,
         publishedAt: app.publishedAt ? String(app.publishedAt).substring(0, 10) : today(),
@@ -310,8 +297,7 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   }
 
   protected removeVideo() {
-    // without a video nothing can play in the background
-    this.form.patchValue({videoUrl: '', backgroundVideo: false});
+    this.form.controls.videoUrl.setValue('');
     this.form.markAsDirty();
   }
 
@@ -357,7 +343,6 @@ export class AppEditor extends EditorPage<ListingFormValue> {
       images: images.map(image => ({url: image.url, text: image.text.trim() || null})),
       videoUrl: value.videoUrl || null,
       backgroundUrl: value.backgroundUrl || null,
-      backgroundVideo: value.backgroundVideo && !!value.videoUrl,
       publishedAt: value.publishedAt as unknown as Date,
     };
 

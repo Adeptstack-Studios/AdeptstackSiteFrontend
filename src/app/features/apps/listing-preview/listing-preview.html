@@ -1,8 +1,6 @@
 @let page = listing();
 <div class="site" aria-label="Preview of the product page">
-  @if (page.backgroundVideo && page.videoUrl) {
-    <video class="backdrop" [src]="page.videoUrl" [poster]="page.backgroundUrl" muted autoplay loop playsinline aria-hidden="true"></video>
-  } @else if (backdrop()) {
+  @if (backdrop()) {
     <img class="backdrop" [src]="backdrop()" alt="" aria-hidden="true">
   }
   <p class="note">Preview · close to how adeptstack.net shows this app</p>

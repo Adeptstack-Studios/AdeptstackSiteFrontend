@@ -296,17 +296,3 @@
   color: #fff;
   font-size: 12px;
 }
-
-.background-video {
-  margin-top: 12px;
-  align-items: flex-start;
-}
-
-.background-video .c-hint {
-  display: block;
-  margin-top: 2px;
-}
-
-.background-video.disabled {
-  color: var(--muted);
-}

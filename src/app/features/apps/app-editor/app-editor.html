@@ -217,9 +217,7 @@
                 @if (form.controls.backgroundUrl.value || screenshots.length) {
                   <img [src]="form.controls.backgroundUrl.value || screenshots.at(0).controls.url.value" alt="Background of the product page">
                 }
-                @if (form.controls.backgroundVideo.value) {
-                  <span class="background-default">The video plays here; the image shows until it has loaded</span>
-                } @else if (!form.controls.backgroundUrl.value) {
+                @if (!form.controls.backgroundUrl.value) {
                   <span class="background-default">{{ screenshots.length ? 'First screenshot' : 'No image yet' }}</span>
                 }
               </div>
@@ -238,15 +236,6 @@
                 }
               </div>
             </div>
-            <label class="check background-video" [class.disabled]="!form.controls.videoUrl.value">
-              <input type="checkbox" formControlName="backgroundVideo">
-              <span>
-                Play the video in the background
-                <span class="c-hint">{{ form.controls.videoUrl.value
-                  ? 'Muted and looping. Visitors who prefer less motion see the image.'
-                  : 'Upload a video above first.' }}</span>
-              </span>
-            </label>
           </section>
           }
         </div>
