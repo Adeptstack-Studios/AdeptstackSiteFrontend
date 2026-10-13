@@ -24,6 +24,7 @@ import {SLUG_PATTERN, slugify} from '../../../shared/slug';
 import {today} from '../../../shared/editor/editor-page';
 import {ListingPreview, ListingPreviewData} from '../listing-preview/listing-preview';
 import {listingChecklist} from './listing-checklist';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 /** One screenshot in the form; textOpen only steers the editor and is never saved. */
 type ScreenshotGroup = FormGroup<{
@@ -39,7 +40,7 @@ type ScreenshotGroup = FormGroup<{
 @Component({
   selector: 'app-app-editor',
   imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
-    VisibilityPicker, AppTile, ListingPreview],
+    VisibilityPicker, AppTile, ListingPreview, EditOnly],
   templateUrl: './app-editor.html',
   styleUrls: ['./app-editor.css', './app-media.css']
 })

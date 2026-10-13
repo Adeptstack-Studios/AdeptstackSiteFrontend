@@ -4,11 +4,12 @@ import {LucideAngularModule, Plus, Search} from 'lucide-angular';
 import {ConsoleService} from '../../../services/console-service';
 import {AppSummary} from '../../../models/console';
 import {AppsTable} from '../apps-table/apps-table';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 /** All apps, with search and the way to create one. */
 @Component({
   selector: 'app-app-list',
-  imports: [RouterLink, LucideAngularModule, AppsTable],
+  imports: [RouterLink, LucideAngularModule, AppsTable, EditOnly],
   templateUrl: './app-list.html',
   styles: `
     .search {

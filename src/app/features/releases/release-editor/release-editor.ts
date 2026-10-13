@@ -21,6 +21,7 @@ import {PublishingCard} from '../../../shared/editor/publishing-card';
 import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkRelease, NOTES_TEMPLATE, ReleaseDraft} from './release-checks';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 /** Channel names for an app without releases. */
 const DEFAULT_CHANNELS = {stable: 'stable', beta: 'beta'};
@@ -47,7 +48,7 @@ type ReleaseFormValue = ReturnType<ReturnType<typeof releaseForm>['getRawValue']
 @Component({
   selector: 'app-release-editor',
   imports: [ReactiveFormsModule, RouterLink, CdkMenuTrigger, CdkMenu, CdkMenuItem, LucideAngularModule, AppTile,
-    MarkdownEditor, PublishingCard, ChecksCard, CoverCard],
+    MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly],
   templateUrl: './release-editor.html',
   styleUrl: './release-editor.css'
 })

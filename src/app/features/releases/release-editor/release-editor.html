@@ -19,7 +19,7 @@
           }
         </p>
       </div>
-      <div class="c-actions">
+      <div appEditOnly class="c-actions">
         @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
           <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked()" (click)="saveAsDraft()">Save draft</button>
         }
@@ -177,7 +177,7 @@
           <app-cover-card [control]="form.controls.imageUrl"></app-cover-card>
 
           @if (stored()) {
-            <section class="c-card" aria-labelledby="danger-heading">
+            <section appEditOnly class="c-card" aria-labelledby="danger-heading">
               <div class="c-card-head"><h2 id="danger-heading">Delete</h2></div>
               <p class="c-hint">Removes this release from the website and the app.</p>
               <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deleteRelease()">

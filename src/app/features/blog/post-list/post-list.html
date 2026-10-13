@@ -13,7 +13,7 @@
         </p>
       </div>
       <div class="c-actions">
-        <a class="c-btn c-btn-primary" routerLink="/blog/new" [queryParams]="state.app ? {app: state.app} : {}">
+        <a appEditOnly class="c-btn c-btn-primary" routerLink="/blog/new" [queryParams]="state.app ? {app: state.app} : {}">
           <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
           New post
         </a>
@@ -69,7 +69,7 @@
     </div>
 
     @if (selection.size()) {
-      <div class="c-selection-bar" role="region" aria-label="Selected posts">
+      <div appEditOnly class="c-selection-bar" role="region" aria-label="Selected posts">
         <strong aria-live="polite">{{ selection.size() }} {{ selection.size() === 1 ? 'post' : 'posts' }} selected</strong>
         <button type="button" class="c-btn c-btn-primary c-btn-sm" [disabled]="selection.busy()" (click)="sendPush()">Send one push</button>
         <button type="button" class="c-btn c-btn-sm" [disabled]="selection.busy()" (click)="setVisibility('PUBLIC')">Make public</button>

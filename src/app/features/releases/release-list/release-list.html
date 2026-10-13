@@ -13,7 +13,7 @@
         </p>
       </div>
       <div class="c-actions">
-        <a class="c-btn c-btn-primary" [routerLink]="['/apps', context.slug(), 'releases', 'new']"
+        <a appEditOnly class="c-btn c-btn-primary" [routerLink]="['/apps', context.slug(), 'releases', 'new']"
            [queryParams]="state.channel ? {channel: state.channel} : {}">
           <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
           New release
@@ -61,7 +61,7 @@
     </div>
 
     @if (selection.size()) {
-      <div class="c-selection-bar" role="region" aria-label="Selected releases">
+      <div appEditOnly class="c-selection-bar" role="region" aria-label="Selected releases">
         <strong aria-live="polite">{{ selection.size() }} {{ selection.size() === 1 ? 'release' : 'releases' }} selected</strong>
         <button type="button" class="c-btn c-btn-primary c-btn-sm" [disabled]="selection.busy()" (click)="sendPush()">Send one push</button>
         <button type="button" class="c-btn c-btn-sm" [disabled]="selection.busy()" (click)="setVisibility('PUBLIC')">Make public</button>

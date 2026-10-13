@@ -16,11 +16,12 @@ import {ChannelChip, VisibilityStatus} from '../../../shared/ui/status';
 import {UrlListState, VISIBILITY_FILTERS} from '../../../shared/listing/url-list';
 import {Selection} from '../../../shared/listing/selection';
 import {isUpcoming} from '../../../shared/ui/relative-day';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 /** All releases of one app, filtered by channel and visibility, with actions on several at once. */
 @Component({
   selector: 'app-release-list',
-  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, ChannelChip, VisibilityStatus],
+  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, ChannelChip, VisibilityStatus, EditOnly],
   templateUrl: './release-list.html',
 })
 export class ReleaseList {

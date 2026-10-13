@@ -4,6 +4,11 @@
  * from the older blog page styles.
  */
 
+/* elements hidden with the hidden attribute stay hidden, whatever display a class gives them */
+[hidden] {
+  display: none !important;
+}
+
 .c-scroll {
   height: 100%;
   overflow-y: auto;

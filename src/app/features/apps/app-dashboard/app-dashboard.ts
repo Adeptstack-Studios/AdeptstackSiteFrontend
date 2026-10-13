@@ -17,13 +17,14 @@ import {AppStats, trend} from '../../../models/stats';
 import {KpiCard} from '../../../shared/charts/kpi-card';
 import {DayChart} from '../../../shared/charts/day-chart';
 import {compact} from '../../../shared/charts/chart-series';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 const CHANNEL_HINTS: Record<string, string> = {stable: 'Everyone gets this', beta: 'Opt-in testers'};
 
 /** One app at a glance: its channels like the tracks of the Play Console, latest releases, store listing. */
 @Component({
   selector: 'app-app-dashboard',
-  imports: [RouterLink, LucideAngularModule, AppTile, ChannelChip, VisibilityStatus, DatePipe, KpiCard, DayChart],
+  imports: [RouterLink, LucideAngularModule, AppTile, ChannelChip, VisibilityStatus, DatePipe, KpiCard, DayChart, EditOnly],
   templateUrl: './app-dashboard.html',
   styleUrl: './app-dashboard.css'
 })

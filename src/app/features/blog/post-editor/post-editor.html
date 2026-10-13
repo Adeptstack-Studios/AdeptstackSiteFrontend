@@ -16,7 +16,7 @@
           }
         </p>
       </div>
-      <div class="c-actions">
+      <div appEditOnly class="c-actions">
         @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
           <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked()" (click)="saveAsDraft()">Save draft</button>
         }
@@ -119,7 +119,7 @@
                           hint="Shown above the post, in the blog list and in link previews."></app-cover-card>
 
           @if (stored()) {
-            <section class="c-card" aria-labelledby="delete-heading">
+            <section appEditOnly class="c-card" aria-labelledby="delete-heading">
               <div class="c-card-head"><h2 id="delete-heading">Delete</h2></div>
               <p class="c-hint">Removes this post from the website and the app.</p>
               <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deletePost()">

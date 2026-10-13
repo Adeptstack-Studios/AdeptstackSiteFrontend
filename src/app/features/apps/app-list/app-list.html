@@ -18,7 +18,7 @@
           <input class="c-input" type="search" placeholder="Search apps" [value]="search()"
                  (input)="search.set($any($event.target).value)">
         </label>
-        <a class="c-btn c-btn-primary" routerLink="/apps/new">
+        <a appEditOnly class="c-btn c-btn-primary" routerLink="/apps/new">
           <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
           Create app
         </a>

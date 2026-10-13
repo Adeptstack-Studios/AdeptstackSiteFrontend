@@ -2,7 +2,7 @@ import {Component, computed, inject, signal} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {ChevronRight, FilePen, FileText, LucideAngularModule, Plus, Store} from 'lucide-angular';
 import {ConsoleService} from '../../services/console-service';
-import {AuthorizationService} from '../../services/authorization';
+import {CurrentUser} from '../../core/auth/current-user';
 import {AppSummary, checklistDone, ConsoleOverview} from '../../models/console';
 import {StatsOverview, trend} from '../../models/stats';
 import {KpiCard} from '../../shared/charts/kpi-card';
@@ -57,7 +57,8 @@ export class Overview {
   protected readonly topPages = computed(() =>
     (this.stats()?.topPages ?? []).slice(0, 6).map(page => ({name: page.path, value: page.views})));
   protected readonly apps = signal<AppSummary[] | null>(null);
-  protected readonly username = signal('');
+  protected readonly currentUser = inject(CurrentUser);
+  protected readonly username = computed(() => this.currentUser.user()?.username ?? '');
 
   protected readonly greeting = greeting(new Date());
   protected readonly shownApps = computed(() => (this.apps() ?? []).slice(0, SHOWN_APPS));
@@ -95,7 +96,6 @@ export class Overview {
   constructor() {
     this.load();
     this.console.apps().subscribe(apps => this.apps.set(apps));
-    inject(AuthorizationService).me().subscribe(user => this.username.set(user.username ?? ''));
   }
 
   /** Release lists only carry the app id; the icon comes from the apps loaded anyway. */

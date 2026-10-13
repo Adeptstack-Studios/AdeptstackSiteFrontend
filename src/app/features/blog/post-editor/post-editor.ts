@@ -17,6 +17,7 @@ import {PublishingCard} from '../../../shared/editor/publishing-card';
 import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkPost} from './post-checks';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 function postForm() {
   return new FormGroup({
@@ -39,7 +40,7 @@ type PostFormValue = ReturnType<ReturnType<typeof postForm>['getRawValue']>;
 /** Writes and edits blog posts: /blog/new and /blog/:id */
 @Component({
   selector: 'app-post-editor',
-  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule, MarkdownEditor, PublishingCard, ChecksCard, CoverCard],
+  imports: [ReactiveFormsModule, RouterLink, LucideAngularModule, MarkdownEditor, PublishingCard, ChecksCard, CoverCard, EditOnly],
   templateUrl: './post-editor.html',
   styles: `
     .fields-2 {

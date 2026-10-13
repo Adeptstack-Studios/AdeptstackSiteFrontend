@@ -15,7 +15,7 @@
           <button type="button" [attr.aria-pressed]="mode() === 'edit'" (click)="mode.set('edit')">Edit</button>
           <button type="button" [attr.aria-pressed]="mode() === 'preview'" (click)="mode.set('preview')">Preview</button>
         </div>
-        <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || busy()">
+        <button appEditOnly type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || busy()">
           {{ saving() ? 'Saving…' : isNew() ? 'Create app' : 'Save' }}
         </button>
       </div>
@@ -243,7 +243,7 @@
           </section>
 
           @if (context.app()) {
-            <section class="c-card" aria-labelledby="delete-heading">
+            <section appEditOnly class="c-card" aria-labelledby="delete-heading">
               <div class="c-card-head"><h2 id="delete-heading">Delete</h2></div>
               <button type="button" class="c-btn c-btn-danger c-btn-sm" (click)="deleteApp()">
                 <lucide-icon [img]="icons.Trash2" [size]="15" aria-hidden="true"></lucide-icon>

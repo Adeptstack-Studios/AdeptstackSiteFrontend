@@ -16,7 +16,7 @@
             <lucide-icon [img]="icons.Store" [size]="16" aria-hidden="true"></lucide-icon>
             Store listing
           </a>
-          <a class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">
+          <a appEditOnly class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">
             <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true"></lucide-icon>
             New release
           </a>
@@ -51,7 +51,7 @@
               @if (channel.latest.visibility === 'PRIVATE') {
                 <a class="c-btn c-btn-sm" [routerLink]="['/apps', app.slug, 'releases', channel.latest.id]">Continue editing</a>
               } @else if (promotable()?.main === channel) {
-                <a class="c-btn c-btn-sm" [routerLink]="['/apps', app.slug, 'releases', 'new']"
+                <a appEditOnly class="c-btn c-btn-sm" [routerLink]="['/apps', app.slug, 'releases', 'new']"
                    [queryParams]="{promote: promotable()!.beta.latest.id}">
                   Promote {{ promotable()!.beta.latest.version }} to {{ channel.name }}
                 </a>
@@ -62,7 +62,7 @@
         } @empty {
           <div class="c-card c-empty">
             <p>No releases yet.</p>
-            <a class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">Create the first release</a>
+            <a appEditOnly class="c-btn c-btn-primary" [routerLink]="['/apps', app.slug, 'releases', 'new']">Create the first release</a>
           </div>
         }
       </section>
@@ -182,7 +182,7 @@
           } @else {
             <div class="c-skeleton posts-skeleton"></div>
           }
-          <a class="c-btn c-btn-sm" routerLink="/blog/new" [queryParams]="{app: app.slug}">
+          <a appEditOnly class="c-btn c-btn-sm" routerLink="/blog/new" [queryParams]="{app: app.slug}">
             <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
             Write a post about {{ app.name }}
           </a>

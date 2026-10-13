@@ -59,10 +59,12 @@
           @if (apps(); as list) {
             <a class="c-link" routerLink="/apps">View all {{ list.length }}</a>
           }
-          <a class="c-btn c-btn-primary c-btn-sm" routerLink="/apps/new">
-            <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
-            Create app
-          </a>
+          @if (currentUser.canEdit()) {
+            <a class="c-btn c-btn-primary c-btn-sm" routerLink="/apps/new">
+              <lucide-icon [img]="icons.Plus" [size]="15" aria-hidden="true"></lucide-icon>
+              Create app
+            </a>
+          }
         </div>
       </div>
       @if (apps() === null) {

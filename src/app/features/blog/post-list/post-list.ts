@@ -17,11 +17,12 @@ import {VisibilityStatus} from '../../../shared/ui/status';
 import {AppTile} from '../../../shared/ui/app-tile';
 import {UrlListState, VISIBILITY_FILTERS} from '../../../shared/listing/url-list';
 import {Selection} from '../../../shared/listing/selection';
+import {EditOnly} from '../../../shared/ui/edit-only';
 
 /** All blog posts, filtered by category, app and visibility, with actions on several at once. */
 @Component({
   selector: 'app-post-list',
-  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, VisibilityStatus, AppTile],
+  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, VisibilityStatus, AppTile, EditOnly],
   templateUrl: './post-list.html',
   styles: `
     .title-cell {
