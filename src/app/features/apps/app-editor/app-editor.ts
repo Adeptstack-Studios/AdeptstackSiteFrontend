@@ -10,10 +10,8 @@ import {
   Trash2, X
 } from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
-import {ConfirmService} from '../../../core/confirm/confirm-service';
 import {AppService} from '../../../services/app-service';
 import {FileService} from '../../../services/file-service';
-import {ToastService} from '../../../services/toast-service';
 import {App, AppImage} from '../../../models/app';
 import {AppResponse} from '../../../models/app-response';
 import {checklistDone} from '../../../models/console';
@@ -21,7 +19,7 @@ import {Visibility, VisibilityPicker} from '../../../shared/visibility-picker/vi
 import {IMAGE_FILE_HINT, isImageFile, isVideoFile, VIDEO_FILE_HINT} from '../../../shared/listing/upload-files';
 import {AppTile} from '../../../shared/ui/app-tile';
 import {SLUG_PATTERN, slugify} from '../../../shared/slug';
-import {today} from '../../../shared/editor/editor-page';
+import {EditorPage, today} from '../../../shared/editor/editor-page';
 import {ListingPreview, ListingPreviewData} from '../listing-preview/listing-preview';
 import {listingChecklist} from './listing-checklist';
 import {EditOnly} from '../../../shared/ui/edit-only';
@@ -37,53 +35,8 @@ type ScreenshotGroup = FormGroup<{
   textOpen: FormControl<boolean>;
 }>;
 
-/**
- * The store listing of an app (/apps/:slug/listing) and the form for a new one (/apps/new).
- * Screenshots form the gallery on the product page; one with a text is also a feature there.
- */
-@Component({
-  selector: 'app-app-editor',
-  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
-    VisibilityPicker, AppTile, ListingPreview, EditOnly, ReviewBanner],
-  templateUrl: './app-editor.html',
-  styleUrls: ['./app-editor.css', './app-media.css']
-})
-export class AppEditor {
-  private readonly apps = inject(AppService);
-  private readonly reviews = inject(ReviewService);
-  private readonly currentUser = inject(CurrentUser);
-  private readonly files = inject(FileService);
-  private readonly toast = inject(ToastService);
-  private readonly confirm = inject(ConfirmService);
-  private readonly router = inject(Router);
-  protected readonly context = inject(AppContext);
-
-  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, Trash2, X};
-  protected readonly checklistDone = checklistDone;
-
-  /** null while creating a new app */
-  protected readonly stored = signal<AppResponse | null>(null);
-  /** a change of the listing waiting for review, or sent back */
-  protected readonly openReview = signal<ReviewDetail | null>(null);
-  private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
-  /** someone else's change waits for review: only they can change this entry until then */
-  protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
-  protected readonly ready = signal(false);
-  protected readonly saving = signal(false);
-  protected readonly uploadingIcon = signal(false);
-  /** e.g. {done: 1, total: 4} while screenshots upload one after another */
-  protected readonly screenshotUpload = signal<{ done: number; total: number } | null>(null);
-  /** 0–100 while the video uploads */
-  protected readonly videoProgress = signal<number | null>(null);
-  protected readonly isNew = computed(() => !this.context.slug());
-  /** the form, or the product page as the website shows it */
-  protected readonly mode = signal<'edit' | 'preview'>('edit');
-  protected readonly busy = computed(() =>
-    this.uploadingIcon() || this.screenshotUpload() !== null || this.videoProgress() !== null);
-  /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
-  private slugFollowsName = true;
-
-  readonly form = new FormGroup({
+function listingForm() {
+  return new FormGroup({
     name: new FormControl('', {nonNullable: true, validators: Validators.required}),
     slug: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.pattern(SLUG_PATTERN)]}),
     slogan: new FormControl('', {nonNullable: true, validators: Validators.required}),
@@ -100,6 +53,54 @@ export class AppEditor {
     publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
     visibility: new FormControl<Visibility>('PRIVATE', {nonNullable: true}),
   });
+}
+
+type ListingFormValue = ReturnType<ReturnType<typeof listingForm>['getRawValue']>;
+
+/**
+ * The store listing of an app (/apps/:slug/listing) and the form for a new one (/apps/new).
+ * Like the release and post editors it keeps unsaved work in this browser and asks before leaving it.
+ * Screenshots form the gallery on the product page; one with a text is also a feature there.
+ */
+@Component({
+  selector: 'app-app-editor',
+  imports: [ReactiveFormsModule, RouterLink, CdkDropList, CdkDrag, CdkDragHandle, LucideAngularModule,
+    VisibilityPicker, AppTile, ListingPreview, EditOnly, ReviewBanner],
+  templateUrl: './app-editor.html',
+  styleUrls: ['./app-editor.css', './app-media.css']
+})
+export class AppEditor extends EditorPage<ListingFormValue> {
+  private readonly apps = inject(AppService);
+  private readonly reviews = inject(ReviewService);
+  private readonly currentUser = inject(CurrentUser);
+  private readonly files = inject(FileService);
+  private readonly router = inject(Router);
+  protected readonly context = inject(AppContext);
+
+  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, Trash2, X};
+  protected readonly checklistDone = checklistDone;
+
+  /** null while creating a new app */
+  protected readonly stored = signal<AppResponse | null>(null);
+  /** a change of the listing waiting for review, or sent back */
+  protected readonly openReview = signal<ReviewDetail | null>(null);
+  private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
+  /** someone else's change waits for review: only they can change this entry until then */
+  protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
+  protected readonly uploadingIcon = signal(false);
+  /** e.g. {done: 1, total: 4} while screenshots upload one after another */
+  protected readonly screenshotUpload = signal<{ done: number; total: number } | null>(null);
+  /** 0–100 while the video uploads */
+  protected readonly videoProgress = signal<number | null>(null);
+  protected readonly isNew = computed(() => !this.context.slug());
+  /** the form, or the product page as the website shows it */
+  protected readonly mode = signal<'edit' | 'preview'>('edit');
+  protected readonly busy = computed(() =>
+    this.uploadingIcon() || this.screenshotUpload() !== null || this.videoProgress() !== null);
+  /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
+  private slugFollowsName = true;
+
+  readonly form = listingForm();
 
   private readonly value = toSignal(this.form.valueChanges.pipe(startWith(null), map(() => this.form.getRawValue())),
     {requireSync: true});
@@ -119,11 +120,12 @@ export class AppEditor {
   }
 
   constructor() {
+    super();
     effect(() => {
       const app = this.context.app();
       if (untracked(this.ready)) return;
       if (this.isNew()) {
-        this.ready.set(true);
+        untracked(() => this.loaded());
       } else if (app) {
         untracked(() => this.load(app.id));
       }
@@ -135,6 +137,24 @@ export class AppEditor {
     this.form.controls.name.valueChanges.pipe(takeUntilDestroyed()).subscribe(name => {
       if (this.slugFollowsName) this.form.controls.slug.setValue(slugify(name), {emitEvent: false});
     });
+    this.keepDrafts();
+  }
+
+  /** by id, not slug: the address may change with the listing */
+  protected draftKey() {
+    return `listing-draft:${this.stored()?.id ?? 'new'}`;
+  }
+
+  /** the kept screenshots first get their rows: the form only takes a value of the same shape */
+  protected override restoreDraft() {
+    const kept = this.draft.restorable();
+    if (kept) {
+      this.screenshots.clear({emitEvent: false});
+      kept.value.images.forEach(image => this.screenshots.push(screenshotGroup(image), {emitEvent: false}));
+    }
+    const value = super.restoreDraft();
+    if (value) this.slugFollowsName = this.isNew() && value.slug === slugify(value.name);
+    return value;
   }
 
   private load(id: number) {
@@ -158,8 +178,7 @@ export class AppEditor {
       });
       this.screenshots.clear();
       (app.images ?? []).forEach(image => this.screenshots.push(screenshotGroup(image)));
-      this.form.markAsPristine();
-      this.ready.set(true);
+      this.loaded();
     });
   }
 
@@ -303,7 +322,7 @@ export class AppEditor {
     save$.subscribe({
       next: response => {
         this.saving.set(false);
-        this.form.markAsPristine();
+        this.settled();
         const review = submittedReview(response);
         if (review) {
           this.reviews.refreshCounts();
@@ -352,6 +371,7 @@ export class AppEditor {
         this.reloadReview();
         return;
       }
+      this.settled();
       this.toast.success(`${app.name} deleted.`);
       this.router.navigate(['/apps']);
     });

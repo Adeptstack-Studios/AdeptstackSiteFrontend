@@ -8,7 +8,12 @@
       <app-tile [name]="form.controls.name.value || 'New app'" [iconUrl]="form.controls.iconUrl.value"></app-tile>
       <div class="c-editor-title">
         <h1>{{ isNew() ? 'Create app' : 'Store listing' }}</h1>
-        <p class="c-sub">{{ isNew() ? 'New apps stay private until you make them visible' : form.controls.name.value }}</p>
+        <p class="c-sub">
+          {{ isNew() ? 'New apps stay private until you make them visible' : form.controls.name.value }}
+          @if (draftStatus()) {
+            · {{ draftStatus() }}
+          }
+        </p>
       </div>
       <div class="c-actions">
         <div class="c-seg" role="group" aria-label="View">
@@ -20,6 +25,15 @@
         </button>
       </div>
     </header>
+
+    @if (draft.restorable(); as kept) {
+      <div class="c-editor-restore" role="status">
+        <lucide-icon [img]="icons.CircleAlert" [size]="17" aria-hidden="true"></lucide-icon>
+        <span>Unsaved changes from {{ draftAge(kept.savedAt) }} were kept in this browser.</span>
+        <button type="button" class="c-btn c-btn-sm" (click)="restoreDraft()">Restore them</button>
+        <button type="button" class="c-link" (click)="draft.discard()">Discard</button>
+      </div>
+    }
 
     @if (ready()) {
       <div class="c-editor-layout">

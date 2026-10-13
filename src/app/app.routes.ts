@@ -46,6 +46,7 @@ export const routes: Routes = [
           {
             path: 'new',
             loadComponent: () => import('./features/apps/app-editor/app-editor').then(m => m.AppEditor),
+            canDeactivate: [unsavedChangesGuard],
             title: 'Create app' + TITLE, data: { label: 'Create app' }
           },
           {
@@ -84,6 +85,7 @@ export const routes: Routes = [
               {
                 path: 'listing',
                 loadComponent: () => import('./features/apps/app-editor/app-editor').then(m => m.AppEditor),
+                canDeactivate: [unsavedChangesGuard],
                 title: 'Store listing' + TITLE, data: { label: 'Store listing' }
               },
               {
