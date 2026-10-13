@@ -77,6 +77,7 @@ export function actionLabel(detail: Pick<ReviewDetail, 'review' | 'baseline' | '
   if (review.action === 'DELETE') return 'Delete';
   if (review.kind === 'PUSH') return 'Push';
   if (review.kind === 'NEWSLETTER') return 'Newsletter';
+  if (payload?.['plan'] === true) return 'Plan';
   const before = String(baseline?.['visibility'] ?? 'PRIVATE').toUpperCase();
   const after = String(payload?.['visibility'] ?? before).toUpperCase();
   if (before === 'PRIVATE' && after !== 'PRIVATE') return 'Publish';

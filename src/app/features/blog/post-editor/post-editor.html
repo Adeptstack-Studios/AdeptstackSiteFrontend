@@ -109,9 +109,9 @@
         </div>
 
         <aside class="c-editor-side">
-          <app-publishing-card [visibility]="form.controls.visibility" [push]="form.controls.push"
-                               [publishedAt]="form.controls.publishedAt" [live]="isLive()" dateLabel="Publish date"
-                               [pushPreview]="'“🚀 ' + (form.controls.title.value || '…') + ' 🔥”'">
+          <app-publishing-card kind="post" [visibility]="form.controls.visibility" [push]="form.controls.push"
+                               [moment]="form.controls.publishedAt" [when]="form.controls.when"
+                               [pushText]="form.controls.pushText">
           </app-publishing-card>
 
           <app-checks-card [checks]="checks()"></app-checks-card>

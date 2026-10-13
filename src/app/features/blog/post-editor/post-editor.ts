@@ -11,9 +11,9 @@ import {AppSummary} from '../../../models/console';
 import {Facet} from '../../../models/listing';
 import {Visibility} from '../../../shared/visibility-picker/visibility-picker';
 import {slugify} from '../../../shared/slug';
-import {EditorPage, today} from '../../../shared/editor/editor-page';
+import {EditorPage} from '../../../shared/editor/editor-page';
 import {MarkdownEditor} from '../../../shared/editor/markdown-editor';
-import {PublishingCard} from '../../../shared/editor/publishing-card';
+import {PublishingCard, PublishWhen} from '../../../shared/editor/publishing-card';
 import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkPost} from './post-checks';
@@ -22,6 +22,7 @@ import {ReviewService} from '../../../services/review-service';
 import {ReviewDetail, submittedReview} from '../../../models/review';
 import {ReviewBanner} from '../../../shared/review/review-banner';
 import {CurrentUser} from '../../../core/auth/current-user';
+import {isAhead, localInputDay, localInputToIso, nowLocalInput, toLocalInput} from '../../../shared/time';
 
 function postForm() {
   return new FormGroup({
@@ -34,8 +35,11 @@ function postForm() {
     content: new FormControl('', {nonNullable: true, validators: Validators.required}),
     imageUrl: new FormControl('', {nonNullable: true}),
     visibility: new FormControl<Visibility>('PUBLIC', {nonNullable: true}),
-    publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
+    /** the publish moment, a datetime-local value */
+    publishedAt: new FormControl(nowLocalInput(), {nonNullable: true, validators: Validators.required}),
+    when: new FormControl<PublishWhen>('now', {nonNullable: true}),
     push: new FormControl(false, {nonNullable: true}),
+    pushText: new FormControl('', {nonNullable: true}),
   });
 }
 
@@ -109,14 +113,27 @@ export class PostEditor extends EditorPage<PostFormValue> {
   private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
   /** someone else's change waits for review: only they can change this entry until then */
   protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
-  protected readonly checks = computed(() => checkPost(this.value(), this.takenSlugs()));
+  protected readonly checks = computed(() => {
+    const checks = checkPost(this.value(), this.takenSlugs());
+    const problem = this.planProblem();
+    return problem ? [...checks, {ok: false, severity: 'error' as const, text: problem}] : checks;
+  });
   protected readonly blocked = computed(() => hasBlockingCheck(this.checks()));
 
   /** a draft that stays private is saved; everything that touches the website is reviewed first */
   protected readonly primaryLabel = computed(() => {
     if (this.lockedByOther()) return 'Waiting for review';
-    if (!this.isLive() && this.value().visibility === 'PRIVATE') return 'Save draft';
-    return this.myReview() ? 'Submit again' : 'Submit for review';
+    const value = this.value();
+    if (!this.isLive() && value.visibility === 'PRIVATE') return 'Save draft';
+    if (this.myReview()) return 'Submit again';
+    return value.when === 'plan' ? 'Submit plan for review' : 'Submit for review';
+  });
+
+  /** a plan needs a moment ahead; checked next to "Before you publish" */
+  protected readonly planProblem = computed(() => {
+    const value = this.value();
+    return value.visibility !== 'PRIVATE' && value.when === 'plan' && !isAhead(value.publishedAt)
+      ? 'A plan needs a publish moment that lies ahead' : null;
   });
 
   constructor() {
@@ -126,6 +143,8 @@ export class PostEditor extends EditorPage<PostFormValue> {
     });
     this.form.controls.title.valueChanges.pipe(takeUntilDestroyed()).subscribe(title => {
       if (this.slugFollowsTitle) this.form.controls.slug.setValue(slugify(title), {emitEvent: false});
+      // the push text follows the title until it is written by hand
+      if (!this.form.controls.pushText.dirty) this.form.controls.pushText.setValue(`🚀 ${title.trim() || '…'} 🔥`, {emitEvent: false});
     });
     this.form.controls.visibility.valueChanges.pipe(takeUntilDestroyed()).subscribe(visibility => {
       if (visibility === 'PRIVATE') this.form.controls.push.setValue(false);
@@ -164,7 +183,8 @@ export class PostEditor extends EditorPage<PostFormValue> {
         // the author goes on with what they submitted, not with the live version
         if (review?.payload && this.myReview()) {
           this.fill({...post, ...review.payload} as News);
-          this.form.controls.push.setValue(review.review.push);
+          // a plan carries its push in the payload, not as "push right away"
+          this.form.controls.push.setValue(review.review.push || !!review.payload['publishPush']);
         } else {
           this.fill(post);
         }
@@ -179,6 +199,7 @@ export class PostEditor extends EditorPage<PostFormValue> {
 
   private fill(post: News) {
     const draft = post.visibility === 'PRIVATE' || !post.visibility;
+    const moment = post.publishAt || (post.publishedAt ? String(post.publishedAt).substring(0, 10) : null);
     this.slugFollowsTitle = false;
     this.form.patchValue({
       title: post.title ?? '',
@@ -190,8 +211,14 @@ export class PostEditor extends EditorPage<PostFormValue> {
       imageUrl: post.imageUrl ?? '',
       // a draft is opened to be published eventually: the choice starts at Public
       visibility: draft ? 'PUBLIC' : post.visibility as Visibility,
-      publishedAt: draft || !post.publishedAt ? today() : String(post.publishedAt).substring(0, 10),
+      // a draft keeps a moment ahead (a plan), otherwise it starts at now
+      publishedAt: draft && !isAhead(toLocalInput(moment)) ? nowLocalInput() : toLocalInput(moment),
+      when: post.plan ? 'plan' : 'now',
+      push: !!post.publishPush,
+      pushText: post.publishPush || `🚀 ${post.title ?? '…'} 🔥`,
     });
+    if (post.publishPush) this.form.controls.pushText.markAsDirty();
+    else this.form.controls.pushText.markAsPristine();
   }
 
   protected override restoreDraft() {
@@ -231,9 +258,13 @@ export class PostEditor extends EditorPage<PostFormValue> {
       content: value.content,
       imageUrl: value.imageUrl.trim(),
       visibility,
-      publishedAt: value.publishedAt as unknown as Date,
+      publishedAt: localInputDay(value.publishedAt) as unknown as Date,
+      publishAt: localInputToIso(value.publishedAt),
+      plan: visibility !== 'PRIVATE' && value.when === 'plan',
+      publishPush: visibility !== 'PRIVATE' && value.push ? value.pushText.trim() || null : null,
     };
-    const push = value.push && visibility !== 'PRIVATE';
+    // a plan sends its push itself, at the publish moment
+    const push = value.push && visibility !== 'PRIVATE' && value.when !== 'plan';
 
     this.saving.set(true);
     const save$ = this.isNew() ? this.news.create(request, push) : this.news.update(request, push);

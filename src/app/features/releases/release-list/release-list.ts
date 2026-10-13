@@ -20,6 +20,7 @@ import {EditOnly} from '../../../shared/ui/edit-only';
 import {ReviewService} from '../../../services/review-service';
 import {ReviewStatus} from '../../../models/review';
 import {ReviewChip} from '../../../shared/review/review-chip';
+import {formatMoment} from '../../../shared/time';
 
 /** All releases of one app, filtered by channel and visibility, with actions on several at once. */
 @Component({
@@ -49,6 +50,7 @@ export class ReleaseList {
   }, inject(DestroyRef));
   protected readonly selection = new Selection<Changelogs>();
   protected readonly isUpcoming = isUpcoming;
+  protected readonly moment = (value: string | null | undefined) => formatMoment(value, {hideMidnight: true});
 
   protected readonly items = signal<Changelogs[] | null>(null);
   protected readonly total = signal(0);

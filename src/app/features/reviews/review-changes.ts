@@ -1,8 +1,9 @@
 import {Component, computed, input} from '@angular/core';
 import {ReviewDetail, ReviewKind} from '../../models/review';
 import {DiffLine, lineDiff} from './line-diff';
+import {formatMoment} from '../../shared/time';
 
-type FieldType = 'text' | 'long' | 'date' | 'visibility' | 'list' | 'flag';
+type FieldType = 'text' | 'long' | 'date' | 'moment' | 'visibility' | 'list' | 'flag';
 
 interface Field {
   key: string;
@@ -20,14 +21,17 @@ const LINKS: Field[] = [
 const FIELDS: Partial<Record<ReviewKind, Field[]>> = {
   RELEASE: [
     {key: 'visibility', label: 'Visibility', type: 'visibility'}, {key: 'version', label: 'Version'},
-    {key: 'channel', label: 'Channel'}, {key: 'title', label: 'Title'}, {key: 'publishedAt', label: 'Release date', type: 'date'},
+    {key: 'channel', label: 'Channel'}, {key: 'title', label: 'Title'}, {key: 'releaseAt', label: 'Release', type: 'moment'},
+    {key: 'plan', label: 'Planned', type: 'flag'}, {key: 'comingSoonAt', label: 'Coming soon from', type: 'moment'},
+    {key: 'comingSoonPush', label: 'Coming soon push'}, {key: 'releasePush', label: 'Release push'},
     {key: 'description', label: 'Summary', type: 'long'}, {key: 'content', label: 'Release notes', type: 'long'},
     {key: 'imageUrl', label: 'Cover image'}, ...LINKS,
   ],
   POST: [
     {key: 'visibility', label: 'Visibility', type: 'visibility'}, {key: 'title', label: 'Title'},
     {key: 'slug', label: 'Address'}, {key: 'category', label: 'Category'}, {key: 'appId', label: 'Linked app'},
-    {key: 'publishedAt', label: 'Date', type: 'date'}, {key: 'description', label: 'Summary', type: 'long'},
+    {key: 'publishAt', label: 'Publish at', type: 'moment'}, {key: 'plan', label: 'Planned', type: 'flag'},
+    {key: 'publishPush', label: 'Push'}, {key: 'description', label: 'Summary', type: 'long'},
     {key: 'content', label: 'Text', type: 'long'}, {key: 'imageUrl', label: 'Cover image'},
   ],
   APP: [
@@ -70,7 +74,10 @@ interface Row {
         <p class="lead">Once approved, the post is sent to every confirmed newsletter subscriber.</p>
       }
       @default {
-        @if (mode() === 'new') {
+        @if (mode() === 'new' && planned()) {
+          <p class="lead">A plan: once approved it stays private, and the console shows it on its own at the times below,
+            as <strong>{{ visibilityAfter() }}</strong>. Everything it shows:</p>
+        } @else if (mode() === 'new') {
           <p class="lead">Goes live for the first time, as <strong>{{ visibilityAfter() }}</strong>. Everything it shows:</p>
         } @else if (!rows().length) {
           <p class="lead">Nothing differs from the live version.</p>
@@ -228,6 +235,7 @@ export class ReviewChanges {
   });
 
   protected readonly pushToReleases = computed(() => this.detail().payload?.['kind'] === 'RELEASE');
+  protected readonly planned = computed(() => this.detail().payload?.['plan'] === true);
   protected readonly visibilityAfter = computed(() => text(this.detail().payload?.['visibility'], 'visibility').toLowerCase());
 
   protected readonly rows = computed<Row[]>(() => {
@@ -238,7 +246,8 @@ export class ReviewChanges {
       const before = text(baseline?.[field.key], field.type);
       const after = text(payload?.[field.key] ?? (isNew ? undefined : baseline?.[field.key]), field.type);
       const long = field.type === 'long' || field.type === 'list';
-      if (isNew) return after ? [{label: field.label, long, before: '', after, diff: null}] : [];
+      // a new entry lists what it shows; "Planned: no" says nothing there
+      if (isNew) return after && !(field.type === 'flag' && after === 'no') ? [{label: field.label, long, before: '', after, diff: null}] : [];
       if (before === after) return [];
       return [{label: field.label, long, before, after, diff: long ? lineDiff(before, after) : null}];
     });
@@ -247,6 +256,8 @@ export class ReviewChanges {
 
 /** A field value as the reviewer reads it. */
 function text(value: unknown, type?: FieldType): string {
+  // a stored plan is a state (PLANNED), a submitted one true; nothing counts as no
+  if (type === 'flag') return value && value !== 'false' ? 'yes' : 'no';
   if (value === null || value === undefined) return '';
   switch (type) {
     case 'visibility': {
@@ -255,8 +266,8 @@ function text(value: unknown, type?: FieldType): string {
     }
     case 'date':
       return String(value).substring(0, 10);
-    case 'flag':
-      return value ? 'yes' : 'no';
+    case 'moment':
+      return formatMoment(String(value));
     case 'list':
       return Array.isArray(value)
         ? value.map(item => {

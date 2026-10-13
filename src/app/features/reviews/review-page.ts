@@ -105,7 +105,7 @@ import {FindingList} from './finding-list';
                 <dd>{{ d.review.author }}</dd>
                 @if (d.review.kind === 'RELEASE' || d.review.kind === 'POST') {
                   <dt>Push</dt>
-                  <dd>{{ d.review.push ? 'once it is live' : 'no' }}</dd>
+                  <dd>{{ d.review.push ? 'once it is live' : d.payload?.['plan'] === true ? 'as planned, see above' : 'no' }}</dd>
                 }
               </dl>
             </section>
@@ -199,7 +199,7 @@ export class ReviewPage {
     return d ? actionLabel(d) : '';
   });
   protected readonly approveLabel = computed(() => ({
-    Publish: 'Approve and publish', Delete: 'Approve and delete', Push: 'Approve and send',
+    Publish: 'Approve and publish', Plan: 'Approve plan', Delete: 'Approve and delete', Push: 'Approve and send',
     Newsletter: 'Approve and send', 'Take offline': 'Approve and take offline',
   } as Record<string, string>)[this.action()] ?? 'Approve');
   protected readonly mine = computed(() => this.detail()?.review.author === this.currentUser.user()?.username);

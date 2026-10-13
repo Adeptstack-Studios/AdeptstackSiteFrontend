@@ -15,4 +15,10 @@ export class News {
   appId?: number | null;
   appName?: string | null;
   appSlug?: string | null;
+  /** the moment it is published (ISO); publishedAt is its day */
+  publishAt?: string | null;
+  /** PLANNED while an approved plan waits. Sent as true to submit a plan. */
+  plan?: string | boolean | null;
+  /** push title, null for no push */
+  publishPush?: string | null;
 }

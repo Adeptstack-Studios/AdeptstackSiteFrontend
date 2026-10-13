@@ -19,4 +19,14 @@ export class Changelogs {
   publishedAt?: Date;
   visible?: boolean;
   visibility?: 'PUBLIC' | 'UNLISTED' | 'PRIVATE';
+  /** the moment it is out (ISO); publishedAt is its day */
+  releaseAt?: string | null;
+  /** coming soon until releaseAt: no download links for visitors */
+  upcoming?: boolean;
+  /** an approved plan the console carries out: PLANNED or COMING_SOON. Sent as true to submit a plan. */
+  plan?: string | boolean | null;
+  comingSoonAt?: string | null;
+  /** push titles, null for no push */
+  comingSoonPush?: string | null;
+  releasePush?: string | null;
 }

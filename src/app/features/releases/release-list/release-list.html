@@ -103,6 +103,8 @@
                     <td class="status-cell">
                       <app-visibility-status [value]="release.visibility"></app-visibility-status>
                       @if (inReview().get(release.id!); as status) { <app-review-chip [status]="status"></app-review-chip> }
+                      @else if (release.plan === 'PLANNED') { <span class="c-planned">Planned · {{ moment(release.releaseAt) }}</span> }
+                      @else if (release.upcoming) { <span class="c-planned">Coming soon · {{ moment(release.releaseAt) }}</span> }
                     </td>
                     <td class="c-muted">
                       {{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}

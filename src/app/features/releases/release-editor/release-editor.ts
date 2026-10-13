@@ -15,9 +15,9 @@ import {Visibility} from '../../../shared/visibility-picker/visibility-picker';
 import {channelKind, suggestVersions, VersionSuggestion} from '../../../shared/versions';
 import {INSTALLER_FILE_HINT, isInstallerFile} from '../../../shared/listing/upload-files';
 import {AppTile} from '../../../shared/ui/app-tile';
-import {EditorPage, today} from '../../../shared/editor/editor-page';
+import {EditorPage} from '../../../shared/editor/editor-page';
 import {MarkdownEditor} from '../../../shared/editor/markdown-editor';
-import {PublishingCard} from '../../../shared/editor/publishing-card';
+import {ComingSoon, PublishingCard, PublishWhen} from '../../../shared/editor/publishing-card';
 import {ChecksCard, hasBlockingCheck} from '../../../shared/editor/checks-card';
 import {CoverCard} from '../../../shared/editor/cover-card';
 import {checkRelease, NOTES_TEMPLATE, ReleaseDraft} from './release-checks';
@@ -26,6 +26,7 @@ import {ReviewService} from '../../../services/review-service';
 import {ReviewDetail, submittedReview} from '../../../models/review';
 import {ReviewBanner} from '../../../shared/review/review-banner';
 import {CurrentUser} from '../../../core/auth/current-user';
+import {isAhead, localInputDay, localInputToIso, nowLocalInput, toLocalInput} from '../../../shared/time';
 
 /** Channel names for an app without releases. */
 const DEFAULT_CHANNELS = {stable: 'stable', beta: 'beta'};
@@ -41,8 +42,15 @@ function releaseForm() {
     links: new FormGroup(Object.fromEntries(LINK_FIELDS.map(({field}) =>
       [field, new FormControl('', {nonNullable: true})])) as Record<LinkField, FormControl<string>>),
     visibility: new FormControl<Visibility>('PUBLIC', {nonNullable: true}),
-    publishedAt: new FormControl(today(), {nonNullable: true, validators: Validators.required}),
+    /** the release moment, a datetime-local value */
+    publishedAt: new FormControl(nowLocalInput(), {nonNullable: true, validators: Validators.required}),
+    when: new FormControl<PublishWhen>('now', {nonNullable: true}),
+    comingSoon: new FormControl<ComingSoon>('off', {nonNullable: true}),
+    comingSoonAt: new FormControl('', {nonNullable: true}),
+    comingSoonPushOn: new FormControl(true, {nonNullable: true}),
+    comingSoonPush: new FormControl('', {nonNullable: true}),
     push: new FormControl(true, {nonNullable: true}),
+    pushText: new FormControl('', {nonNullable: true}),
   });
 }
 
@@ -142,9 +150,24 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   /** a draft that stays private is saved; everything that touches the website is reviewed first */
   protected readonly primaryLabel = computed(() => {
     if (this.lockedByOther()) return 'Waiting for review';
-    if (!this.isLive() && this.value().visibility === 'PRIVATE') return 'Save draft';
-    return this.myReview() ? 'Submit again' : 'Submit for review';
+    const value = this.value();
+    if (!this.isLive() && value.visibility === 'PRIVATE') return 'Save draft';
+    if (this.myReview()) return 'Submit again';
+    return value.when === 'plan' ? 'Submit plan for review' : 'Submit for review';
   });
+
+  /** an app without a release out yet is announced by name, later releases by version */
+  private readonly firstRelease = computed(() => (this.context.app()?.channels ?? []).length === 0);
+
+  protected suggestedComingSoonPush(version: string) {
+    const app = this.context.app()?.name ?? '';
+    return this.firstRelease() ? `👀 ${app} is coming soon!` : `👀 ${app} ${version.trim() || '…'} is coming soon!`;
+  }
+
+  protected suggestedReleasePush(version: string) {
+    const app = this.context.app()?.name ?? '';
+    return this.firstRelease() ? `🚀 ${app} is OUT NOW! 🔥` : `🚀 ${app} v${version.trim() || '…'} is OUT NOW! 🔥`;
+  }
 
   constructor() {
     super();
@@ -160,6 +183,11 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       if (this.form.controls.title.dirty) this.titleFollowsVersion = false;
     });
     this.form.controls.version.valueChanges.pipe(takeUntilDestroyed()).subscribe(version => {
+      // the push texts follow the version until they are written by hand
+      if (!this.form.controls.pushText.dirty) this.form.controls.pushText.setValue(this.suggestedReleasePush(version), {emitEvent: false});
+      if (!this.form.controls.comingSoonPush.dirty) {
+        this.form.controls.comingSoonPush.setValue(this.suggestedComingSoonPush(version), {emitEvent: false});
+      }
       const app = this.context.app();
       if (this.titleFollowsVersion && app) {
         this.form.controls.title.setValue(`${app.name} ${version.trim()}`.trim(), {emitEvent: false});
@@ -209,7 +237,8 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
         // the author goes on with what they submitted, not with the live version
         if (review?.payload && this.myReview()) {
           this.fill({...release, ...review.payload} as Changelogs);
-          this.form.controls.push.setValue(review.review.push);
+          // a plan carries its push in the payload, not as "push right away"
+          this.form.controls.push.setValue(review.review.push || !!review.payload['releasePush']);
         } else {
           this.fill(release);
         }
@@ -257,6 +286,9 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
 
   private fill(release: Changelogs) {
     const draft = release.visibility === 'PRIVATE' || !release.visibility;
+    const moment = release.releaseAt || (release.publishedAt ? String(release.publishedAt).substring(0, 10) : null);
+    // a stored plan (PLANNED, COMING_SOON) or a submitted one (true)
+    const planned = !!release.plan;
     this.form.patchValue({
       version: release.version ?? '',
       channel: release.channel ?? '',
@@ -267,9 +299,20 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       links: pickLinks(release),
       // a draft is opened to be published eventually: the choice starts at Public, like a new release
       visibility: draft ? 'PUBLIC' : release.visibility as Visibility,
-      push: draft,
-      publishedAt: draft || !release.publishedAt ? today() : String(release.publishedAt).substring(0, 10),
+      push: draft || !!release.releasePush,
+      // a draft keeps a moment ahead (a plan), otherwise it starts at now
+      publishedAt: draft && !isAhead(toLocalInput(moment)) ? nowLocalInput() : toLocalInput(moment),
+      when: planned ? 'plan' : 'now',
+      comingSoon: !planned || !release.comingSoonAt ? 'off' : isAhead(toLocalInput(release.comingSoonAt)) ? 'at' : 'now',
+      comingSoonAt: toLocalInput(release.comingSoonAt),
+      comingSoonPushOn: !planned || !!release.comingSoonPush,
+      comingSoonPush: release.comingSoonPush || this.suggestedComingSoonPush(release.version ?? ''),
+      pushText: release.releasePush || this.suggestedReleasePush(release.version ?? ''),
     });
+    this.form.controls.pushText.markAsPristine();
+    this.form.controls.comingSoonPush.markAsPristine();
+    if (release.releasePush) this.form.controls.pushText.markAsDirty();
+    if (release.comingSoonPush) this.form.controls.comingSoonPush.markAsDirty();
     this.customChannel.set(!this.channelOptions().includes(release.channel ?? ''));
   }
 
@@ -410,9 +453,12 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       imageUrl: value.imageUrl.trim() || app.iconUrl || '',
       ...Object.fromEntries(LINK_FIELDS.map(({field}) => [field, value.links[field].trim()])),
       visibility,
-      publishedAt: value.publishedAt as unknown as Date,
+      publishedAt: localInputDay(value.publishedAt) as unknown as Date,
+      releaseAt: localInputToIso(value.publishedAt),
+      ...planFields(value, visibility),
     };
-    const push = value.push && visibility !== 'PRIVATE';
+    // a plan sends its pushes itself, at coming soon and at the release
+    const push = value.push && visibility !== 'PRIVATE' && value.when !== 'plan';
 
     this.saving.set(true);
     const save$ = this.isNew() ? this.changelogs.create(request, push) : this.changelogs.update(request, push);
@@ -484,6 +530,22 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       this.router.navigate(['/apps', this.context.slug(), 'releases']);
     });
   }
+}
+
+/** What a plan adds to the request; nothing for a draft or publishing right away (besides the push text). */
+function planFields(value: ReleaseFormValue, visibility: Visibility): Partial<Changelogs> {
+  const releasePush = value.push ? value.pushText.trim() || null : null;
+  if (visibility === 'PRIVATE' || value.when !== 'plan') {
+    return {plan: false, comingSoonAt: null, comingSoonPush: null, releasePush: visibility === 'PRIVATE' ? null : releasePush};
+  }
+  const comingSoonAt = value.comingSoon === 'now' ? new Date().toISOString()
+    : value.comingSoon === 'at' ? localInputToIso(value.comingSoonAt) : null;
+  return {
+    plan: true,
+    comingSoonAt,
+    comingSoonPush: comingSoonAt && value.comingSoonPushOn ? value.comingSoonPush.trim() || null : null,
+    releasePush,
+  };
 }
 
 function pickLinks(release: Changelogs): Partial<Record<LinkField, string>> {

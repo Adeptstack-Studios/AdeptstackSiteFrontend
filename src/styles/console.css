@@ -774,3 +774,15 @@ a.c-row-title:hover {
   height: 300px;
   margin: 16px 20px;
 }
+
+/* a plan or a coming soon release in a list: when it is out */
+.c-planned {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+}

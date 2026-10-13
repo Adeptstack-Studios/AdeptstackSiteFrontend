@@ -1,7 +1,7 @@
 import {compareVersions, isVersionNumber} from '../../../shared/versions';
 import {LINK_FIELDS} from '../../../models/console';
 import {EditorCheck} from '../../../shared/editor/checks-card';
-import {isUpcoming} from '../../../shared/ui/relative-day';
+import {formatMoment, isAhead, localInputToIso} from '../../../shared/time';
 
 /** What "Before you publish" looks at; plain values so it can be computed from the form. */
 export interface ReleaseDraft {
@@ -12,10 +12,13 @@ export interface ReleaseDraft {
   content: string;
   imageUrl: string;
   links: Record<string, string>;
-  /** yyyy-MM-dd */
+  /** the release moment, a datetime-local value */
   publishedAt: string;
   push: boolean;
   visibility: string;
+  when: 'now' | 'plan';
+  comingSoon: 'off' | 'now' | 'at';
+  comingSoonAt: string;
 }
 
 // built from lines so the "* " bullets keep their space for typing
@@ -72,11 +75,22 @@ export function checkRelease(draft: ReleaseDraft, channelVersions: string[], has
       : {ok: false, severity: 'error', text: 'Upload a cover image, the app has no icon to fall back to'});
   }
 
-  if (draft.visibility !== 'PRIVATE' && isUpcoming(draft.publishedAt)) {
-    const date = new Date(draft.publishedAt + 'T00:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-    checks.push({ok: true, severity: 'warning', text: `Coming soon on the website until ${date}, downloads stay hidden until then`});
+  const shown = draft.visibility !== 'PRIVATE';
+  if (shown && draft.when === 'plan') {
+    if (!isAhead(draft.publishedAt)) {
+      checks.push({ok: false, severity: 'error', text: 'A plan needs a release moment that lies ahead'});
+    } else if (draft.comingSoon === 'at' && !(draft.comingSoonAt && draft.comingSoonAt < draft.publishedAt)) {
+      checks.push({ok: false, severity: 'error', text: 'Coming soon has to start before the release'});
+    } else {
+      const soon = draft.comingSoon === 'now' ? 'coming soon once approved'
+        : draft.comingSoon === 'at' ? `coming soon from ${formatMoment(localInputToIso(draft.comingSoonAt))}` : 'hidden until then';
+      checks.push({ok: true, severity: 'warning', text: `Planned for ${formatMoment(localInputToIso(draft.publishedAt))}, ${soon}`});
+    }
+  } else if (shown && isAhead(draft.publishedAt)) {
+    checks.push({ok: true, severity: 'warning',
+      text: `Coming soon on the website until ${formatMoment(localInputToIso(draft.publishedAt))}, downloads stay hidden until then`});
     if (draft.push) {
-      checks.push({ok: false, severity: 'warning', text: 'The push goes out right away, before the release can be downloaded'});
+      checks.push({ok: false, severity: 'warning', text: 'The push goes out right away, before the release can be downloaded. A plan sends it at the release.'});
     }
   }
 

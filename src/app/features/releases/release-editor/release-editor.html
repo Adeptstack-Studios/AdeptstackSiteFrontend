@@ -168,9 +168,11 @@
         </div>
 
         <aside class="c-editor-side">
-          <app-publishing-card [visibility]="form.controls.visibility" [push]="form.controls.push"
-                               [publishedAt]="form.controls.publishedAt" [live]="isLive()"
-                               [pushPreview]="'“' + context.app()?.name + ' v' + (form.controls.version.value || '…') + ' is OUT NOW!”'">
+          <app-publishing-card kind="release" [visibility]="form.controls.visibility" [push]="form.controls.push"
+                               [moment]="form.controls.publishedAt" [when]="form.controls.when"
+                               [pushText]="form.controls.pushText" [comingSoon]="form.controls.comingSoon"
+                               [comingSoonAt]="form.controls.comingSoonAt" [comingSoonPushOn]="form.controls.comingSoonPushOn"
+                               [comingSoonPush]="form.controls.comingSoonPush">
           </app-publishing-card>
 
           <app-checks-card [checks]="checks()"></app-checks-card>
