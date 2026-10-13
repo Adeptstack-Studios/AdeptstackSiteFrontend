@@ -2,70 +2,87 @@
 <div class="site" aria-label="Preview of the product page">
   <p class="note">Preview · close to how adeptstack.net shows this app</p>
 
-  @if (page.legacy) {
-    <div class="legacy">
-      <lucide-icon [img]="icons.TriangleAlert" [size]="18" aria-hidden="true"></lucide-icon>
-      <div>
-        <strong>Legacy Software</strong>
-        <p>This application is no longer actively developed and only receives security-related or limited updates.</p>
-      </div>
-    </div>
-  }
-
-  <header class="head">
-    <div class="icon">
-      @if (page.iconUrl) {
-        <img [src]="page.iconUrl" [alt]="page.name + ' icon'">
-      }
-    </div>
-    <div class="head-text">
-      @if (page.category) {
-        <span class="category">{{ page.category }}</span>
-      }
-      <h2>{{ page.name || 'App name' }}</h2>
-      <p class="slogan">{{ page.slogan || 'Slogan' }}</p>
-      @if (platforms().length) {
-        <div class="platforms">
-          @for (platform of platforms(); track platform) {
-            <span>{{ platform }}</span>
+  <div class="layout">
+    <!-- the store panel, like the Microsoft Store: it stays in view on the website -->
+    <aside class="panel">
+      <div class="id">
+        <div class="icon">
+          @if (page.iconUrl) {
+            <img [src]="page.iconUrl" [alt]="page.name + ' icon'">
           }
         </div>
+        <div>
+          <h2>{{ page.name || 'App name' }}</h2>
+          <span class="publisher">Adeptstack</span>
+          @if (page.category) {
+            <span class="category">{{ page.category }}</span>
+          }
+        </div>
+      </div>
+      <p class="slogan">{{ page.slogan || 'Slogan' }}</p>
+      @if (page.legacy) {
+        <span class="badge">Legacy</span>
       }
-      <span class="download">
-        <lucide-icon [img]="icons.Download" [size]="18" aria-hidden="true"></lucide-icon>
+      <span class="get">
+        <lucide-icon [img]="icons.Download" [size]="17" aria-hidden="true"></lucide-icon>
         Download
       </span>
-      <p class="download-hint">The buttons come from the latest release.</p>
+      <p class="hint">The button and “Also available on” come from the latest release.</p>
+      @if (page.legacy) {
+        <div class="legacy">
+          <lucide-icon [img]="icons.TriangleAlert" [size]="15" aria-hidden="true"></lucide-icon>
+          No longer actively developed. It only gets security fixes or small updates.
+        </div>
+      }
+      @if (platforms().length) {
+        <div class="works">
+          <span class="label">Works on</span>
+          <div class="platforms">
+            @for (platform of platforms(); track platform) {
+              <span>{{ platform }}</span>
+            }
+          </div>
+        </div>
+      }
+    </aside>
+
+    <div class="main">
+      @if (page.videoUrl || page.images.length) {
+        <section aria-label="Screenshots">
+          <h3>Screenshots</h3>
+          <div class="gallery">
+            @if (page.videoUrl) {
+              <div class="shot video">
+                <video [src]="page.videoUrl" [poster]="page.images[0]?.url ?? ''" controls preload="none"></video>
+              </div>
+            }
+            @for (image of page.images; track $index) {
+              <div class="shot"><img [src]="image.url" [alt]="'Screenshot ' + ($index + 1)"></div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (page.description) {
+        <section class="description">
+          <h3>Description</h3>
+          <markdown [data]="page.description"></markdown>
+        </section>
+      }
+
+      <p class="hint">“What's new” shows the latest release here, “News” the posts linked to this app.</p>
+
+      @if (features().length) {
+        <section class="features">
+          <h3>Features</h3>
+          @for (feature of features(); track $index; let odd = $odd) {
+            <div class="feature" [class.reverse]="odd">
+              <div class="shot"><img [src]="feature.url" [alt]="'Feature ' + ($index + 1)"></div>
+              <div class="feature-text"><markdown [data]="feature.text"></markdown></div>
+            </div>
+          }
+        </section>
+      }
     </div>
-  </header>
-
-  @if (page.description) {
-    <section class="description">
-      <markdown [data]="page.description"></markdown>
-    </section>
-  }
-
-  @if (page.videoUrl || page.images.length) {
-    <section class="gallery" aria-label="Gallery">
-      @if (page.videoUrl) {
-        <div class="shot video">
-          <video [src]="page.videoUrl" [poster]="page.images[0]?.url ?? ''" controls preload="none"></video>
-        </div>
-      }
-      @for (image of page.images; track $index) {
-        <div class="shot"><img [src]="image.url" [alt]="'Screenshot ' + ($index + 1)"></div>
-      }
-    </section>
-  }
-
-  @if (features().length) {
-    <section class="features">
-      @for (feature of features(); track $index; let odd = $odd) {
-        <div class="feature" [class.reverse]="odd">
-          <div class="shot"><img [src]="feature.url" [alt]="'Feature ' + ($index + 1)"></div>
-          <div class="feature-text"><markdown [data]="feature.text"></markdown></div>
-        </div>
-      }
-    </section>
-  }
+  </div>
 </div>

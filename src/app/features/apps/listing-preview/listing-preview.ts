@@ -16,9 +16,9 @@ export interface ListingPreviewData {
 }
 
 /**
- * The product page as adeptstack.net shows it, close enough to judge texts, order and images:
- * head with icon and platforms, description, gallery with the video first, then the features.
- * Always dark, like the website.
+ * The product page as adeptstack.net shows it, close enough to judge texts, order and images: the store
+ * panel with icon, name and platforms beside screenshots (video first), description and features, like
+ * the Microsoft Store. Always dark, like the website.
  */
 @Component({
   selector: 'app-listing-preview',
