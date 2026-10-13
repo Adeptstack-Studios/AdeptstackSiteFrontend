@@ -195,9 +195,52 @@
 
 .gallery {
   display: flex;
-  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  scrollbar-width: none;
+}
+
+.gallery .shot {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  scroll-snap-align: center;
+}
+
+.thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.thumb {
+  flex: none;
+  width: 72px;
+  aspect-ratio: 16 / 9;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  background: #0f172a;
+  overflow: hidden;
+  opacity: .6;
+}
+
+.thumb:first-child {
+  border-color: #3b82f6;
+  opacity: 1;
+}
+
+.thumb.video {
+  background: #000;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .shot {
@@ -262,10 +305,6 @@
 }
 
 @container (max-width: 640px) {
-  .shot {
-    width: 85%;
-  }
-
   .features .feature,
   .features .feature.reverse {
     flex-direction: column;

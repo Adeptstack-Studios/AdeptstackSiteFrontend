@@ -60,6 +60,17 @@
               <div class="shot"><img [src]="image.url" [alt]="'Screenshot ' + ($index + 1)"></div>
             }
           </div>
+          @if (page.images.length + (page.videoUrl ? 1 : 0) > 1) {
+            <!-- one shot at a time on the website, the others as thumbnails below -->
+            <div class="thumbs" aria-hidden="true">
+              @if (page.videoUrl) {
+                <span class="thumb video"></span>
+              }
+              @for (image of page.images; track $index) {
+                <span class="thumb"><img [src]="image.url" alt=""></span>
+              }
+            </div>
+          }
         </section>
       }
 
