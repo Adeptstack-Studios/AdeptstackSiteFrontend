@@ -46,6 +46,8 @@ function listingForm() {
     iconUrl: new FormControl('', {nonNullable: true, validators: Validators.required}),
     images: new FormArray<ScreenshotGroup>([]),
     videoUrl: new FormControl('', {nonNullable: true}),
+    backgroundUrl: new FormControl('', {nonNullable: true}),
+    backgroundVideo: new FormControl(false, {nonNullable: true}),
     modrinthId: new FormControl('', {nonNullable: true}),
     curseforgeId: new FormControl('', {nonNullable: true}),
     highlighted: new FormControl(false, {nonNullable: true}),
@@ -88,6 +90,7 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   /** someone else's change waits for review: only they can change this entry until then */
   protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly uploadingIcon = signal(false);
+  protected readonly uploadingBackground = signal(false);
   /** e.g. {done: 1, total: 4} while screenshots upload one after another */
   protected readonly screenshotUpload = signal<{ done: number; total: number } | null>(null);
   /** 0–100 while the video uploads */
@@ -95,8 +98,8 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   protected readonly isNew = computed(() => !this.context.slug());
   /** the form, or the product page as the website shows it */
   protected readonly mode = signal<'edit' | 'preview'>('edit');
-  protected readonly busy = computed(() =>
-    this.uploadingIcon() || this.screenshotUpload() !== null || this.videoProgress() !== null);
+  protected readonly busy = computed(() => this.uploadingIcon() || this.uploadingBackground()
+    || this.screenshotUpload() !== null || this.videoProgress() !== null);
   /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
   private slugFollowsName = true;
 
@@ -137,6 +140,17 @@ export class AppEditor extends EditorPage<ListingFormValue> {
     this.form.controls.name.valueChanges.pipe(takeUntilDestroyed()).subscribe(name => {
       if (this.slugFollowsName) this.form.controls.slug.setValue(slugify(name), {emitEvent: false});
     });
+    // only a video can play in the background
+    this.form.controls.videoUrl.valueChanges.pipe(startWith(this.form.controls.videoUrl.value), takeUntilDestroyed())
+      .subscribe(video => {
+        const toggle = this.form.controls.backgroundVideo;
+        if (video) {
+          toggle.enable({emitEvent: false});
+        } else {
+          toggle.setValue(false, {emitEvent: false});
+          toggle.disable({emitEvent: false});
+        }
+      });
     this.keepDrafts();
   }
 
@@ -171,6 +185,8 @@ export class AppEditor extends EditorPage<ListingFormValue> {
         name: app.name ?? '', slug: app.slug ?? '', slogan: app.slogan ?? '', description: app.description ?? '',
         category: app.category ?? '', platforms: app.platforms ?? '', iconUrl: app.iconUrl ?? '',
         videoUrl: app.videoUrl ?? '',
+        backgroundUrl: app.backgroundUrl ?? '',
+        backgroundVideo: !!app.backgroundVideo && !!app.videoUrl,
         modrinthId: app.modrinthId ?? '', curseforgeId: app.curseforgeId ?? '',
         highlighted: !!app.highlighted, legacy: !!app.legacy,
         publishedAt: app.publishedAt ? String(app.publishedAt).substring(0, 10) : today(),
@@ -294,7 +310,33 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   }
 
   protected removeVideo() {
-    this.form.controls.videoUrl.setValue('');
+    // without a video nothing can play in the background
+    this.form.patchValue({videoUrl: '', backgroundVideo: false});
+    this.form.markAsDirty();
+  }
+
+  // background
+
+  protected onBackgroundSelected(event: Event) {
+    const file = takeFile(event);
+    if (!file) return;
+    if (!isImageFile(file)) {
+      this.toast.error(IMAGE_FILE_HINT);
+      return;
+    }
+    this.uploadingBackground.set(true);
+    this.files.uploadImage(file).subscribe({
+      next: response => {
+        this.form.controls.backgroundUrl.setValue(response.url);
+        this.form.markAsDirty();
+        this.uploadingBackground.set(false);
+      },
+      error: () => this.uploadingBackground.set(false),
+    });
+  }
+
+  protected removeBackground() {
+    this.form.controls.backgroundUrl.setValue('');
     this.form.markAsDirty();
   }
 
@@ -314,6 +356,8 @@ export class AppEditor extends EditorPage<ListingFormValue> {
       slug: value.slug.trim(),
       images: images.map(image => ({url: image.url, text: image.text.trim() || null})),
       videoUrl: value.videoUrl || null,
+      backgroundUrl: value.backgroundUrl || null,
+      backgroundVideo: value.backgroundVideo && !!value.videoUrl,
       publishedAt: value.publishedAt as unknown as Date,
     };
 

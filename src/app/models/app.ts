@@ -24,6 +24,10 @@ export class App {
   images?: AppImage[];
   /** Optional uploaded video, shown first in the gallery */
   videoUrl?: string | null;
+  /** behind the top of the product page; null means the first screenshot */
+  backgroundUrl?: string | null;
+  /** the video plays there instead */
+  backgroundVideo?: boolean;
 
   /** The first three screenshots again, for older clients */
   image1Url?: string;

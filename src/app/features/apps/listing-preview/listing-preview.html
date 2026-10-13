@@ -1,5 +1,10 @@
 @let page = listing();
 <div class="site" aria-label="Preview of the product page">
+  @if (page.backgroundVideo && page.videoUrl) {
+    <video class="backdrop" [src]="page.videoUrl" [poster]="page.backgroundUrl" muted autoplay loop playsinline aria-hidden="true"></video>
+  } @else if (backdrop()) {
+    <img class="backdrop" [src]="backdrop()" alt="" aria-hidden="true">
+  }
   <p class="note">Preview · close to how adeptstack.net shows this app</p>
 
   <div class="layout">
@@ -53,7 +58,7 @@
           <div class="gallery">
             @if (page.videoUrl) {
               <div class="shot video">
-                <video [src]="page.videoUrl" [poster]="page.images[0]?.url ?? ''" controls preload="none"></video>
+                <video [src]="page.videoUrl + '#t=0.1'" controls preload="metadata"></video>
               </div>
             }
             @for (image of page.images; track $index) {

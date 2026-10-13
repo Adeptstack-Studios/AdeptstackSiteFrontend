@@ -39,6 +39,7 @@ const FIELDS: Partial<Record<ReviewKind, Field[]>> = {
     {key: 'slogan', label: 'Slogan'}, {key: 'slug', label: 'Address'}, {key: 'category', label: 'Category'},
     {key: 'platforms', label: 'Platforms'}, {key: 'description', label: 'Description', type: 'long'},
     {key: 'iconUrl', label: 'Icon'}, {key: 'images', label: 'Screenshots', type: 'list'}, {key: 'videoUrl', label: 'Video'},
+    {key: 'backgroundUrl', label: 'Background'}, {key: 'backgroundVideo', label: 'Video as background', type: 'flag'},
     {key: 'modrinthId', label: 'Modrinth ID'}, {key: 'curseforgeId', label: 'CurseForge ID'},
     {key: 'highlighted', label: 'Highlighted', type: 'flag'}, {key: 'legacy', label: 'Legacy', type: 'flag'},
     {key: 'publishedAt', label: 'Release date', type: 'date'},

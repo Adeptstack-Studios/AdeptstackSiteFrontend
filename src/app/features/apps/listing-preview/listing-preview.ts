@@ -12,6 +12,8 @@ export interface ListingPreviewData {
   category: string;
   legacy: boolean;
   videoUrl: string;
+  backgroundUrl: string;
+  backgroundVideo: boolean;
   images: { url: string; text: string }[];
 }
 
@@ -33,4 +35,6 @@ export class ListingPreview {
   protected readonly platforms = computed(() =>
     this.listing().platforms.split(/[,;]/).map(platform => platform.trim()).filter(Boolean));
   protected readonly features = computed(() => this.listing().images.filter(image => image.text.trim()));
+  /** behind the top, like the website: the own image, else the first screenshot */
+  protected readonly backdrop = computed(() => this.listing().backgroundUrl || this.listing().images[0]?.url || '');
 }

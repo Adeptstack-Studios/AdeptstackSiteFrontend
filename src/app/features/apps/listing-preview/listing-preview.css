@@ -8,6 +8,24 @@
   color: #cbd5e1;
   overflow: hidden;
   container-type: inline-size;
+  position: relative;
+}
+
+/* the background behind the top, sharp and fading out like on the website */
+.backdrop {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  opacity: .35;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 35%, transparent);
+}
+
+.note,
+.layout {
+  position: relative;
 }
 
 .note {
