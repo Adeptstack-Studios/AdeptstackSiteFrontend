@@ -149,6 +149,28 @@ export const routes: Routes = [
         title: 'Activity' + TITLE, data: { label: 'Activity log' }
       },
       {
+        path: 'reviews',
+        data: { label: 'Reviews' },
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/reviews/review-list-page').then(m => m.ReviewListPage),
+            title: 'Reviews' + TITLE
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./features/reviews/review-page').then(m => m.ReviewPage),
+            title: 'Review' + TITLE, data: { label: 'Review' }
+          },
+        ]
+      },
+      {
+        path: 'content-check',
+        loadComponent: () => import('./features/reviews/content-rules-page').then(m => m.ContentRulesPage),
+        canActivate: [ownerGuard],
+        title: 'Content check' + TITLE, data: { label: 'Content check' }
+      },
+      {
         path: 'team',
         loadComponent: () => import('./features/team/team-page').then(m => m.TeamPage),
         canActivate: [ownerGuard],
