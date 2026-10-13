@@ -79,6 +79,8 @@ interface Row {
             as <strong>{{ visibilityAfter() }}</strong>. Everything it shows:</p>
         } @else if (mode() === 'new') {
           <p class="lead">Goes live for the first time, as <strong>{{ visibilityAfter() }}</strong>. Everything it shows:</p>
+        } @else if (dropsPlan()) {
+          <p class="lead">Drops the approved plan: it stays a private draft, and nothing comes out at the planned time.</p>
         } @else if (!rows().length) {
           <p class="lead">Nothing differs from the live version.</p>
         }
@@ -231,11 +233,17 @@ export class ReviewChanges {
     if (review.action === 'DELETE') return 'delete';
     if (review.kind === 'PUSH') return 'push';
     if (review.kind === 'NEWSLETTER') return 'newsletter';
-    return text(baseline?.['visibility'], 'visibility') === 'Private' ? 'new' : 'change';
+    // an approved plan is private until its time, but changing it is a change like on a live entry
+    return text(baseline?.['visibility'], 'visibility') === 'Private' && !baseline?.['plan'] ? 'new' : 'change';
   });
 
   protected readonly pushToReleases = computed(() => this.detail().payload?.['kind'] === 'RELEASE');
   protected readonly planned = computed(() => this.detail().payload?.['plan'] === true);
+  protected readonly dropsPlan = computed(() => {
+    const {baseline, payload} = this.detail();
+    return this.mode() === 'change' && !!baseline?.['plan'] && payload?.['plan'] !== true
+      && text(payload?.['visibility'], 'visibility') === 'Private';
+  });
   protected readonly visibilityAfter = computed(() => text(this.detail().payload?.['visibility'], 'visibility').toLowerCase());
 
   protected readonly rows = computed<Row[]>(() => {

@@ -17,7 +17,7 @@
         </p>
       </div>
       <div appEditOnly class="c-actions">
-        @if (!isLive() && form.controls.visibility.value !== 'PRIVATE') {
+        @if (!guarded() && form.controls.visibility.value !== 'PRIVATE') {
           <button type="button" class="c-btn" [disabled]="!ready() || saving() || blocked() || lockedByOther()" (click)="saveAsDraft()">Save draft</button>
         }
         <button type="submit" class="c-btn c-btn-primary" [disabled]="!ready() || saving() || blocked() || lockedByOther()"

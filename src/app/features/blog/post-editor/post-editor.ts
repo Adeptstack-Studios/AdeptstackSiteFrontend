@@ -108,6 +108,8 @@ export class PostEditor extends EditorPage<PostFormValue> {
 
   protected readonly isNew = computed(() => this.postId() === null);
   protected readonly isLive = computed(() => !!this.stored() && this.stored()!.visibility !== 'PRIVATE');
+  /** live, or private with an approved plan: changing or deleting it is reviewed either way */
+  protected readonly guarded = computed(() => this.isLive() || !!this.stored()?.plan);
   /** a change of it waiting for review, or sent back */
   protected readonly openReview = signal<ReviewDetail | null>(null);
   private readonly myReview = computed(() => this.openReview()?.review.author === this.currentUser.user()?.username);
@@ -124,7 +126,7 @@ export class PostEditor extends EditorPage<PostFormValue> {
   protected readonly primaryLabel = computed(() => {
     if (this.lockedByOther()) return 'Waiting for review';
     const value = this.value();
-    if (!this.isLive() && value.visibility === 'PRIVATE') return 'Save draft';
+    if (!this.guarded() && value.visibility === 'PRIVATE') return 'Save draft';
     if (this.myReview()) return 'Submit again';
     return value.when === 'plan' ? 'Submit plan for review' : 'Submit for review';
   });
@@ -317,17 +319,19 @@ export class PostEditor extends EditorPage<PostFormValue> {
     if (!stored) return;
     const ok = await this.confirm.ask({
       title: 'Delete this post?',
-      message: stored.visibility === 'PRIVATE'
+      message: !this.guarded()
         ? `The draft “${stored.title}” is deleted. This cannot be undone.`
-        : `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`,
-      confirmLabel: stored.visibility === 'PRIVATE' ? 'Delete post' : 'Submit deletion', danger: true,
+        : this.isLive()
+          ? `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`
+          : `“${stored.title}” has an approved plan, so deleting it is submitted for review first. Until then the plan stays.`,
+      confirmLabel: !this.guarded() ? 'Delete post' : 'Submit deletion', danger: true,
     });
     if (!ok) return;
     this.news.deleteById(stored.id!).subscribe(response => {
       this.settled();
       if (submittedReview(response)) {
         this.reviews.refreshCounts();
-        this.toast.success('Deleting the post is submitted for review. It stays live until an owner approves.');
+        this.toast.success(`Deleting the post is submitted for review. It stays ${this.isLive() ? 'live' : 'planned'} until an owner approves.`);
       } else {
         this.toast.success('Post deleted.');
       }

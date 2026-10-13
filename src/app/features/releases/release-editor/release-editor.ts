@@ -104,6 +104,8 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   protected readonly isNew = computed(() => this.releaseId() === null);
   /** an existing release that is already out: editing it changes what people see right away */
   protected readonly isLive = computed(() => !!this.stored() && this.stored()!.visibility !== 'PRIVATE');
+  /** live, or private with an approved plan: changing or deleting it is reviewed either way */
+  protected readonly guarded = computed(() => this.isLive() || !!this.stored()?.plan);
 
   protected readonly channelOptions = computed(() => {
     const names = (this.context.app()?.channels ?? []).map(channel => channel.name);
@@ -151,7 +153,7 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   protected readonly primaryLabel = computed(() => {
     if (this.lockedByOther()) return 'Waiting for review';
     const value = this.value();
-    if (!this.isLive() && value.visibility === 'PRIVATE') return 'Save draft';
+    if (!this.guarded() && value.visibility === 'PRIVATE') return 'Save draft';
     if (this.myReview()) return 'Submit again';
     return value.when === 'plan' ? 'Submit plan for review' : 'Submit for review';
   });
@@ -512,10 +514,12 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
     if (!stored) return;
     const ok = await this.confirm.ask({
       title: `Delete ${stored.version}?`,
-      message: stored.visibility === 'PRIVATE'
+      message: !this.guarded()
         ? `The draft “${stored.title}” is deleted. This cannot be undone.`
-        : `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`,
-      confirmLabel: stored.visibility === 'PRIVATE' ? 'Delete release' : 'Submit deletion', danger: true,
+        : this.isLive()
+          ? `“${stored.title}” is live, so deleting it is submitted for review first. Once approved it is removed from the website and the app.`
+          : `“${stored.title}” has an approved plan, so deleting it is submitted for review first. Until then the plan stays.`,
+      confirmLabel: !this.guarded() ? 'Delete release' : 'Submit deletion', danger: true,
     });
     if (!ok) return;
     this.changelogs.deleteById(stored.id!).subscribe(response => {
@@ -523,7 +527,7 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       this.context.refresh().subscribe();
       if (submittedReview(response)) {
         this.reviews.refreshCounts();
-        this.toast.success(`Deleting ${stored.version} is submitted for review. It stays live until an owner approves.`);
+        this.toast.success(`Deleting ${stored.version} is submitted for review. It stays ${this.isLive() ? 'live' : 'planned'} until an owner approves.`);
       } else {
         this.toast.success(`${stored.version} deleted.`);
       }
