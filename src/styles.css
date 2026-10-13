@@ -119,6 +119,23 @@ a {
   color: var(--accent-text);
 }
 
+/*
+ * lucide's element wraps an inline svg, which sits on the text baseline and keeps room for descenders
+ * below it: every icon stood about 3px above the middle of its button or row. As a flex box around a
+ * block svg it is exactly as tall as the icon and centres like any other item.
+ */
+lucide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+lucide-icon svg {
+  display: block;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
