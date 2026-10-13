@@ -4,7 +4,7 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
+  ArrowUpRight, Bell, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
   LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
 } from 'lucide-angular';
 import {LocalStorageService} from '../services/local-storage-service';
@@ -16,6 +16,7 @@ import {checklistDone} from '../models/console';
 import {SessionTimer} from '../core/session/session-timer';
 import {AppTile} from '../shared/ui/app-tile';
 import {PlatformsPipe} from '../shared/ui/platforms';
+import {ReviewService} from '../services/review-service';
 
 /** One step of the route chain that shows up in the breadcrumb. */
 interface RouteStep {
@@ -39,6 +40,7 @@ export class AdminPanel {
   protected readonly theme = inject(ThemeService);
   protected readonly context = inject(AppContext);
   protected readonly currentUser = inject(CurrentUser);
+  private readonly reviews = inject(ReviewService);
 
   protected readonly user = this.currentUser.user;
   protected readonly navOpen = signal(false);
@@ -48,15 +50,23 @@ export class AdminPanel {
     {path: '/', label: 'Overview', icon: House, exact: true},
     {path: '/apps', label: 'All apps', icon: LayoutGrid, exact: true},
     {path: '/blog', label: 'Blog', icon: FileText, exact: false},
+    {path: '/reviews', label: 'Reviews', icon: ClipboardCheck, exact: false},
     {path: '/stats', label: 'Statistics', icon: ChartLine, exact: false},
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
     {path: '/activity', label: 'Activity log', icon: History, exact: false},
   ];
-  /** Team & roles only shows up for owners */
+  /** Team & roles and the content check only show up for owners */
   protected readonly navItems = computed(() => this.currentUser.isOwner()
-    ? [...this.nav, {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
+    ? [...this.nav, {path: '/content-check', label: 'Content check', icon: ShieldCheck, exact: false},
+      {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
     : this.nav);
+  /** owners see what waits for them, everyone else their changes that were sent back */
+  protected readonly reviewCount = computed(() => {
+    const counts = this.reviews.counts();
+    if (!counts) return 0;
+    return this.currentUser.isOwner() ? counts.pending : counts.changesRequested;
+  });
   protected readonly icons = {
     ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, History, Layers, LayoutDashboard,
     LogOut, Menu, Monitor, Moon, Store, Sun, UserRound, Users
@@ -72,10 +82,12 @@ export class AdminPanel {
 
   constructor() {
     this.currentUser.ensure().subscribe();
+    this.reviews.refreshCounts();
 
     this.updateSteps();
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed()).subscribe(() => {
       this.updateSteps();
+      this.reviews.refreshCounts();
       this.navOpen.set(false);
     });
   }

@@ -90,7 +90,7 @@
               <li>
                 <a class="row" [routerLink]="item.link" [queryParams]="item.query ?? {}">
                   <span class="badge" [class]="item.kind">
-                    <lucide-icon [img]="item.kind === 'draft' ? icons.FilePen : item.kind === 'posts' ? icons.FileText : icons.Store"
+                    <lucide-icon [img]="item.kind === 'review' ? icons.ClipboardCheck : item.kind === 'draft' ? icons.FilePen : item.kind === 'posts' ? icons.FileText : icons.Store"
                                  [size]="16" aria-hidden="true"></lucide-icon>
                   </span>
                   <span class="row-text">

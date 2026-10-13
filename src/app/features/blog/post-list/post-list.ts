@@ -18,11 +18,14 @@ import {AppTile} from '../../../shared/ui/app-tile';
 import {UrlListState, VISIBILITY_FILTERS} from '../../../shared/listing/url-list';
 import {Selection} from '../../../shared/listing/selection';
 import {EditOnly} from '../../../shared/ui/edit-only';
+import {ReviewService} from '../../../services/review-service';
+import {ReviewStatus} from '../../../models/review';
+import {ReviewChip} from '../../../shared/review/review-chip';
 
 /** All blog posts, filtered by category, app and visibility, with actions on several at once. */
 @Component({
   selector: 'app-post-list',
-  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, VisibilityStatus, AppTile, EditOnly],
+  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, VisibilityStatus, AppTile, EditOnly, ReviewChip],
   templateUrl: './post-list.html',
   styles: `
     .title-cell {
@@ -46,6 +49,7 @@ import {EditOnly} from '../../../shared/ui/edit-only';
   `
 })
 export class PostList {
+  private readonly reviews = inject(ReviewService);
   private readonly news = inject(NewsService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
@@ -114,7 +118,16 @@ export class PostList {
     this.news.categories().subscribe(categories => this.categories.set(categories));
   }
 
+  /** open reviews by entry, for the chip next to the visibility */
+  protected readonly inReview = signal(new Map<number, ReviewStatus>());
+
+  private loadReviews() {
+    this.reviews.openOf('POST').subscribe(open =>
+      this.inReview.set(new Map(open.filter(review => review.targetId !== null).map(review => [review.targetId!, review.status]))));
+  }
+
   private load() {
+    this.loadReviews();
     const state = this.list.state();
     this.news.list({
       category: state.category || undefined, app: state.app || undefined, visibility: state.visibility || undefined,

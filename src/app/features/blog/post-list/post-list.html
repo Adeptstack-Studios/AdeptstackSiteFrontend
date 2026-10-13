@@ -121,7 +121,10 @@
                         <span class="c-muted">–</span>
                       }
                     </td>
-                    <td><app-visibility-status [value]="post.visibility"></app-visibility-status></td>
+                    <td class="status-cell">
+                      <app-visibility-status [value]="post.visibility"></app-visibility-status>
+                      @if (inReview().get(post.id!); as status) { <app-review-chip [status]="status"></app-review-chip> }
+                    </td>
                     <td class="num c-muted">{{ post.readingTimeMinutes }} min</td>
                     <td class="c-muted">{{ post.visibility === 'PRIVATE' ? 'Draft' : (post.publishedAt | date: 'MMM d, y') }}</td>
                   </tr>

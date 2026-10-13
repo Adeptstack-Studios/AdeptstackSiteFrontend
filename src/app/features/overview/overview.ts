@@ -1,6 +1,6 @@
 import {Component, computed, inject, signal} from '@angular/core';
 import {RouterLink} from '@angular/router';
-import {ChevronRight, FilePen, FileText, LucideAngularModule, Plus, Store} from 'lucide-angular';
+import {ChevronRight, ClipboardCheck, FilePen, FileText, LucideAngularModule, Plus, Store} from 'lucide-angular';
 import {ConsoleService} from '../../services/console-service';
 import {TeamService} from '../../services/team-service';
 import {CurrentUser} from '../../core/auth/current-user';
@@ -16,10 +16,11 @@ import {AppsTable} from '../apps/apps-table/apps-table';
 import {AppTile} from '../../shared/ui/app-tile';
 import {ChannelChip, VisibilityStatus} from '../../shared/ui/status';
 import {RelativeDayPipe} from '../../shared/ui/relative-day';
+import {ReviewService} from '../../services/review-service';
 
 /** Something left half done, with a link to finish it. */
 interface AttentionItem {
-  kind: 'draft' | 'posts' | 'listing';
+  kind: 'draft' | 'posts' | 'listing' | 'review';
   title: string;
   detail: string;
   link: string[];
@@ -42,7 +43,7 @@ const SHOWN_ACTIVITY = 6;
 export class Overview {
   private readonly console = inject(ConsoleService);
 
-  protected readonly icons = {ChevronRight, FilePen, FileText, Plus, Store};
+  protected readonly icons = {ChevronRight, FilePen, FileText, Plus, Store, ClipboardCheck};
   protected readonly ranges = RANGES;
   protected readonly range = signal(30);
   protected readonly overview = signal<ConsoleOverview | null>(null);
@@ -62,6 +63,7 @@ export class Overview {
     (this.stats()?.topPages ?? []).slice(0, 6).map(page => ({name: page.path, value: page.views})));
   protected readonly apps = signal<AppSummary[] | null>(null);
   protected readonly currentUser = inject(CurrentUser);
+  private readonly reviews = inject(ReviewService);
   protected readonly username = computed(() => this.currentUser.user()?.username ?? '');
   protected readonly activity = signal<ActivityEntry[] | null>(null);
 
@@ -72,6 +74,26 @@ export class Overview {
     const overview = this.overview();
     const apps = this.apps();
     if (!overview || !apps) return [];
+
+    const counts = this.reviews.counts();
+    const reviews: AttentionItem[] = [];
+    if (counts?.pending && this.currentUser.isOwner()) {
+      reviews.push({
+        kind: 'review',
+        title: `${counts.pending} ${counts.pending === 1 ? 'change waits' : 'changes wait'} for your review`,
+        detail: 'Nothing goes live before an owner approves it',
+        link: ['/reviews'],
+      });
+    }
+    if (counts?.changesRequested) {
+      reviews.push({
+        kind: 'review',
+        title: `${counts.changesRequested} of your changes ${counts.changesRequested === 1 ? 'was' : 'were'} sent back`,
+        detail: 'Read the comment, change it and submit again',
+        link: ['/reviews'],
+        query: {filter: 'mine'},
+      });
+    }
 
     const drafts: AttentionItem[] = overview.draftReleases.map(release => ({
       kind: 'draft',
@@ -94,7 +116,7 @@ export class Overview {
         detail: 'Missing: ' + app.checklist.filter(item => !item.done).map(item => item.label.toLowerCase()).join(', '),
         link: ['/apps', app.slug, 'listing'],
       }));
-    return [...drafts, ...posts, ...listings];
+    return [...reviews, ...drafts, ...posts, ...listings];
   });
   protected readonly shownAttention = computed(() => this.attention().slice(0, SHOWN_ATTENTION));
 

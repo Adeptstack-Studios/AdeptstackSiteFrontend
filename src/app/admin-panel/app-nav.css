@@ -11,6 +11,16 @@
   color: var(--warn);
 }
 
+/* something waits for this user: reviews to do, or own changes sent back */
+.nav-count.badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-align: center;
+}
+
 /* app mode: back link, app switcher and the link to the product page */
 
 .back-link {

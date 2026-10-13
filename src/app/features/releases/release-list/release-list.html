@@ -100,7 +100,10 @@
                     <td><a class="c-version c-row-title" [routerLink]="['/apps', context.slug(), 'releases', release.id]">{{ release.version }}</a></td>
                     <td><app-channel-chip [name]="release.channel"></app-channel-chip></td>
                     <td class="c-ellipsis">{{ release.title }}</td>
-                    <td><app-visibility-status [value]="release.visibility"></app-visibility-status></td>
+                    <td class="status-cell">
+                      <app-visibility-status [value]="release.visibility"></app-visibility-status>
+                      @if (inReview().get(release.id!); as status) { <app-review-chip [status]="status"></app-review-chip> }
+                    </td>
                     <td class="c-muted">
                       {{ release.visibility === 'PRIVATE' ? 'Draft' : (release.publishedAt | date: 'MMM d, y') }}
                       @if (release.visibility !== 'PRIVATE' && isUpcoming(release.publishedAt + '')) {

@@ -17,14 +17,18 @@ import {UrlListState, VISIBILITY_FILTERS} from '../../../shared/listing/url-list
 import {Selection} from '../../../shared/listing/selection';
 import {isUpcoming} from '../../../shared/ui/relative-day';
 import {EditOnly} from '../../../shared/ui/edit-only';
+import {ReviewService} from '../../../services/review-service';
+import {ReviewStatus} from '../../../models/review';
+import {ReviewChip} from '../../../shared/review/review-chip';
 
 /** All releases of one app, filtered by channel and visibility, with actions on several at once. */
 @Component({
   selector: 'app-release-list',
-  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, ChannelChip, VisibilityStatus, EditOnly],
+  imports: [RouterLink, DatePipe, LucideAngularModule, Pagination, ChannelChip, VisibilityStatus, EditOnly, ReviewChip],
   templateUrl: './release-list.html',
 })
 export class ReleaseList {
+  private readonly reviews = inject(ReviewService);
   private readonly changelogs = inject(ChangelogsService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
@@ -90,7 +94,16 @@ export class ReleaseList {
     }
   }
 
+  /** open reviews by entry, for the chip next to the visibility */
+  protected readonly inReview = signal(new Map<number, ReviewStatus>());
+
+  private loadReviews() {
+    this.reviews.openOf('RELEASE').subscribe(open =>
+      this.inReview.set(new Map(open.filter(review => review.targetId !== null).map(review => [review.targetId!, review.status]))));
+  }
+
   private load() {
+    this.loadReviews();
     const state = this.list.state();
     this.changelogs.list({
       app: this.context.slug()!, channel: state.channel || undefined, visibility: state.visibility || undefined,

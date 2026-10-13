@@ -78,6 +78,9 @@
              [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null">
             <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
             {{ item.label }}
+            @if (item.path === '/reviews' && reviewCount()) {
+              <span class="nav-count badge" [attr.aria-label]="reviewCount() + (currentUser.isOwner() ? ' waiting' : ' sent back')">{{ reviewCount() }}</span>
+            }
           </a>
         }
       </nav>
