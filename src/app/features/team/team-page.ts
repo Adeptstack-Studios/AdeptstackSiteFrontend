@@ -462,7 +462,7 @@ export class TeamPage {
   protected async remove(member: TeamMember) {
     const ok = await this.confirm.ask({
       title: `Remove ${member.username}?`,
-      message: 'They are signed out at once and cannot sign in again. What they did stays in the activity log.',
+      message: 'They are signed out at once and cannot sign in again. Their changes still waiting for review are withdrawn. What they did stays in the activity log.',
       confirmLabel: 'Remove from team',
       danger: true,
     });
