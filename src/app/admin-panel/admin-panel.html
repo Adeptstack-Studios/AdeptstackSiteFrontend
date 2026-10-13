@@ -110,6 +110,7 @@
       </nav>
 
       <div class="topbar-actions">
+        <app-palette-trigger></app-palette-trigger>
         @if (currentUser.role() === 'VIEWER') {
           <span class="viewer-badge" title="Your role can look at everything, but not change anything.">
             <lucide-icon [img]="icons.Eye" [size]="14" aria-hidden="true"></lucide-icon> View only

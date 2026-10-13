@@ -6,6 +6,8 @@ import {AppSummary, ConsoleOverview, LinkSuggestion} from '../models/console';
 import {Page, toHttpParams, toPage} from '../models/listing';
 import {AppStats, NewsletterStatus, PushLogEntry, StatsOverview} from '../models/stats';
 import {RoadmapItem} from '../models/roadmap';
+import {SearchHit} from '../models/search';
+import {quietRequest} from '../core/errors/http-errors';
 
 /** Read-only summaries made for the console; they include private entries. */
 @Injectable({
@@ -47,6 +49,12 @@ export class ConsoleService {
   /** Releases and posts by their moment, oldest first; app is an id or slug, from and to ISO instants. */
   roadmap(query: { app?: string; from?: string; to?: string; limit?: number } = {}): Observable<RoadmapItem[]> {
     return this.http.get<RoadmapItem[]>(environment.consoleRoadmap, {params: toHttpParams(query)});
+  }
+
+  /** Releases, posts and open reviews matching every word of q, private ones too; at most limit of each kind. */
+  search(q: string, limit = 5): Observable<SearchHit[]> {
+    // the palette shows its own hint when searching fails
+    return this.http.get<SearchHit[]>(environment.consoleSearch, {params: {q, limit}, context: quietRequest()});
   }
 
   newsletter(): Observable<NewsletterStatus> {

@@ -7,7 +7,6 @@ import {
   ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
   LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
 } from 'lucide-angular';
-import {LocalStorageService} from '../services/local-storage-service';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
 import {User} from '../models/user';
@@ -17,6 +16,8 @@ import {SessionTimer} from '../core/session/session-timer';
 import {AppTile} from '../shared/ui/app-tile';
 import {PlatformsPipe} from '../shared/ui/platforms';
 import {ReviewService} from '../services/review-service';
+import {PaletteTrigger} from '../core/palette/palette-trigger';
+import {PaletteService} from '../core/palette/palette-service';
 
 /** One step of the route chain that shows up in the breadcrumb. */
 interface RouteStep {
@@ -30,17 +31,18 @@ interface RouteStep {
 @Component({
   selector: 'app-admin-panel',
   imports: [RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule, CdkMenuTrigger, CdkMenu, CdkMenuGroup,
-    CdkMenuItem, CdkMenuItemRadio, SessionTimer, AppTile, PlatformsPipe],
+    CdkMenuItem, CdkMenuItemRadio, SessionTimer, AppTile, PlatformsPipe, PaletteTrigger],
   templateUrl: './admin-panel.html',
+  host: {'(document:keydown)': 'shortcut($event)'},
   styleUrls: ['./admin-panel.css', './app-nav.css']
 })
 export class AdminPanel {
-  private readonly storage = inject(LocalStorageService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
   protected readonly context = inject(AppContext);
   protected readonly currentUser = inject(CurrentUser);
   private readonly reviews = inject(ReviewService);
+  private readonly palette = inject(PaletteService);
 
   protected readonly user = this.currentUser.user;
   protected readonly navOpen = signal(false);
@@ -101,10 +103,16 @@ export class AdminPanel {
     if (!this.context.apps()) this.context.loadApps();
   }
 
+  /** Ctrl+K (⌘K on a Mac) opens the command palette anywhere in the console, and closes it again. */
+  protected shortcut(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.palette.toggle();
+    }
+  }
+
   protected logout() {
-    this.storage.remove('auth-key');
-    this.currentUser.clear();
-    this.router.navigateByUrl('/login');
+    this.currentUser.signOut();
   }
 
   /** Every route with a label (or the app route) adds one breadcrumb step. */

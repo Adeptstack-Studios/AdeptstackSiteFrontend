@@ -45,6 +45,7 @@ export const environment = {
   consolePushes: 'http://localhost:8080/api/console/pushes',
   consoleNewsletter: 'http://localhost:8080/api/console/newsletter',
   consoleRoadmap: 'http://localhost:8080/api/console/roadmap',
+  consoleSearch: 'http://localhost:8080/api/console/search',
 
   teamMembers: 'http://localhost:8080/api/team/members',
   teamInvites: 'http://localhost:8080/api/team/invites',
