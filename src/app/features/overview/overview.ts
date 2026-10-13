@@ -2,7 +2,10 @@ import {Component, computed, inject, signal} from '@angular/core';
 import {RouterLink} from '@angular/router';
 import {ChevronRight, FilePen, FileText, LucideAngularModule, Plus, Store} from 'lucide-angular';
 import {ConsoleService} from '../../services/console-service';
+import {TeamService} from '../../services/team-service';
 import {CurrentUser} from '../../core/auth/current-user';
+import {ActivityEntry} from '../../models/team';
+import {ActivityList} from '../activity/activity-list';
 import {AppSummary, checklistDone, ConsoleOverview} from '../../models/console';
 import {StatsOverview, trend} from '../../models/stats';
 import {KpiCard} from '../../shared/charts/kpi-card';
@@ -26,12 +29,13 @@ interface AttentionItem {
 const RANGES = [7, 30, 90];
 const SHOWN_APPS = 5;
 const SHOWN_ATTENTION = 6;
+const SHOWN_ACTIVITY = 6;
 
 /** Start page: the most important numbers, the apps and what needs to be done. */
 @Component({
   selector: 'app-overview',
   imports: [RouterLink, LucideAngularModule, AppsTable, AppTile, ChannelChip, VisibilityStatus, RelativeDayPipe,
-    KpiCard, DayChart, ShareList],
+    KpiCard, DayChart, ShareList, ActivityList],
   templateUrl: './overview.html',
   styleUrl: './overview.css'
 })
@@ -59,6 +63,7 @@ export class Overview {
   protected readonly apps = signal<AppSummary[] | null>(null);
   protected readonly currentUser = inject(CurrentUser);
   protected readonly username = computed(() => this.currentUser.user()?.username ?? '');
+  protected readonly activity = signal<ActivityEntry[] | null>(null);
 
   protected readonly greeting = greeting(new Date());
   protected readonly shownApps = computed(() => (this.apps() ?? []).slice(0, SHOWN_APPS));
@@ -96,6 +101,7 @@ export class Overview {
   constructor() {
     this.load();
     this.console.apps().subscribe(apps => this.apps.set(apps));
+    inject(TeamService).activity(1, SHOWN_ACTIVITY).subscribe(page => this.activity.set(page.items));
   }
 
   /** Release lists only carry the app id; the icon comes from the apps loaded anyway. */

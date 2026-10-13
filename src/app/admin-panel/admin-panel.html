@@ -59,6 +59,11 @@
           <lucide-icon [img]="icons.Bell" [size]="17" aria-hidden="true"></lucide-icon>
           Notifications
         </a>
+        <a class="nav-link" [routerLink]="['/apps', slug, 'activity']" routerLinkActive="active"
+           #appActivity="routerLinkActive" [attr.aria-current]="appActivity.isActive ? 'page' : null">
+          <lucide-icon [img]="icons.History" [size]="17" aria-hidden="true"></lucide-icon>
+          Activity
+        </a>
       </nav>
 
       <a class="site-link" [href]="'https://adeptstack.net/products/' + slug" target="_blank" rel="noopener">

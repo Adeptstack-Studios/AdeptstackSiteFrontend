@@ -4,7 +4,7 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, FileText, House, Layers,
+  ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
   LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
 } from 'lucide-angular';
 import {LocalStorageService} from '../services/local-storage-service';
@@ -51,13 +51,14 @@ export class AdminPanel {
     {path: '/stats', label: 'Statistics', icon: ChartLine, exact: false},
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
+    {path: '/activity', label: 'Activity log', icon: History, exact: false},
   ];
   /** Team & roles only shows up for owners */
   protected readonly navItems = computed(() => this.currentUser.isOwner()
     ? [...this.nav, {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
     : this.nav);
   protected readonly icons = {
-    ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, Layers, LayoutDashboard,
+    ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, History, Layers, LayoutDashboard,
     LogOut, Menu, Monitor, Moon, Store, Sun, UserRound, Users
   };
   protected readonly checklistDone = checklistDone;

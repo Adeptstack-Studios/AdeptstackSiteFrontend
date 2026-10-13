@@ -142,5 +142,21 @@
         }
       </section>
     </div>
+
+    <section class="c-card" aria-labelledby="activity-heading">
+      <div class="c-card-head">
+        <h2 id="activity-heading">Recent activity</h2>
+        <a class="c-link" routerLink="/activity">Open the log</a>
+      </div>
+      @if (activity(); as entries) {
+        @if (entries.length) {
+          <app-activity-list [entries]="entries" [compact]="true"></app-activity-list>
+        } @else {
+          <p class="c-empty">Nothing yet. From now on every change is written down.</p>
+        }
+      } @else {
+        <div class="c-skeleton list-skeleton"></div>
+      }
+    </section>
   </div>
 </div>

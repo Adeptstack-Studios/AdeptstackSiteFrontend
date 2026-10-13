@@ -96,6 +96,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/notifications/notifications-page').then(m => m.NotificationsPage),
                 title: 'Notifications' + TITLE, data: { label: 'Notifications' }
               },
+              {
+                path: 'activity',
+                loadComponent: () => import('./features/activity/activity-page').then(m => m.ActivityPage),
+                title: 'Activity' + TITLE, data: { label: 'Activity' }
+              },
             ]
           },
         ]
@@ -137,6 +142,11 @@ export const routes: Routes = [
         path: 'newsletter',
         loadComponent: () => import('./features/newsletter/newsletter-page').then(m => m.NewsletterPage),
         title: 'Newsletter' + TITLE, data: { label: 'Newsletter' }
+      },
+      {
+        path: 'activity',
+        loadComponent: () => import('./features/activity/activity-page').then(m => m.ActivityPage),
+        title: 'Activity' + TITLE, data: { label: 'Activity log' }
       },
       {
         path: 'team',
