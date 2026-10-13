@@ -5,6 +5,7 @@ import {environment} from '../../environments/environment';
 import {AppSummary, ConsoleOverview, LinkSuggestion} from '../models/console';
 import {Page, toHttpParams, toPage} from '../models/listing';
 import {AppStats, NewsletterStatus, PushLogEntry, StatsOverview} from '../models/stats';
+import {RoadmapItem} from '../models/roadmap';
 
 /** Read-only summaries made for the console; they include private entries. */
 @Injectable({
@@ -41,6 +42,11 @@ export class ConsoleService {
   pushes(page: number, size: number, app?: number): Observable<Page<PushLogEntry>> {
     return this.http.get<PushLogEntry[]>(environment.consolePushes,
       {observe: 'response', params: toHttpParams({app, page: page - 1, size})}).pipe(map(toPage));
+  }
+
+  /** Releases and posts by their moment, oldest first; app is an id or slug, from and to ISO instants. */
+  roadmap(query: { app?: string; from?: string; to?: string; limit?: number } = {}): Observable<RoadmapItem[]> {
+    return this.http.get<RoadmapItem[]>(environment.consoleRoadmap, {params: toHttpParams(query)});
   }
 
   newsletter(): Observable<NewsletterStatus> {

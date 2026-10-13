@@ -4,7 +4,7 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, Bell, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
+  ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
   LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
 } from 'lucide-angular';
 import {LocalStorageService} from '../services/local-storage-service';
@@ -50,6 +50,7 @@ export class AdminPanel {
     {path: '/', label: 'Overview', icon: House, exact: true},
     {path: '/apps', label: 'All apps', icon: LayoutGrid, exact: true},
     {path: '/blog', label: 'Blog', icon: FileText, exact: false},
+    {path: '/roadmap', label: 'Roadmap', icon: CalendarClock, exact: false},
     {path: '/reviews', label: 'Reviews', icon: ClipboardCheck, exact: false},
     {path: '/stats', label: 'Statistics', icon: ChartLine, exact: false},
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},

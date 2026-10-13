@@ -44,6 +44,7 @@ export const environment = {
   consoleStats: 'https://api.adeptstack.net/api/console/stats',
   consolePushes: 'https://api.adeptstack.net/api/console/pushes',
   consoleNewsletter: 'https://api.adeptstack.net/api/console/newsletter',
+  consoleRoadmap: 'https://api.adeptstack.net/api/console/roadmap',
 
   teamMembers: 'https://api.adeptstack.net/api/team/members',
   teamInvites: 'https://api.adeptstack.net/api/team/invites',

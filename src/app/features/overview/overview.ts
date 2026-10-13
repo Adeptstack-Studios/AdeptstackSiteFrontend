@@ -17,6 +17,7 @@ import {AppTile} from '../../shared/ui/app-tile';
 import {ChannelChip, VisibilityStatus} from '../../shared/ui/status';
 import {RelativeDayPipe} from '../../shared/ui/relative-day';
 import {ReviewService} from '../../services/review-service';
+import {UpcomingCard} from '../roadmap/upcoming-card';
 
 /** Something left half done, with a link to finish it. */
 interface AttentionItem {
@@ -36,7 +37,7 @@ const SHOWN_ACTIVITY = 6;
 @Component({
   selector: 'app-overview',
   imports: [RouterLink, LucideAngularModule, AppsTable, AppTile, ChannelChip, VisibilityStatus, RelativeDayPipe,
-    KpiCard, DayChart, ShareList, ActivityList],
+    KpiCard, DayChart, ShareList, ActivityList, UpcomingCard],
   templateUrl: './overview.html',
   styleUrl: './overview.css'
 })

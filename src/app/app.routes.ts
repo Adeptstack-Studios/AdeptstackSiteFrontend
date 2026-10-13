@@ -149,6 +149,11 @@ export const routes: Routes = [
         title: 'Activity' + TITLE, data: { label: 'Activity log' }
       },
       {
+        path: 'roadmap',
+        loadComponent: () => import('./features/roadmap/roadmap-page').then(m => m.RoadmapPage),
+        title: 'Roadmap' + TITLE, data: { label: 'Roadmap' }
+      },
+      {
         path: 'reviews',
         data: { label: 'Reviews' },
         children: [
