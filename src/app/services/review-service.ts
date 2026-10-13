@@ -45,8 +45,9 @@ export class ReviewService {
     return this.http.get<ReviewSummary[]>(`${environment.reviews}/open`, {params: {kind}, context: quietRequest()});
   }
 
-  approve(id: number, comment: string): Observable<ReviewSummary> {
-    return this.http.post<ReviewSummary>(`${environment.reviews}/${id}/approve`, {comment})
+  /** submittedAt of the version that was read: if the author submitted again since, the backend refuses (409) */
+  approve(id: number, comment: string, submittedAt: string): Observable<ReviewSummary> {
+    return this.http.post<ReviewSummary>(`${environment.reviews}/${id}/approve`, {comment, submittedAt})
       .pipe(tap(() => this.refreshCounts()));
   }
 

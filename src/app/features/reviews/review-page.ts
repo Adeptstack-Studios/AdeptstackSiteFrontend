@@ -223,15 +223,21 @@ export class ReviewPage {
   }
 
   protected approve() {
+    const read = this.detail();
+    if (!read) return;
     this.busy.set(true);
-    this.reviews.approve(this.id, this.comment).subscribe({
+    this.reviews.approve(this.id, this.comment, read.review.submittedAt).subscribe({
       next: review => {
         this.busy.set(false);
         if (review.error) this.toast.error(review.error);
         else this.toast.success(this.action() === 'Delete' ? 'Approved and deleted.' : 'Approved. It is live now.');
         this.load();
       },
-      error: () => this.busy.set(false),
+      // e.g. a new version came in meanwhile: show it, the comment stays
+      error: () => {
+        this.busy.set(false);
+        this.load(true);
+      },
     });
   }
 
@@ -263,11 +269,11 @@ export class ReviewPage {
     });
   }
 
-  private load() {
+  private load(keepComment = false) {
     this.reviews.detail(this.id).subscribe({
       next: detail => {
         this.detail.set(detail);
-        this.comment = '';
+        if (!keepComment) this.comment = '';
       },
       error: () => this.missing.set(true),
     });
