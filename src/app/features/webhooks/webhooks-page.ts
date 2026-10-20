@@ -101,7 +101,7 @@ import {
                 }
               </ul>
             } @else {
-              <p class="c-empty">No webhooks yet. Add one above, e.g. for a Discord channel.</p>
+              <p class="c-empty">No webhooks yet. Add one below, e.g. for a Discord channel.</p>
             }
           } @else {
             <div class="c-skeleton c-list-skeleton"></div>
