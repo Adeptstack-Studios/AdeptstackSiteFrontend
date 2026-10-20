@@ -4,6 +4,7 @@ import {ImageUp, LucideAngularModule} from 'lucide-angular';
 import {FileService} from '../../services/file-service';
 import {ToastService} from '../../services/toast-service';
 import {IMAGE_FILE_HINT, isImageFile} from '../listing/upload-files';
+import {MediaPickerService} from '../media/media-picker';
 
 /** The cover image of a release or post: upload, replace, remove. */
 @Component({
@@ -21,6 +22,7 @@ import {IMAGE_FILE_HINT, isImageFile} from '../listing/upload-files';
               {{ uploading() ? 'Uploading…' : 'Replace' }}
               <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="upload($event)">
             </label>
+            <button type="button" class="c-btn c-btn-sm" (click)="fromLibrary()">From files</button>
             <button type="button" class="c-btn c-btn-sm" (click)="remove()">Remove</button>
           </div>
         </div>
@@ -30,6 +32,7 @@ import {IMAGE_FILE_HINT, isImageFile} from '../listing/upload-files';
           {{ uploading() ? 'Uploading…' : 'Choose an image' }}
           <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="upload($event)">
         </label>
+        <button type="button" class="c-link library" (click)="fromLibrary()">or choose one already uploaded</button>
       }
       <p class="c-hint">{{ hint() }}</p>
     </section>
@@ -51,6 +54,11 @@ import {IMAGE_FILE_HINT, isImageFile} from '../listing/upload-files';
     .drop:focus-within {
       border-color: var(--accent);
       color: var(--text);
+    }
+
+    .library {
+      margin-top: 8px;
+      font-size: 13px;
     }
 
     .cover img {
@@ -76,6 +84,7 @@ import {IMAGE_FILE_HINT, isImageFile} from '../listing/upload-files';
 export class CoverCard {
   private readonly files = inject(FileService);
   private readonly toast = inject(ToastService);
+  private readonly picker = inject(MediaPickerService);
 
   readonly control = input.required<FormControl<string>>();
   readonly hint = input('Also used for link previews (Discord, WhatsApp, …)');
@@ -102,6 +111,13 @@ export class CoverCard {
       },
       error: () => this.uploading.set(false),
     });
+  }
+
+  protected async fromLibrary() {
+    const url = await this.picker.pick();
+    if (!url) return;
+    this.control().setValue(url);
+    this.control().markAsDirty();
   }
 
   protected remove() {

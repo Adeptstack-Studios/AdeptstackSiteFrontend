@@ -31,6 +31,7 @@ export const environment = {
   uploadApp: 'http://localhost:8080/api/files/uploadApp',
   uploadImage: 'http://localhost:8080/api/files/uploadImage',
   uploadVideo: 'http://localhost:8080/api/files/uploadVideo',
+  files: 'http://localhost:8080/api/files',
 
   appsGet: 'http://localhost:8080/api/apps/get',
   appsCreate: 'http://localhost:8080/api/apps/create',
