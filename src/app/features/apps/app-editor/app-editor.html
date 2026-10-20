@@ -104,6 +104,7 @@
               <div>
                 <span class="c-label">App icon</span>
                 <p class="c-hint">Square, at least 256 × 256 px. Used on cards and for link previews.</p>
+                <button type="button" class="c-link pick" (click)="pickIcon()">Choose from files</button>
               </div>
             </div>
 
@@ -116,6 +117,11 @@
                   {{ featureCount() === 1 ? 'feature' : 'features' }}.
                 </p>
               </div>
+              <div class="media-buttons">
+              <button type="button" class="c-btn c-btn-sm" (click)="pickScreenshot()">
+                <lucide-icon [img]="icons.Images" [size]="15" aria-hidden="true"></lucide-icon>
+                From files
+              </button>
               <label class="c-btn c-btn-sm add-media" [class.disabled]="screenshotUpload()">
                 <lucide-icon [img]="icons.ImagePlus" [size]="15" aria-hidden="true"></lucide-icon>
                 @if (screenshotUpload(); as upload) {
@@ -126,6 +132,7 @@
                 <input type="file" accept="image/png,image/jpeg,image/webp" multiple class="sr-only"
                        (change)="onScreenshotsSelected($event)" [disabled]="!!screenshotUpload()">
               </label>
+              </div>
             </div>
 
             <ol class="shots" cdkDropList (cdkDropListDropped)="dropScreenshot($event)" formArrayName="images">
@@ -149,6 +156,17 @@
                         <button type="button" class="icon-btn" (click)="moveScreenshot(i, i + 1)" [disabled]="last"
                                 [attr.aria-label]="'Move screenshot ' + (i + 1) + ' down'">
                           <lucide-icon [img]="icons.ArrowDown" [size]="15" aria-hidden="true"></lucide-icon>
+                        </button>
+                        <label class="icon-btn" [class.busy]="replacingShot() === shot"
+                               [title]="replacingShot() === shot ? 'Uploading…' : 'Replace with an upload'">
+                          <lucide-icon [img]="icons.ImageUp" [size]="15" aria-hidden="true"></lucide-icon>
+                          <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only"
+                                 (change)="onScreenshotReplaced($event, shot)" [disabled]="replacingShot() !== null"
+                                 [attr.aria-label]="'Replace screenshot ' + (i + 1) + ' with an upload'">
+                        </label>
+                        <button type="button" class="icon-btn" (click)="pickScreenshotImage(shot)" title="Replace from files"
+                                [attr.aria-label]="'Replace screenshot ' + (i + 1) + ' from files'">
+                          <lucide-icon [img]="icons.Images" [size]="15" aria-hidden="true"></lucide-icon>
                         </button>
                         <button type="button" class="icon-btn danger" (click)="removeScreenshot(i)"
                                 [attr.aria-label]="'Remove screenshot ' + (i + 1)">
@@ -228,6 +246,10 @@
                   <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="onBackgroundSelected($event)"
                          [disabled]="uploadingBackground()">
                 </label>
+                <button type="button" class="c-btn c-btn-sm" (click)="pickBackground()">
+                  <lucide-icon [img]="icons.Images" [size]="15" aria-hidden="true"></lucide-icon>
+                  From files
+                </button>
                 @if (form.controls.backgroundUrl.value) {
                   <button type="button" class="c-btn c-btn-sm" (click)="removeBackground()">
                     <lucide-icon [img]="icons.X" [size]="15" aria-hidden="true"></lucide-icon>

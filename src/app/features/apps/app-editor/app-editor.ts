@@ -6,9 +6,10 @@ import {HttpEventType} from '@angular/common/http';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
 import {concatMap, forkJoin, from, map, startWith} from 'rxjs';
 import {
-  ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, LucideAngularModule,
+  ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, LucideAngularModule,
   Trash2, X
 } from 'lucide-angular';
+import {MediaPickerService} from '../../../shared/media/media-picker';
 import {AppContext} from '../../../core/app-context/app-context';
 import {AppService} from '../../../services/app-service';
 import {FileService} from '../../../services/file-service';
@@ -75,10 +76,11 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   private readonly reviews = inject(ReviewService);
   private readonly currentUser = inject(CurrentUser);
   private readonly files = inject(FileService);
+  private readonly picker = inject(MediaPickerService);
   private readonly router = inject(Router);
   protected readonly context = inject(AppContext);
 
-  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, ImageUp, Trash2, X};
+  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, Trash2, X};
   protected readonly checklistDone = checklistDone;
 
   /** null while creating a new app */
@@ -90,6 +92,8 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly uploadingIcon = signal(false);
   protected readonly uploadingBackground = signal(false);
+  /** the screenshot whose image is being replaced by an upload */
+  protected readonly replacingShot = signal<ScreenshotGroup | null>(null);
   /** e.g. {done: 1, total: 4} while screenshots upload one after another */
   protected readonly screenshotUpload = signal<{ done: number; total: number } | null>(null);
   /** 0–100 while the video uploads */
@@ -98,7 +102,7 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   /** the form, or the product page as the website shows it */
   protected readonly mode = signal<'edit' | 'preview'>('edit');
   protected readonly busy = computed(() => this.uploadingIcon() || this.uploadingBackground()
-    || this.screenshotUpload() !== null || this.videoProgress() !== null);
+    || this.replacingShot() !== null || this.screenshotUpload() !== null || this.videoProgress() !== null);
   /** the slug follows the name until it is edited by hand, and never changes by itself once saved */
   private slugFollowsName = true;
 
@@ -213,6 +217,10 @@ export class AppEditor extends EditorPage<ListingFormValue> {
     });
   }
 
+  protected async pickIcon() {
+    await this.pickInto(this.form.controls.iconUrl);
+  }
+
   // screenshots
 
   /** Several files at once; they are added in the order they were chosen. */
@@ -238,6 +246,36 @@ export class AppEditor extends EditorPage<ListingFormValue> {
         this.toast.success(count === 1 ? 'Screenshot added.' : `${count} screenshots added.`);
       },
     });
+  }
+
+  protected async pickScreenshot() {
+    const url = await this.picker.pick();
+    if (!url) return;
+    this.screenshots.push(screenshotGroup({url, text: null}));
+    this.form.markAsDirty();
+  }
+
+  /** A new image for a screenshot; its place and text stay. */
+  protected onScreenshotReplaced(event: Event, group: ScreenshotGroup) {
+    const file = takeFile(event);
+    if (!file) return;
+    if (!isImageFile(file)) {
+      this.toast.error(IMAGE_FILE_HINT);
+      return;
+    }
+    this.replacingShot.set(group);
+    this.files.uploadImage(file).subscribe({
+      next: response => {
+        group.controls.url.setValue(response.url);
+        this.form.markAsDirty();
+        this.replacingShot.set(null);
+      },
+      error: () => this.replacingShot.set(null),
+    });
+  }
+
+  protected async pickScreenshotImage(group: ScreenshotGroup) {
+    await this.pickInto(group.controls.url);
   }
 
   protected dropScreenshot(event: CdkDragDrop<unknown>) {
@@ -321,8 +359,20 @@ export class AppEditor extends EditorPage<ListingFormValue> {
     });
   }
 
+  protected async pickBackground() {
+    await this.pickInto(this.form.controls.backgroundUrl);
+  }
+
   protected removeBackground() {
     this.form.controls.backgroundUrl.setValue('');
+    this.form.markAsDirty();
+  }
+
+  /** an image already uploaded, from the files */
+  private async pickInto(control: FormControl<string>) {
+    const url = await this.picker.pick();
+    if (!url) return;
+    control.setValue(url);
     this.form.markAsDirty();
   }
 

@@ -35,7 +35,6 @@
 }
 
 .add-media {
-  margin-left: auto;
   position: relative;
 }
 
@@ -140,6 +139,29 @@
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+}
+
+.media-buttons {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pick {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+label.icon-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+label.icon-btn.busy {
+  opacity: .5;
+  cursor: progress;
 }
 
 .icon-btn:hover:not(:disabled) {
@@ -259,8 +281,9 @@
     flex-wrap: wrap;
   }
 
-  .add-media {
+  .media-buttons {
     margin-left: 0;
+    justify-content: flex-start;
   }
 }
 
