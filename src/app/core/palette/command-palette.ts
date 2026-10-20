@@ -164,6 +164,7 @@ export class CommandPalette {
     );
     if (owner) {
       commands.push(page('Content check', '/content-check', 'ShieldCheck', 'words rules blocked'),
+        page('Webhooks', '/webhooks', 'Webhook', 'discord integration notify announce'),
         page('Team & roles', '/team', 'Users', 'members invite owner editor viewer'));
     }
     commands.push(page('Account', '/account', 'UserRound', 'password profile'));

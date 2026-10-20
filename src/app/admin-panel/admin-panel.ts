@@ -5,7 +5,7 @@ import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} fr
 import {filter} from 'rxjs';
 import {
   ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
-  LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users
+  LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users, Webhook
 } from 'lucide-angular';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
@@ -59,9 +59,10 @@ export class AdminPanel {
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
     {path: '/activity', label: 'Activity log', icon: History, exact: false},
   ];
-  /** Team & roles and the content check only show up for owners */
+  /** Team & roles, the content check and the webhooks only show up for owners */
   protected readonly navItems = computed(() => this.currentUser.isOwner()
     ? [...this.nav, {path: '/content-check', label: 'Content check', icon: ShieldCheck, exact: false},
+      {path: '/webhooks', label: 'Webhooks', icon: Webhook, exact: false},
       {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
     : this.nav);
   /** owners see what waits for them, everyone else their changes that were sent back */

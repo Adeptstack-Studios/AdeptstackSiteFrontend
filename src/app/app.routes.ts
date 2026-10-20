@@ -178,6 +178,12 @@ export const routes: Routes = [
         title: 'Content check' + TITLE, data: { label: 'Content check' }
       },
       {
+        path: 'webhooks',
+        loadComponent: () => import('./features/webhooks/webhooks-page').then(m => m.WebhooksPage),
+        canActivate: [ownerGuard],
+        title: 'Webhooks' + TITLE, data: { label: 'Webhooks' }
+      },
+      {
         path: 'team',
         loadComponent: () => import('./features/team/team-page').then(m => m.TeamPage),
         canActivate: [ownerGuard],

@@ -53,4 +53,5 @@ export const environment = {
   reviews: 'http://localhost:8080/api/reviews',
   contentCheck: 'http://localhost:8080/api/content-check',
   contentRules: 'http://localhost:8080/api/content-rules',
+  webhooks: 'http://localhost:8080/api/webhooks',
 };

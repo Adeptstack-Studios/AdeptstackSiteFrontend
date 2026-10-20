@@ -53,4 +53,5 @@ export const environment = {
   reviews: 'https://api.adeptstack.net/api/reviews',
   contentCheck: 'https://api.adeptstack.net/api/content-check',
   contentRules: 'https://api.adeptstack.net/api/content-rules',
+  webhooks: 'https://api.adeptstack.net/api/webhooks',
 };
