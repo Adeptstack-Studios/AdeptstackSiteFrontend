@@ -161,12 +161,13 @@ export class CommandPalette {
       page('Notifications', '/notifications', 'Bell', 'push'),
       page('Newsletter', '/newsletter', 'Mail', 'subscribers email'),
       page('Files', '/files', 'FolderOpen', 'uploads images media library installers videos'),
-      page('Activity log', '/activity', 'History', 'history changes'),
+      page('Activity log', '/settings/activity', 'History', 'history changes settings'),
+      page('Settings', '/settings', 'Settings', 'preferences configuration'),
     );
     if (owner) {
-      commands.push(page('Content check', '/content-check', 'ShieldCheck', 'words rules blocked'),
-        page('Webhooks', '/webhooks', 'Webhook', 'discord integration notify announce'),
-        page('Team & roles', '/team', 'Users', 'members invite owner editor viewer'));
+      commands.push(page('Content check', '/settings/content-check', 'ShieldCheck', 'words rules blocked settings'),
+        page('Webhooks', '/settings/webhooks', 'Webhook', 'discord integration notify announce settings'),
+        page('Team & roles', '/settings/team', 'Users', 'members invite owner editor viewer settings'));
     }
     commands.push(page('Account', '/account', 'UserRound', 'password profile'));
 
@@ -195,7 +196,7 @@ export class CommandPalette {
     }
     if (owner) {
       commands.push({id: 'action:invite', group: 'Actions', label: 'Invite someone to the team', keywords: 'member add user',
-        url: '/team', icon: 'Users', searchOnly: true});
+        url: '/settings/team', icon: 'Users', searchOnly: true});
     }
     commands.push(
       this.theme.isDark()

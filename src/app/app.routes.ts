@@ -151,11 +151,6 @@ export const routes: Routes = [
         title: 'Files' + TITLE, data: { label: 'Files' }
       },
       {
-        path: 'activity',
-        loadComponent: () => import('./features/activity/activity-page').then(m => m.ActivityPage),
-        title: 'Activity' + TITLE, data: { label: 'Activity log' }
-      },
-      {
         path: 'roadmap',
         loadComponent: () => import('./features/roadmap/roadmap-page').then(m => m.RoadmapPage),
         title: 'Roadmap' + TITLE, data: { label: 'Roadmap' }
@@ -177,31 +172,49 @@ export const routes: Routes = [
         ]
       },
       {
-        path: 'content-check',
-        loadComponent: () => import('./features/reviews/content-rules-page').then(m => m.ContentRulesPage),
-        canActivate: [ownerGuard],
-        title: 'Content check' + TITLE, data: { label: 'Content check' }
-      },
-      {
-        path: 'webhooks',
-        loadComponent: () => import('./features/webhooks/webhooks-page').then(m => m.WebhooksPage),
-        canActivate: [ownerGuard],
-        title: 'Webhooks' + TITLE, data: { label: 'Webhooks' }
-      },
-      {
-        path: 'team',
-        loadComponent: () => import('./features/team/team-page').then(m => m.TeamPage),
-        canActivate: [ownerGuard],
-        title: 'Team' + TITLE, data: { label: 'Team & roles' }
+        // set up once, looked at now and then: tabs of their own instead of places in the sidebar
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings-layout').then(m => m.SettingsLayout),
+        data: { label: 'Settings' },
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'activity' },
+          {
+            path: 'activity',
+            loadComponent: () => import('./features/activity/activity-page').then(m => m.ActivityPage),
+            title: 'Activity' + TITLE, data: { label: 'Activity log' }
+          },
+          {
+            path: 'content-check',
+            loadComponent: () => import('./features/reviews/content-rules-page').then(m => m.ContentRulesPage),
+            canActivate: [ownerGuard],
+            title: 'Content check' + TITLE, data: { label: 'Content check' }
+          },
+          {
+            path: 'webhooks',
+            loadComponent: () => import('./features/webhooks/webhooks-page').then(m => m.WebhooksPage),
+            canActivate: [ownerGuard],
+            title: 'Webhooks' + TITLE, data: { label: 'Webhooks' }
+          },
+          {
+            path: 'team',
+            loadComponent: () => import('./features/team/team-page').then(m => m.TeamPage),
+            canActivate: [ownerGuard],
+            title: 'Team' + TITLE, data: { label: 'Team & roles' }
+          },
+        ]
       },
       {
         path: 'account',
         loadComponent: () => import('./features/account/account-page').then(m => m.AccountPage),
         title: 'Account' + TITLE, data: { label: 'Account' }
       },
-      // older addresses: the blog moved, releases live with their app now
+      // older addresses: the blog moved, releases live with their app now, a few pages went to the settings
       { path: 'news', redirectTo: 'blog' },
       { path: 'changelogs', redirectTo: 'apps' },
+      { path: 'activity', redirectTo: 'settings/activity' },
+      { path: 'content-check', redirectTo: 'settings/content-check' },
+      { path: 'webhooks', redirectTo: 'settings/webhooks' },
+      { path: 'team', redirectTo: 'settings/team' },
     ]
   },
 ];

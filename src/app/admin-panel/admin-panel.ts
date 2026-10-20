@@ -4,8 +4,8 @@ import {ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterLinkAct
 import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} from '@angular/cdk/menu';
 import {filter} from 'rxjs';
 import {
-  ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
-  FolderOpen, LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users, Webhook
+  ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
+  FolderOpen, LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Settings, Store, Sun, UserRound, Users
 } from 'lucide-angular';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
@@ -58,14 +58,7 @@ export class AdminPanel {
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
     {path: '/files', label: 'Files', icon: FolderOpen, exact: false},
-    {path: '/activity', label: 'Activity log', icon: History, exact: false},
   ];
-  /** Team & roles, the content check and the webhooks only show up for owners */
-  protected readonly navItems = computed(() => this.currentUser.isOwner()
-    ? [...this.nav, {path: '/content-check', label: 'Content check', icon: ShieldCheck, exact: false},
-      {path: '/webhooks', label: 'Webhooks', icon: Webhook, exact: false},
-      {path: '/team', label: 'Team & roles', icon: Users, exact: false}]
-    : this.nav);
   /** owners see what waits for them, everyone else their changes that were sent back */
   protected readonly reviewCount = computed(() => {
     const counts = this.reviews.counts();
@@ -74,7 +67,7 @@ export class AdminPanel {
   });
   protected readonly icons = {
     ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, History, Layers, LayoutDashboard,
-    LogOut, Menu, Monitor, Moon, Store, Sun, UserRound, Users
+    LogOut, Menu, Monitor, Moon, Settings, Store, Sun, UserRound, Users
   };
   protected readonly checklistDone = checklistDone;
 

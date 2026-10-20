@@ -33,7 +33,7 @@ import {ROLE_INFO} from '../../models/team';
             </dl>
             <p class="c-hint">
               @if (currentUser.isOwner()) {
-                Roles are set under <a class="c-link" routerLink="/team">Team &amp; roles</a>.
+                Roles are set under <a class="c-link" routerLink="/settings/team">Team &amp; roles</a>.
               } @else {
                 An owner of the team can change your role.
               }

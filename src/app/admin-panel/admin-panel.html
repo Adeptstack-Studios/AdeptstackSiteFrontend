@@ -73,7 +73,7 @@
       </a>
     } @else {
       <nav class="nav" aria-label="Main">
-        @for (item of navItems(); track item.path) {
+        @for (item of nav; track item.path) {
           <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
              [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null">
             <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
@@ -85,6 +85,13 @@
         }
       </nav>
     }
+
+    <!-- at the foot of the sidebar, in an app below its website link -->
+    <a class="nav-link settings-link" routerLink="/settings" routerLinkActive="active" #settings="routerLinkActive"
+       [attr.aria-current]="settings.isActive ? 'page' : null">
+      <lucide-icon [img]="icons.Settings" [size]="17" aria-hidden="true"></lucide-icon>
+      Settings
+    </a>
   </aside>
 
   @if (navOpen()) {
@@ -146,7 +153,7 @@
       <lucide-icon [img]="icons.UserRound" [size]="16" aria-hidden="true"></lucide-icon> Account
     </a>
     @if (currentUser.isOwner()) {
-      <a class="menu-item" cdkMenuItem routerLink="/team">
+      <a class="menu-item" cdkMenuItem routerLink="/settings/team">
         <lucide-icon [img]="icons.Users" [size]="16" aria-hidden="true"></lucide-icon> Team &amp; roles
       </a>
     }

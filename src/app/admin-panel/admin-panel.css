@@ -63,6 +63,15 @@
   gap: 2px;
 }
 
+.settings-link {
+  margin-top: auto;
+}
+
+/* in an app the website link already sits at the foot */
+.site-link + .settings-link {
+  margin-top: 0;
+}
+
 .nav-link {
   display: flex;
   align-items: center;
