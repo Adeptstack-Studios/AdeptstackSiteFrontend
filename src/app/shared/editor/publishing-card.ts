@@ -47,6 +47,16 @@ export type ComingSoon = 'off' | 'now' | 'at';
         <label class="c-label" for="moment">{{ momentLabel() }}</label>
         <input id="moment" class="c-input" type="datetime-local" [formControl]="moment()">
         @if (momentHint()) { <p class="c-hint">{{ momentHint() }}</p> }
+        @if (aheadNow()) {
+          <p class="c-hint ahead">
+            @if (isRelease()) {
+              Shown as coming soon until then, but nothing happens by itself at the release.
+            } @else {
+              This moment lies ahead. Posted now, the post goes out right away with today's date.
+            }
+            <button type="button" class="c-link" (click)="planForThen()">Plan it for then</button>
+          </p>
+        }
       </div>
 
       @if (isRelease() && planned() && comingSoon()) {
@@ -102,6 +112,10 @@ export type ComingSoon = 'off' | 'now' | 'at';
     </section>
   `,
   styles: `
+    .c-hint.ahead {
+      color: var(--warn);
+    }
+
     .options {
       display: flex;
       flex-direction: column;
@@ -235,10 +249,26 @@ export class PublishingCard {
     const ahead = isAhead(this.moment().value);
     if (this.planned()) {
       const target = this.visibility().value === 'PUBLIC' ? 'public' : 'unlisted';
-      return ahead ? `Private until then, ${target} at this moment on its own.` : 'A plan needs a moment that lies ahead.';
+      if (!ahead) return 'A plan needs a moment that lies ahead.';
+      return this.isRelease() && this.soonValue() !== 'off'
+        ? 'Out at this moment on its own, coming soon before that.'
+        : `Private until then, ${target} at this moment on its own.`;
     }
-    if (this.isRelease() && this.shown() && ahead) return 'Shown as coming soon until then, without download links.';
     return '';
+  }
+
+  /**
+   * A moment ahead without a plan: a post would go out today with that date (the backend dates it today), a
+   * release would be coming soon with its push sent right away. A plan does it properly.
+   */
+  protected aheadNow() {
+    return this.shown() && !this.planned() && isAhead(this.moment().value);
+  }
+
+  /** a release stays visible as coming soon, as it would have been, and is out with its push at the moment */
+  protected planForThen() {
+    this.setWhen('plan');
+    if (this.isRelease()) this.setSoon('now');
   }
 
   protected pushLabel() {
