@@ -146,6 +146,11 @@ export const routes: Routes = [
         title: 'Newsletter' + TITLE, data: { label: 'Newsletter' }
       },
       {
+        path: 'files',
+        loadComponent: () => import('./features/files/files-page').then(m => m.FilesPage),
+        title: 'Files' + TITLE, data: { label: 'Files' }
+      },
+      {
         path: 'activity',
         loadComponent: () => import('./features/activity/activity-page').then(m => m.ActivityPage),
         title: 'Activity' + TITLE, data: { label: 'Activity log' }

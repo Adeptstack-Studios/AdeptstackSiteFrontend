@@ -1,7 +1,7 @@
 import {Component, computed, inject, input, output} from '@angular/core';
 import {DatePipe} from '@angular/common';
 import {RouterLink} from '@angular/router';
-import {Bell, FileText, LucideAngularModule, Package, Store, Users} from 'lucide-angular';
+import {Bell, FileText, FolderOpen, LucideAngularModule, Package, Store, Users} from 'lucide-angular';
 import {ActivityEntry} from '../../models/team';
 import {AppContext} from '../../core/app-context/app-context';
 import {RelativeTimePipe} from '../../shared/ui/relative-day';
@@ -151,6 +151,7 @@ export class ActivityList {
       case 'POST': return FileText;
       case 'APP': return Store;
       case 'PUSH': return Bell;
+      case 'FILE': return FolderOpen;
       default: return Users;
     }
   }

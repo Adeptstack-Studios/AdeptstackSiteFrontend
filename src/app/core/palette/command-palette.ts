@@ -160,6 +160,7 @@ export class CommandPalette {
       page('Statistics', '/stats', 'ChartLine', 'views visitors downloads'),
       page('Notifications', '/notifications', 'Bell', 'push'),
       page('Newsletter', '/newsletter', 'Mail', 'subscribers email'),
+      page('Files', '/files', 'FolderOpen', 'uploads images media library installers videos'),
       page('Activity log', '/activity', 'History', 'history changes'),
     );
     if (owner) {

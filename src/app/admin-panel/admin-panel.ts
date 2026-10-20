@@ -5,7 +5,7 @@ import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} fr
 import {filter} from 'rxjs';
 import {
   ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ShieldCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
-  LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users, Webhook
+  FolderOpen, LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Store, Sun, UserRound, Users, Webhook
 } from 'lucide-angular';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
@@ -57,6 +57,7 @@ export class AdminPanel {
     {path: '/stats', label: 'Statistics', icon: ChartLine, exact: false},
     {path: '/notifications', label: 'Notifications', icon: Bell, exact: false},
     {path: '/newsletter', label: 'Newsletter', icon: Mail, exact: false},
+    {path: '/files', label: 'Files', icon: FolderOpen, exact: false},
     {path: '/activity', label: 'Activity log', icon: History, exact: false},
   ];
   /** Team & roles, the content check and the webhooks only show up for owners */

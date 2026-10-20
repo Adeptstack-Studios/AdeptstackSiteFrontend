@@ -84,9 +84,9 @@ export class ActivityPage {
   protected readonly entries = signal<ActivityEntry[] | null>(null);
   protected readonly total = signal(0);
 
-  /** inside an app, team changes never belong to it */
+  /** inside an app, team changes and files never belong to it */
   protected readonly areas = computed(() =>
-    this.context.slug() ? ACTIVITY_AREAS.filter(one => one.key !== 'team') : ACTIVITY_AREAS);
+    this.context.slug() ? ACTIVITY_AREAS.filter(one => one.key !== 'team' && one.key !== 'files') : ACTIVITY_AREAS);
 
   constructor() {
     effect(() => {

@@ -1,5 +1,5 @@
 import {
-  ArrowUpRight, Bell, CalendarClock, ChartLine, ClipboardCheck, Clock, FileText, History, House, Layers, LayoutDashboard,
+  ArrowUpRight, Bell, CalendarClock, ChartLine, ClipboardCheck, Clock, FileText, FolderOpen, History, House, Layers, LayoutDashboard,
   LayoutGrid, LogOut, Mail, Monitor, Moon, Plus, Rocket, ShieldCheck, Store, Sun, UserRound, Users, Webhook
 } from 'lucide-angular';
 import {SearchHit} from '../../models/search';
@@ -7,7 +7,7 @@ import {STATUS_LABELS} from '../../models/review';
 
 /** Icons by name, so a remembered command can be stored as plain JSON. */
 export const ICONS = {
-  ArrowUpRight, Bell, CalendarClock, ChartLine, ClipboardCheck, Clock, FileText, History, House, Layers, LayoutDashboard,
+  ArrowUpRight, Bell, CalendarClock, ChartLine, ClipboardCheck, Clock, FileText, FolderOpen, History, House, Layers, LayoutDashboard,
   LayoutGrid, LogOut, Mail, Monitor, Moon, Plus, Rocket, ShieldCheck, Store, Sun, UserRound, Users, Webhook
 };
 export type IconName = keyof typeof ICONS;

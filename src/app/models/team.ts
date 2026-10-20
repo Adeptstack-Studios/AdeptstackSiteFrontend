@@ -32,7 +32,7 @@ export interface InviteInfo {
   token: string | null;
 }
 
-export type ActivityTarget = 'RELEASE' | 'POST' | 'APP' | 'PUSH' | 'USER' | 'INVITE';
+export type ActivityTarget = 'RELEASE' | 'POST' | 'APP' | 'PUSH' | 'USER' | 'INVITE' | 'FILE';
 
 export interface ActivityEntry {
   id: number;
@@ -52,6 +52,7 @@ export const ACTIVITY_AREAS: { key: string; label: string; targets: ActivityTarg
   {key: 'posts', label: 'Blog', targets: ['POST']},
   {key: 'apps', label: 'Store listings', targets: ['APP']},
   {key: 'pushes', label: 'Pushes', targets: ['PUSH']},
+  {key: 'files', label: 'Files', targets: ['FILE']},
   {key: 'team', label: 'Team', targets: ['USER', 'INVITE']},
 ];
 
