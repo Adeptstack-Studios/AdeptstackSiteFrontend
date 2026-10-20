@@ -2,7 +2,7 @@ import {Component, computed, inject, signal} from '@angular/core';
 import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
-import {forkJoin, map, Observable, of} from 'rxjs';
+import {catchError, forkJoin, map, Observable, of} from 'rxjs';
 import {ArrowLeft, ArrowUpRight, CircleAlert, LucideAngularModule, Trash2} from 'lucide-angular';
 import {NewsService} from '../../../services/news-service';
 import {ConsoleService} from '../../../services/console-service';
@@ -22,6 +22,7 @@ import {ReviewService} from '../../../services/review-service';
 import {ReviewDetail, submittedReview} from '../../../models/review';
 import {ReviewBanner} from '../../../shared/review/review-banner';
 import {CurrentUser} from '../../../core/auth/current-user';
+import {WebhookService} from '../../../services/webhook-service';
 import {isAhead, localInputDay, localInputToIso, nowLocalInput, toLocalInput} from '../../../shared/time';
 
 function postForm() {
@@ -40,6 +41,7 @@ function postForm() {
     when: new FormControl<PublishWhen>('now', {nonNullable: true}),
     push: new FormControl(false, {nonNullable: true}),
     pushText: new FormControl('', {nonNullable: true}),
+    postToWebhooks: new FormControl(false, {nonNullable: true}),
   });
 }
 
@@ -88,6 +90,9 @@ export class PostEditor extends EditorPage<PostFormValue> {
   private readonly reviews = inject(ReviewService);
   private readonly currentUser = inject(CurrentUser);
   private readonly console = inject(ConsoleService);
+  /** the webhooks “Post to webhooks” reaches; the box is hidden without any */
+  protected readonly webhookNames = toSignal(inject(WebhookService).choosable().pipe(catchError(() => of([]))),
+    {initialValue: [] as string[]});
 
   protected readonly icons = {ArrowLeft, ArrowUpRight, CircleAlert, Trash2};
 
@@ -217,6 +222,7 @@ export class PostEditor extends EditorPage<PostFormValue> {
       publishedAt: draft && !isAhead(toLocalInput(moment)) ? nowLocalInput() : toLocalInput(moment),
       when: post.plan ? 'plan' : 'now',
       push: !!post.publishPush,
+      postToWebhooks: !!post.postToWebhooks,
       pushText: post.publishPush || `🚀 ${post.title ?? '…'} 🔥`,
     });
     if (post.publishPush) this.form.controls.pushText.markAsDirty();
@@ -264,6 +270,7 @@ export class PostEditor extends EditorPage<PostFormValue> {
       publishAt: localInputToIso(value.publishedAt),
       plan: visibility !== 'PRIVATE' && value.when === 'plan',
       publishPush: visibility !== 'PRIVATE' && value.push ? value.pushText.trim() || null : null,
+      postToWebhooks: value.postToWebhooks,
     };
     // a plan sends its push itself, at the publish moment
     const push = value.push && visibility !== 'PRIVATE' && value.when !== 'plan';

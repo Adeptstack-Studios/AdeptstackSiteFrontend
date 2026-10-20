@@ -172,7 +172,8 @@
                                [moment]="form.controls.publishedAt" [when]="form.controls.when"
                                [pushText]="form.controls.pushText" [comingSoon]="form.controls.comingSoon"
                                [comingSoonAt]="form.controls.comingSoonAt" [comingSoonPushOn]="form.controls.comingSoonPushOn"
-                               [comingSoonPush]="form.controls.comingSoonPush">
+                               [comingSoonPush]="form.controls.comingSoonPush"
+                               [webhook]="form.controls.postToWebhooks" [webhookNames]="webhookNames()">
           </app-publishing-card>
 
           <app-checks-card [checks]="checks()"></app-checks-card>

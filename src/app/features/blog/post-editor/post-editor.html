@@ -111,7 +111,8 @@
         <aside class="c-editor-side">
           <app-publishing-card kind="post" [visibility]="form.controls.visibility" [push]="form.controls.push"
                                [moment]="form.controls.publishedAt" [when]="form.controls.when"
-                               [pushText]="form.controls.pushText">
+                               [pushText]="form.controls.pushText"
+                               [webhook]="form.controls.postToWebhooks" [webhookNames]="webhookNames()">
           </app-publishing-card>
 
           <app-checks-card [checks]="checks()"></app-checks-card>

@@ -3,7 +3,7 @@ import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {CdkMenu, CdkMenuItem, CdkMenuTrigger} from '@angular/cdk/menu';
-import {forkJoin, map, Observable, of} from 'rxjs';
+import {catchError, forkJoin, map, Observable, of} from 'rxjs';
 import {ArrowLeft, CircleAlert, Download, LucideAngularModule, Plus, Trash2, Upload, X} from 'lucide-angular';
 import {AppContext} from '../../../core/app-context/app-context';
 import {ChangelogsService} from '../../../services/changelogs-service';
@@ -26,6 +26,7 @@ import {ReviewService} from '../../../services/review-service';
 import {ReviewDetail, submittedReview} from '../../../models/review';
 import {ReviewBanner} from '../../../shared/review/review-banner';
 import {CurrentUser} from '../../../core/auth/current-user';
+import {WebhookService} from '../../../services/webhook-service';
 import {isAhead, localInputDay, localInputToIso, nowLocalInput, toLocalInput} from '../../../shared/time';
 
 /** Channel names for an app without releases. */
@@ -51,6 +52,7 @@ function releaseForm() {
     comingSoonPush: new FormControl('', {nonNullable: true}),
     push: new FormControl(true, {nonNullable: true}),
     pushText: new FormControl('', {nonNullable: true}),
+    postToWebhooks: new FormControl(false, {nonNullable: true}),
   });
 }
 
@@ -72,6 +74,9 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
   private readonly currentUser = inject(CurrentUser);
   private readonly console = inject(ConsoleService);
   private readonly files = inject(FileService);
+  /** the webhooks “Post to webhooks” reaches; the box is hidden without any */
+  protected readonly webhookNames = toSignal(inject(WebhookService).choosable().pipe(catchError(() => of([]))),
+    {initialValue: [] as string[]});
   protected readonly context = inject(AppContext);
 
   protected readonly icons = {ArrowLeft, CircleAlert, Download, Plus, Trash2, Upload, X};
@@ -302,6 +307,7 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       // a draft is opened to be published eventually: the choice starts at Public, like a new release
       visibility: draft ? 'PUBLIC' : release.visibility as Visibility,
       push: draft || !!release.releasePush,
+      postToWebhooks: !!release.postToWebhooks,
       // a draft keeps a moment ahead (a plan), otherwise it starts at now
       publishedAt: draft && !isAhead(toLocalInput(moment)) ? nowLocalInput() : toLocalInput(moment),
       when: planned ? 'plan' : 'now',
@@ -458,6 +464,7 @@ export class ReleaseEditor extends EditorPage<ReleaseFormValue> {
       publishedAt: localInputDay(value.publishedAt) as unknown as Date,
       releaseAt: localInputToIso(value.publishedAt),
       ...planFields(value, visibility),
+      postToWebhooks: value.postToWebhooks,
     };
     // a plan sends its pushes itself, at coming soon and at the release
     const push = value.push && visibility !== 'PRIVATE' && value.when !== 'plan';

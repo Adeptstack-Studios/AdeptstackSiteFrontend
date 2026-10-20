@@ -87,6 +87,17 @@ export type ComingSoon = 'off' | 'now' | 'at';
           <label class="c-label sr-only" for="push-text">Push text</label>
           <input id="push-text" class="c-input push-text" [formControl]="text" maxlength="150">
         }
+        @if (webhook(); as toWebhooks) {
+          @if (webhookNames().length) {
+            <label class="check">
+              <input type="checkbox" [formControl]="toWebhooks">
+              <span>
+                <strong>Post to webhooks</strong>
+                <span class="hint">{{ webhookNames().join(', ') }}, {{ planned() ? 'once it is out' : 'once it is live' }}</span>
+              </span>
+            </label>
+          }
+        }
       }
     </section>
   `,
@@ -186,6 +197,9 @@ export class PublishingCard {
   readonly comingSoonPushOn = input<FormControl<boolean> | null>(null);
   readonly comingSoonPush = input<FormControl<string> | null>(null);
   readonly kind = input<'release' | 'post'>('release');
+  /** “Post to webhooks”, shown when a webhook sends only what is ticked */
+  readonly webhook = input<FormControl<boolean> | null>(null);
+  readonly webhookNames = input<string[]>([]);
 
   protected readonly options = PUBLISH_OPTIONS;
   protected readonly isRelease = computed(() => this.kind() === 'release');

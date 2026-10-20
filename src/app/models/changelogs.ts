@@ -29,4 +29,6 @@ export class Changelogs {
   /** push titles, null for no push */
   comingSoonPush?: string | null;
   releasePush?: string | null;
+  /** also to the webhooks that send what is ticked in the editor */
+  postToWebhooks?: boolean;
 }

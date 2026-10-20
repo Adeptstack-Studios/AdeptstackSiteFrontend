@@ -21,4 +21,6 @@ export class News {
   plan?: string | boolean | null;
   /** push title, null for no push */
   publishPush?: string | null;
+  /** also to the webhooks that send what is ticked in the editor */
+  postToWebhooks?: boolean;
 }

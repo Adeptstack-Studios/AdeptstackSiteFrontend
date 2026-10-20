@@ -24,6 +24,7 @@ const FIELDS: Partial<Record<ReviewKind, Field[]>> = {
     {key: 'channel', label: 'Channel'}, {key: 'title', label: 'Title'}, {key: 'releaseAt', label: 'Release', type: 'moment'},
     {key: 'plan', label: 'Planned', type: 'flag'}, {key: 'comingSoonAt', label: 'Coming soon from', type: 'moment'},
     {key: 'comingSoonPush', label: 'Coming soon push'}, {key: 'releasePush', label: 'Release push'},
+    {key: 'postToWebhooks', label: 'Post to webhooks', type: 'flag'},
     {key: 'description', label: 'Summary', type: 'long'}, {key: 'content', label: 'Release notes', type: 'long'},
     {key: 'imageUrl', label: 'Cover image'}, ...LINKS,
   ],
@@ -31,7 +32,8 @@ const FIELDS: Partial<Record<ReviewKind, Field[]>> = {
     {key: 'visibility', label: 'Visibility', type: 'visibility'}, {key: 'title', label: 'Title'},
     {key: 'slug', label: 'Address'}, {key: 'category', label: 'Category'}, {key: 'appId', label: 'Linked app'},
     {key: 'publishAt', label: 'Publish at', type: 'moment'}, {key: 'plan', label: 'Planned', type: 'flag'},
-    {key: 'publishPush', label: 'Push'}, {key: 'description', label: 'Summary', type: 'long'},
+    {key: 'publishPush', label: 'Push'}, {key: 'postToWebhooks', label: 'Post to webhooks', type: 'flag'},
+    {key: 'description', label: 'Summary', type: 'long'},
     {key: 'content', label: 'Text', type: 'long'}, {key: 'imageUrl', label: 'Cover image'},
   ],
   APP: [
