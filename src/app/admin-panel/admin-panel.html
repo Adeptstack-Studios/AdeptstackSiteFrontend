@@ -1,6 +1,6 @@
-<div class="shell" [class.nav-open]="navOpen()">
+<div class="shell" [class.nav-open]="navOpen()" [class.collapsed]="collapsed()">
   <aside class="sidebar" id="sidebar">
-    <a class="brand" routerLink="/">
+    <a class="brand" routerLink="/" [attr.title]="collapsed() ? 'Overview' : null">
       <span class="brand-mark"><img src="img/adeptstack_white.png" alt="" width="20" height="20"></span>
       <span class="brand-text">
         <span class="brand-name">adeptstack</span>
@@ -10,13 +10,13 @@
 
     @if (context.slug(); as slug) {
       <!-- inside one app: its own navigation, like a project in the Play Console -->
-      <a class="back-link" routerLink="/apps">
+      <a class="back-link" routerLink="/apps" [attr.title]="collapsed() ? 'All apps' : null">
         <lucide-icon [img]="icons.ChevronLeft" [size]="15" aria-hidden="true"></lucide-icon>
-        All apps
+        <span class="label">All apps</span>
       </a>
 
       <button type="button" class="app-switch" [cdkMenuTriggerFor]="appMenu" (click)="openSwitcher()"
-              aria-label="Switch app">
+              aria-label="Switch app" [attr.title]="collapsed() ? (context.app()?.name ?? slug) : null">
         <app-tile [name]="context.app()?.name ?? slug" [iconUrl]="context.app()?.iconUrl" [size]="34"></app-tile>
         <span class="app-switch-text">
           <span class="app-switch-name">{{ context.app()?.name ?? slug }}</span>
@@ -29,12 +29,12 @@
         <a class="nav-link" [routerLink]="['/apps', slug]" routerLinkActive="active"
            [routerLinkActiveOptions]="{exact: true}" #dash="routerLinkActive" [attr.aria-current]="dash.isActive ? 'page' : null">
           <lucide-icon [img]="icons.LayoutDashboard" [size]="17" aria-hidden="true"></lucide-icon>
-          Dashboard
+          <span class="label">Dashboard</span>
         </a>
         <a class="nav-link" [routerLink]="['/apps', slug, 'releases']" routerLinkActive="active"
            #rel="routerLinkActive" [attr.aria-current]="rel.isActive ? 'page' : null">
           <lucide-icon [img]="icons.Layers" [size]="17" aria-hidden="true"></lucide-icon>
-          Releases
+          <span class="label">Releases</span>
           @if (context.app(); as app) {
             <span class="nav-count">{{ app.releaseCount }}</span>
           }
@@ -42,7 +42,7 @@
         <a class="nav-link" [routerLink]="['/apps', slug, 'listing']" routerLinkActive="active"
            #listing="routerLinkActive" [attr.aria-current]="listing.isActive ? 'page' : null">
           <lucide-icon [img]="icons.Store" [size]="17" aria-hidden="true"></lucide-icon>
-          Store listing
+          <span class="label">Store listing</span>
           @if (context.app(); as app) {
             <span class="nav-count" [class.warn]="checklistDone(app) < app.checklist.length">
               {{ checklistDone(app) }}/{{ app.checklist.length }}
@@ -52,21 +52,22 @@
         <a class="nav-link" [routerLink]="['/apps', slug, 'stats']" routerLinkActive="active"
            #appStats="routerLinkActive" [attr.aria-current]="appStats.isActive ? 'page' : null">
           <lucide-icon [img]="icons.ChartLine" [size]="17" aria-hidden="true"></lucide-icon>
-          Statistics
+          <span class="label">Statistics</span>
         </a>
         <a class="nav-link" [routerLink]="['/apps', slug, 'notifications']" routerLinkActive="active"
            #appPushes="routerLinkActive" [attr.aria-current]="appPushes.isActive ? 'page' : null">
           <lucide-icon [img]="icons.Bell" [size]="17" aria-hidden="true"></lucide-icon>
-          Notifications
+          <span class="label">Notifications</span>
         </a>
         <a class="nav-link" [routerLink]="['/apps', slug, 'activity']" routerLinkActive="active"
            #appActivity="routerLinkActive" [attr.aria-current]="appActivity.isActive ? 'page' : null">
           <lucide-icon [img]="icons.History" [size]="17" aria-hidden="true"></lucide-icon>
-          Activity
+          <span class="label">Activity</span>
         </a>
       </nav>
 
-      <a class="site-link" [href]="'https://adeptstack.net/products/' + slug" target="_blank" rel="noopener">
+      <a class="site-link" [href]="'https://adeptstack.net/products/' + slug" target="_blank" rel="noopener"
+         [attr.title]="collapsed() ? 'On the website: /products/' + slug : null">
         <span class="site-link-label">On the website</span>
         <span class="site-link-path">/products/{{ slug }}</span>
         <lucide-icon [img]="icons.ArrowUpRight" [size]="14" aria-hidden="true"></lucide-icon>
@@ -75,9 +76,10 @@
       <nav class="nav" aria-label="Main">
         @for (item of nav; track item.path) {
           <a class="nav-link" [routerLink]="item.path" routerLinkActive="active" #link="routerLinkActive"
-             [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null">
+             [routerLinkActiveOptions]="{exact: item.exact}" [attr.aria-current]="link.isActive ? 'page' : null"
+             [attr.title]="collapsed() ? item.label : null">
             <lucide-icon [img]="item.icon" [size]="17" aria-hidden="true"></lucide-icon>
-            {{ item.label }}
+            <span class="label">{{ item.label }}</span>
             @if (item.path === '/reviews' && reviewCount()) {
               <span class="nav-count badge" [attr.aria-label]="reviewCount() + (currentUser.isOwner() ? ' waiting' : ' sent back')">{{ reviewCount() }}</span>
             }
@@ -88,9 +90,9 @@
 
     <!-- at the foot of the sidebar, in an app below its website link -->
     <a class="nav-link settings-link" routerLink="/settings" routerLinkActive="active" #settings="routerLinkActive"
-       [attr.aria-current]="settings.isActive ? 'page' : null">
+       [attr.aria-current]="settings.isActive ? 'page' : null" [attr.title]="collapsed() ? 'Settings' : null">
       <lucide-icon [img]="icons.Settings" [size]="17" aria-hidden="true"></lucide-icon>
-      Settings
+      <span class="label">Settings</span>
     </a>
   </aside>
 
@@ -103,6 +105,12 @@
       <button type="button" class="icon-btn menu-btn" aria-label="Open menu" aria-controls="sidebar"
               [attr.aria-expanded]="navOpen()" (click)="navOpen.set(!navOpen())">
         <lucide-icon [img]="icons.Menu" [size]="18" aria-hidden="true"></lucide-icon>
+      </button>
+
+      <button type="button" class="icon-btn collapse-btn" aria-controls="sidebar" [attr.aria-expanded]="!collapsed()"
+              [attr.aria-label]="collapsed() ? 'Expand the sidebar' : 'Collapse the sidebar'"
+              [title]="(collapsed() ? 'Expand the sidebar' : 'Collapse the sidebar') + ' (Ctrl+B)'" (click)="toggleCollapsed()">
+        <lucide-icon [img]="collapsed() ? icons.PanelLeftOpen : icons.PanelLeftClose" [size]="18" aria-hidden="true"></lucide-icon>
       </button>
 
       <nav class="crumbs" aria-label="Breadcrumb">

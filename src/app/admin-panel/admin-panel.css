@@ -3,10 +3,18 @@
   height: 100vh;
 }
 
+/* sidebar and top bar are one frame around the page, which sits in it with a rounded corner */
 .shell {
+  --sidebar-width: 240px;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   height: 100%;
+  background: var(--panel);
+  transition: grid-template-columns .2s ease;
+}
+
+.shell.collapsed {
+  --sidebar-width: 68px;
 }
 
 /* sidebar */
@@ -17,8 +25,15 @@
   gap: 22px;
   padding: 18px 12px;
   background: var(--panel);
-  border-right: 1px solid var(--line);
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* nothing wraps while the sidebar folds out again */
+.label,
+.brand-text {
+  white-space: nowrap;
 }
 
 .brand {
@@ -73,9 +88,11 @@
 }
 
 .nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
   padding: 9px 10px;
   border-radius: var(--radius-sm);
   color: var(--muted);
@@ -110,9 +127,16 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 24px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
+  padding: 0 24px 0 12px;
+}
+
+.collapse-btn {
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.collapse-btn:hover {
+  color: var(--text);
 }
 
 .crumbs {
@@ -210,6 +234,80 @@
   min-height: 0;
   overflow: hidden;
   background: var(--bg);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  border-top-left-radius: 16px;
+}
+
+/* wide screens: the sidebar folded in to its icons, the names as tooltips */
+@media (min-width: 901px) {
+  /* everything on one line down the middle of the rail */
+  .collapsed .label,
+  .collapsed .brand-text,
+  .collapsed .app-switch-text,
+  .collapsed .app-switch > lucide-icon {
+    display: none;
+  }
+
+  .collapsed .brand,
+  .collapsed .back-link,
+  .collapsed .nav-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .collapsed .nav-link,
+  .collapsed .back-link {
+    width: 44px;
+  }
+
+  .collapsed .app-switch {
+    justify-content: center;
+  }
+
+  .collapsed .nav-count {
+    display: none;
+  }
+
+  /* what waits for review stays visible as a dot on the icon */
+  .collapsed .nav-count.badge {
+    display: block;
+    position: absolute;
+    top: 6px;
+    left: 27px;
+    width: 9px;
+    height: 9px;
+    min-width: 0;
+    padding: 0;
+    font-size: 0;
+    box-shadow: 0 0 0 2px var(--panel);
+  }
+
+  .collapsed .app-switch {
+    width: 44px;
+    padding: 4px;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .collapsed .site-link {
+    width: 44px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 12px 0;
+  }
+
+  .collapsed .site-link-label,
+  .collapsed .site-link-path {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell {
+    transition: none;
+  }
 }
 
 /* account menu, rendered in the CDK overlay */
@@ -320,8 +418,18 @@ a.menu-item {
     display: inline-flex;
   }
 
+  .collapse-btn {
+    display: none;
+  }
+
   .topbar {
     padding: 0 16px;
+  }
+
+  /* the sidebar is a drawer here, the page takes the whole width below the top bar */
+  .content {
+    border-left: none;
+    border-top-left-radius: 0;
   }
 
   .user-name {

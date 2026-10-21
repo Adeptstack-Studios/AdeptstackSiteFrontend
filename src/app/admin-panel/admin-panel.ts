@@ -5,7 +5,7 @@ import {CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger} fr
 import {filter} from 'rxjs';
 import {
   ArrowUpRight, Bell, CalendarClock, ChartLine, ChevronDown, ClipboardCheck, ChevronLeft, ChevronsUpDown, Eye, FileText, History, House, Layers,
-  FolderOpen, LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, Settings, Store, Sun, UserRound, Users
+  FolderOpen, LayoutDashboard, LayoutGrid, LogOut, LucideAngularModule, Mail, Menu, Monitor, Moon, PanelLeftClose, PanelLeftOpen, Settings, Store, Sun, UserRound, Users
 } from 'lucide-angular';
 import {ThemeService} from '../core/theme/theme-service';
 import {AppContext} from '../core/app-context/app-context';
@@ -46,6 +46,8 @@ export class AdminPanel {
 
   protected readonly user = this.currentUser.user;
   protected readonly navOpen = signal(false);
+  /** wide screens: the sidebar shows only its icons; remembered in this browser */
+  protected readonly collapsed = signal(readCollapsed());
   private readonly steps = signal<RouteStep[]>([]);
 
   protected readonly nav = [
@@ -67,7 +69,7 @@ export class AdminPanel {
   });
   protected readonly icons = {
     ArrowUpRight, Bell, ChartLine, ChevronDown, ChevronLeft, ChevronsUpDown, Eye, History, Layers, LayoutDashboard,
-    LogOut, Menu, Monitor, Moon, Settings, Store, Sun, UserRound, Users
+    LogOut, Menu, Monitor, Moon, PanelLeftClose, PanelLeftOpen, Settings, Store, Sun, UserRound, Users
   };
   protected readonly checklistDone = checklistDone;
 
@@ -98,11 +100,29 @@ export class AdminPanel {
     if (!this.context.apps()) this.context.loadApps();
   }
 
-  /** Ctrl+K (⌘K on a Mac) opens the command palette anywhere in the console, and closes it again. */
+  protected toggleCollapsed() {
+    const collapsed = !this.collapsed();
+    this.collapsed.set(collapsed);
+    try {
+      localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0');
+    } catch {
+      // without storage it stays as it is until the page is reloaded
+    }
+  }
+
+  /**
+   * Ctrl+K (⌘K on a Mac) opens the command palette anywhere in the console, and closes it again.
+   * Ctrl+B folds the sidebar in and out, as in many editors.
+   */
   protected shortcut(event: KeyboardEvent) {
-    if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k') {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    const key = event.key.toLowerCase();
+    if (key === 'k') {
       event.preventDefault();
       this.palette.toggle();
+    } else if (key === 'b' && !isTyping(event)) {
+      event.preventDefault();
+      this.toggleCollapsed();
     }
   }
 
@@ -126,4 +146,20 @@ export class AdminPanel {
     }
     this.steps.set(steps);
   }
+}
+
+const COLLAPSED_KEY = 'sidebar-collapsed';
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** in a text field Ctrl+B stays with the field */
+function isTyping(event: KeyboardEvent) {
+  const target = event.target as HTMLElement | null;
+  return !!target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }
