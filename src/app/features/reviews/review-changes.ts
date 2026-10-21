@@ -255,7 +255,9 @@ export class ReviewChanges {
     const isNew = this.mode() === 'new';
     return fields.flatMap(field => {
       const before = text(baseline?.[field.key], field.type);
-      const after = text(payload?.[field.key] ?? (isNew ? undefined : baseline?.[field.key]), field.type);
+      // a field sent as null was cleared (e.g. the push switched off); only a field not sent at all stays as it was
+      const sent = !!payload && field.key in payload;
+      const after = text(sent ? payload[field.key] : isNew ? undefined : baseline?.[field.key], field.type);
       const long = field.type === 'long' || field.type === 'list';
       // a new entry lists what it shows; "Planned: no" says nothing there
       if (isNew) return after && !(field.type === 'flag' && after === 'no') ? [{label: field.label, long, before: '', after, diff: null}] : [];
