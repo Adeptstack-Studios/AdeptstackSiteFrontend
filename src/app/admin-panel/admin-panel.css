@@ -9,7 +9,7 @@
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   height: 100%;
-  background: var(--panel);
+  background: var(--frame);
   transition: grid-template-columns .2s ease;
 }
 
@@ -24,7 +24,7 @@
   flex-direction: column;
   gap: 22px;
   padding: 18px 12px;
-  background: var(--panel);
+  background: var(--frame);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -281,7 +281,7 @@
     min-width: 0;
     padding: 0;
     font-size: 0;
-    box-shadow: 0 0 0 2px var(--panel);
+    box-shadow: 0 0 0 2px var(--frame);
   }
 
   .collapsed .app-switch {

@@ -13,6 +13,8 @@
 :root {
   --bg: #F4F5F7;
   --panel: #FFFFFF;
+  /* sidebar and top bar around the page; a shade of its own in dark */
+  --frame: #FFFFFF;
   --panel-2: #F1F3F6;
   --line: #E2E5EA;
   --line-strong: #CDD2DA;
@@ -45,13 +47,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0A0C10;
-    --panel: #11141A;
-    --panel-2: #171B23;
-    --line: #242A36;
-    --line-strong: #343B4A;
-    --text: #ECEEF3;
-    --muted: #9AA3B5;
+    /* the roles of Notivity v2: page, frame, cards, raised, lines; neutral greys */
+    --bg: #121212;
+    --frame: #1A1A1A;
+    --panel: #1E1E1E;
+    --panel-2: #262626;
+    --line: #2E2E2E;
+    --line-strong: #3D3D3D;
+    --text: #F2F2F2;
+    --muted: #A1A1A1;
     --accent: #2563EB;
     --accent-hover: #3B74F0;
     --accent-text: #7DA9FF;
@@ -63,22 +67,24 @@
     --danger: #F87171;
     --danger-soft: rgba(248, 113, 113, .14);
     --beta: #F5A524;
-    --off: #7C8496;
-    --overlay: rgba(3, 5, 8, .62);
+    --off: #8A8A8A;
+    --overlay: rgba(0, 0, 0, .55);
     --shadow-sm: 0 1px 0 rgba(255, 255, 255, .03) inset;
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .45);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, .5);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0A0C10;
-  --panel: #11141A;
-  --panel-2: #171B23;
-  --line: #242A36;
-  --line-strong: #343B4A;
-  --text: #ECEEF3;
-  --muted: #9AA3B5;
+  /* the roles of Notivity v2: page, frame, cards, raised, lines; neutral greys */
+  --bg: #121212;
+  --frame: #1A1A1A;
+  --panel: #1E1E1E;
+  --panel-2: #262626;
+  --line: #2E2E2E;
+  --line-strong: #3D3D3D;
+  --text: #F2F2F2;
+  --muted: #A1A1A1;
   --accent: #2563EB;
   --accent-hover: #3B74F0;
   --accent-text: #7DA9FF;
@@ -90,10 +96,10 @@
   --danger: #F87171;
   --danger-soft: rgba(248, 113, 113, .14);
   --beta: #F5A524;
-  --off: #7C8496;
-  --overlay: rgba(3, 5, 8, .62);
+  --off: #8A8A8A;
+  --overlay: rgba(0, 0, 0, .55);
   --shadow-sm: 0 1px 0 rgba(255, 255, 255, .03) inset;
-  --shadow-lg: 0 24px 60px rgba(0, 0, 0, .45);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
 
