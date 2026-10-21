@@ -38,6 +38,29 @@
     @if (ready()) {
       <div class="c-editor-layout">
         <app-review-banner [detail]="openReview()" (withdrawn)="reloadReview()"></app-review-banner>
+        @for (plan of plans(); track plan.review.id) {
+          <section class="plan-banner" role="status">
+            <lucide-icon [img]="icons.CalendarClock" [size]="18" aria-hidden="true"></lucide-icon>
+            <div class="plan-text">
+              <strong>A change to this listing goes live {{ planLabel(plan) }}</strong>
+              <p class="c-muted">
+                Approved by {{ plan.review.reviewer }}, submitted by {{ plan.review.author }}.
+                @if (replacesPlan() === plan.review.id) {
+                  The form shows this plan; submitting replaces it once approved.
+                } @else {
+                  The form shows the live listing.
+                }
+              </p>
+            </div>
+            <div class="plan-actions">
+              <a class="c-btn c-btn-sm" [routerLink]="['/reviews', plan.review.id]">Open review</a>
+              @if (canChangePlan(plan)) {
+                <button appEditOnly type="button" class="c-btn c-btn-sm" (click)="editPlan(plan)">Edit plan</button>
+                <button appEditOnly type="button" class="c-btn c-btn-sm" (click)="cancelPlan(plan)">Call off</button>
+              }
+            </div>
+          </section>
+        }
         <div class="c-editor-main">
           @if (mode() === 'preview') {
             <app-listing-preview [listing]="previewData()"></app-listing-preview>
@@ -280,6 +303,46 @@
               <input id="publishedAt" class="c-input" type="date" formControlName="publishedAt">
             </div>
           </section>
+
+          @if (canPlan()) {
+            <section class="c-card" aria-labelledby="when-heading" [formGroup]="planForm">
+              <div class="c-card-head"><h2 id="when-heading">When it goes live</h2></div>
+              <div class="c-seg" role="group" aria-labelledby="when-heading">
+                <button type="button" [attr.aria-pressed]="planValue().when === 'now'" (click)="setPlan({when: 'now'})">Once approved</button>
+                <button type="button" [attr.aria-pressed]="planValue().when === 'plan'" (click)="setPlan({when: 'plan'})">Plan</button>
+              </div>
+              @if (planValue().when === 'plan') {
+                <div class="c-seg plan-kind" role="group" aria-label="Plan for">
+                  <button type="button" [attr.aria-pressed]="planValue().kind === 'release'" (click)="setPlan({kind: 'release'})">With a release</button>
+                  <button type="button" [attr.aria-pressed]="planValue().kind === 'at'" (click)="setPlan({kind: 'at'})">At a moment</button>
+                </div>
+                @if (planValue().kind === 'release') {
+                  @if (upcoming().length) {
+                    <div class="field">
+                      <label class="c-label" for="plan-release">Release</label>
+                      <select id="plan-release" class="c-input" formControlName="releaseId">
+                        @for (release of upcoming(); track release.id) {
+                          <option [ngValue]="release.id">{{ releaseLabel(release) }}</option>
+                        }
+                      </select>
+                    </div>
+                    <p class="c-hint">Live in the same minute the release is out, also if the release moves.</p>
+                  } @else {
+                    <p class="c-hint">No planned release of this app yet. Plan one first, or choose a moment.</p>
+                  }
+                } @else {
+                  <div class="field">
+                    <label class="c-label" for="plan-at">Live at</label>
+                    <input id="plan-at" class="c-input" type="datetime-local" formControlName="at">
+                  </div>
+                  @if (planValue().at && !planAtAhead()) {
+                    <p class="c-error">A plan needs a moment that lies ahead.</p>
+                  }
+                }
+                <p class="c-hint">The review happens now. Until then the live listing stays as it is; only what you change here goes live.</p>
+              }
+            </section>
+          }
 
           <section class="c-card" aria-labelledby="mods-heading">
             <div class="c-card-head"><h2 id="mods-heading">Mod downloads</h2></div>

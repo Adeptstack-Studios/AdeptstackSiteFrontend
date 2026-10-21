@@ -7,7 +7,7 @@ import {ReviewService} from '../../services/review-service';
 import {CurrentUser} from '../../core/auth/current-user';
 import {ToastService} from '../../services/toast-service';
 import {AppContext} from '../../core/app-context/app-context';
-import {actionLabel, ReviewDetail} from '../../models/review';
+import {actionLabel, planText, ReviewDetail} from '../../models/review';
 import {RelativeTimePipe} from '../../shared/ui/relative-day';
 import {ReviewChip} from '../../shared/review/review-chip';
 import {ReviewChanges} from './review-changes';
@@ -26,7 +26,10 @@ import {FindingList} from './finding-list';
           </a>
           <div class="c-editor-title">
             <h1>{{ action() }}: {{ d.review.title }}</h1>
-            <p class="c-sub">by {{ d.review.author }}, {{ d.review.submittedAt | relativeTime }}</p>
+            <p class="c-sub">
+              by {{ d.review.author }}, {{ d.review.submittedAt | relativeTime }}
+              @if (plan()) { · <strong>live {{ plan() }}</strong> }
+            </p>
           </div>
           <app-review-chip [status]="d.review.status"></app-review-chip>
         </header>
@@ -86,6 +89,12 @@ import {FindingList} from './finding-list';
                     <span [title]="d.review.reviewedAt | date: 'MMM d, y, HH:mm'">{{ d.review.reviewedAt | relativeTime }}</span>.</p>
                   @if (d.review.comment) { <p class="quote">{{ d.review.comment }}</p> }
                   @if (d.review.error) { <p class="error">{{ d.review.error }}</p> }
+                }
+                @case ('SCHEDULED') {
+                  <p class="note"><strong>{{ d.review.reviewer }}</strong> approved it
+                    <span [title]="d.review.reviewedAt | date: 'MMM d, y, HH:mm'">{{ d.review.reviewedAt | relativeTime }}</span>.
+                    It goes live {{ plan() }}{{ d.review.withRelease ? ', in the same minute the release is out' : '' }}.</p>
+                  @if (d.review.comment) { <p class="quote">{{ d.review.comment }}</p> }
                 }
                 @case ('WITHDRAWN') {
                   <p class="c-muted note">Withdrawn {{ d.review.reviewedAt | relativeTime }}. Nothing changed on the website.</p>
@@ -197,6 +206,11 @@ export class ReviewPage {
   protected readonly action = computed(() => {
     const d = this.detail();
     return d ? actionLabel(d) : '';
+  });
+  /** a planned store listing change: when it goes live */
+  protected readonly plan = computed(() => {
+    const d = this.detail();
+    return d ? planText(d.review) : '';
   });
   protected readonly approveLabel = computed(() => ({
     Publish: 'Approve and publish', Plan: 'Approve plan', Delete: 'Approve and delete', Push: 'Approve and send',

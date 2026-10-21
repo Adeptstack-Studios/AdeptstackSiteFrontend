@@ -34,6 +34,11 @@ import {ReviewStatus, STATUS_LABELS} from '../../models/review';
       color: var(--good);
     }
 
+    .chip[data-status="SCHEDULED"] {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
     .chip[data-status="WITHDRAWN"] {
       background: var(--panel-2);
       color: var(--muted);

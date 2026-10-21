@@ -1,6 +1,7 @@
 export type ReviewKind = 'RELEASE' | 'POST' | 'APP' | 'PUSH' | 'NEWSLETTER';
 export type ReviewAction = 'UPDATE' | 'DELETE' | 'SEND';
-export type ReviewStatus = 'PENDING' | 'CHANGES_REQUESTED' | 'APPROVED' | 'WITHDRAWN';
+/** SCHEDULED: approved, a store listing change that goes live later as planned */
+export type ReviewStatus = 'PENDING' | 'CHANGES_REQUESTED' | 'APPROVED' | 'WITHDRAWN' | 'SCHEDULED';
 
 /** A change waiting for (or past) an owner's approval. */
 export interface ReviewSummary {
@@ -21,6 +22,11 @@ export interface ReviewSummary {
   hints: number;
   /** went wrong after approving, e.g. the push */
   error: string | null;
+  /** a planned store listing change: live at this moment … */
+  applyAt: string | null;
+  /** … or with this release, named as when it was planned */
+  withReleaseId: number | null;
+  withRelease: string | null;
 }
 
 /** Something the content check found; start and end point into the field's text. */
@@ -63,7 +69,16 @@ export const STATUS_LABELS: Record<ReviewStatus, string> = {
   CHANGES_REQUESTED: 'Changes requested',
   APPROVED: 'Approved',
   WITHDRAWN: 'Withdrawn',
+  SCHEDULED: 'Planned',
 };
+
+/** "with Activity Pulse 1.3.0 (stable)" or "on Oct 23, 19:00"; empty for a change without a plan */
+export function planText(review: Pick<ReviewSummary, 'applyAt' | 'withRelease'>): string {
+  if (review.withRelease) return 'with ' + review.withRelease;
+  if (!review.applyAt) return '';
+  return 'on ' + new Date(review.applyAt).toLocaleString('en-US',
+    {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false});
+}
 
 export const RULE_LEVELS: { level: ContentRule['level']; label: string; note: string }[] = [
   {level: 'BLOCK', label: 'Blocked', note: 'cannot be submitted'},
@@ -77,7 +92,7 @@ export function actionLabel(detail: Pick<ReviewDetail, 'review' | 'baseline' | '
   if (review.action === 'DELETE') return 'Delete';
   if (review.kind === 'PUSH') return 'Push';
   if (review.kind === 'NEWSLETTER') return 'Newsletter';
-  if (payload?.['plan'] === true) return 'Plan';
+  if (payload?.['plan'] === true || payload?.['planReleaseId'] != null || payload?.['planAt'] != null) return 'Plan';
   const before = String(baseline?.['visibility'] ?? 'PRIVATE').toUpperCase();
   const after = String(payload?.['visibility'] ?? before).toUpperCase();
   if (before === 'PRIVATE' && after !== 'PRIVATE') return 'Publish';

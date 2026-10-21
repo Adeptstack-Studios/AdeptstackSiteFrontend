@@ -56,6 +56,16 @@ export class ReviewService {
       .pipe(tap(() => this.refreshCounts()));
   }
 
+  /** Approved store listing changes waiting for their release or moment. */
+  planned(kind: ReviewKind, targetId: number): Observable<ReviewDetail[]> {
+    return this.http.get<ReviewDetail[]>(`${environment.reviews}/planned/${kind}/${targetId}`);
+  }
+
+  /** Calls a planned change off; nothing goes live. */
+  cancelPlan(id: number): Observable<ReviewSummary> {
+    return this.http.post<ReviewSummary>(`${environment.reviews}/${id}/cancel-plan`, null);
+  }
+
   withdraw(id: number): Observable<ReviewSummary> {
     return this.http.post<ReviewSummary>(`${environment.reviews}/${id}/withdraw`, null)
       .pipe(tap(() => this.refreshCounts()));

@@ -6,7 +6,7 @@ import {HttpEventType} from '@angular/common/http';
 import {CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList} from '@angular/cdk/drag-drop';
 import {concatMap, forkJoin, from, map, startWith} from 'rxjs';
 import {
-  ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, LucideAngularModule,
+  ArrowDown, ArrowLeft, ArrowUp, CalendarClock, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, LucideAngularModule,
   Trash2, X
 } from 'lucide-angular';
 import {MediaPickerService} from '../../../shared/media/media-picker';
@@ -25,7 +25,10 @@ import {ListingPreview, ListingPreviewData} from '../listing-preview/listing-pre
 import {listingChecklist} from './listing-checklist';
 import {EditOnly} from '../../../shared/ui/edit-only';
 import {ReviewService} from '../../../services/review-service';
-import {ReviewDetail, submittedReview} from '../../../models/review';
+import {planText, ReviewDetail, submittedReview} from '../../../models/review';
+import {ChangelogsService} from '../../../services/changelogs-service';
+import {Changelogs} from '../../../models/changelogs';
+import {formatMoment, isAhead, localInputToIso, toLocalInput} from '../../../shared/time';
 import {ReviewBanner} from '../../../shared/review/review-banner';
 import {CurrentUser} from '../../../core/auth/current-user';
 
@@ -77,10 +80,11 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   private readonly currentUser = inject(CurrentUser);
   private readonly files = inject(FileService);
   private readonly picker = inject(MediaPickerService);
+  private readonly changelogs = inject(ChangelogsService);
   private readonly router = inject(Router);
   protected readonly context = inject(AppContext);
 
-  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, Trash2, X};
+  protected readonly icons = {ArrowDown, ArrowLeft, ArrowUp, CalendarClock, Check, CircleAlert, Film, GripVertical, ImagePlus, Images, ImageUp, Trash2, X};
   protected readonly checklistDone = checklistDone;
 
   /** null while creating a new app */
@@ -92,6 +96,20 @@ export class AppEditor extends EditorPage<ListingFormValue> {
   protected readonly lockedByOther = computed(() => !!this.openReview() && !this.myReview());
   protected readonly uploadingIcon = signal(false);
   protected readonly uploadingBackground = signal(false);
+  /** approved changes of this listing that go live later, with a release or at a moment */
+  protected readonly plans = signal<ReviewDetail[]>([]);
+  /** releases of this app that are not out yet: a listing change can go live with one of them */
+  protected readonly upcoming = signal<Changelogs[]>([]);
+  /** the planned change being edited, replaced once the new version is approved */
+  protected readonly replacesPlan = signal<number | null>(null);
+  readonly planForm = new FormGroup({
+    when: new FormControl<'now' | 'plan'>('now', {nonNullable: true}),
+    kind: new FormControl<'release' | 'at'>('release', {nonNullable: true}),
+    releaseId: new FormControl<number | null>(null),
+    at: new FormControl('', {nonNullable: true}),
+  });
+  protected readonly planValue = toSignal(this.planForm.valueChanges.pipe(startWith(null), map(() => this.planForm.getRawValue())),
+    {requireSync: true});
   /** the screenshot whose image is being replaced by an upload */
   protected readonly replacingShot = signal<ScreenshotGroup | null>(null);
   /** e.g. {done: 1, total: 4} while screenshots upload one after another */
@@ -117,8 +135,13 @@ export class AppEditor extends EditorPage<ListingFormValue> {
     const goesLive = this.value().visibility !== 'PRIVATE' || (this.stored()?.visibility ?? 'PRIVATE') !== 'PRIVATE';
     if (this.isNew()) return goesLive ? 'Create and submit' : 'Create app';
     if (!goesLive) return 'Save';
+    if (this.planned()) return this.myReview() ? 'Submit plan again' : 'Submit plan for review';
     return this.myReview() ? 'Submit again' : 'Submit for review';
   });
+  /** a live listing (or one going live) can wait for a release or a moment */
+  protected readonly canPlan = computed(() => !this.isNew() && !this.lockedByOther()
+    && (this.value().visibility !== 'PRIVATE' || (this.stored()?.visibility ?? 'PRIVATE') !== 'PRIVATE'));
+  protected readonly planned = computed(() => this.canPlan() && this.planValue().when === 'plan');
   protected readonly previewData = computed<ListingPreviewData>(() => this.value());
 
   protected get screenshots() {
@@ -171,22 +194,135 @@ export class AppEditor extends EditorPage<ListingFormValue> {
       this.stored.set(stored);
       this.openReview.set(review);
       // the author goes on with what they submitted, not with the live listing
-      const app = (review?.payload && this.myReview() ? {...stored, ...review.payload} : stored) as AppResponse;
-      this.slugFollowsName = false;
-      this.form.patchValue({
-        name: app.name ?? '', slug: app.slug ?? '', slogan: app.slogan ?? '', description: app.description ?? '',
-        category: app.category ?? '', platforms: app.platforms ?? '', iconUrl: app.iconUrl ?? '',
-        videoUrl: app.videoUrl ?? '',
-        backgroundUrl: app.backgroundUrl ?? '',
-        modrinthId: app.modrinthId ?? '', curseforgeId: app.curseforgeId ?? '',
-        highlighted: !!app.highlighted, legacy: !!app.legacy,
-        publishedAt: app.publishedAt ? String(app.publishedAt).substring(0, 10) : today(),
-        visibility: (app.visibility ?? 'PRIVATE') as Visibility,
-      });
-      this.screenshots.clear();
-      (app.images ?? []).forEach(image => this.screenshots.push(screenshotGroup(image)));
+      const mine = !!review?.payload && this.myReview();
+      const app = (mine ? {...stored, ...review!.payload} : stored) as AppResponse;
+      this.fill(app);
+      if (mine) this.takePlan(review!.payload!);
       this.loaded();
     });
+    this.loadPlans(id);
+  }
+
+  /** The planned changes and the releases a change can go live with. */
+  private loadPlans(id: number) {
+    this.reviews.planned('APP', id).subscribe(plans => this.plans.set(plans));
+    this.changelogs.list({app: id, size: 100}).subscribe(page => {
+      const now = Date.now();
+      this.upcoming.set(page.items
+        .filter(release => !!release.plan || (release.visibility !== 'PRIVATE' && !!release.releaseAt
+          && new Date(release.releaseAt).getTime() > now))
+        .sort((a, b) => String(a.releaseAt ?? '').localeCompare(String(b.releaseAt ?? ''))));
+    });
+  }
+
+  /** The plan a submitted or planned version carries, into the plan controls. */
+  private takePlan(payload: Record<string, unknown>) {
+    const releaseId = payload['planReleaseId'] as number | null | undefined;
+    const at = payload['planAt'] as string | null | undefined;
+    this.replacesPlan.set((payload['replacesPlan'] as number | null | undefined) ?? null);
+    if (releaseId == null && !at) {
+      this.planForm.reset({when: 'now', kind: 'release', releaseId: null, at: ''});
+      return;
+    }
+    this.planForm.reset({
+      when: 'plan', kind: releaseId != null ? 'release' : 'at', releaseId: releaseId ?? null, at: at ? toLocalInput(at) : '',
+    });
+  }
+
+  /** The form from a listing: the live one, a submitted version or a planned one. */
+  private fill(app: AppResponse) {
+    this.slugFollowsName = false;
+    this.form.patchValue({
+      name: app.name ?? '', slug: app.slug ?? '', slogan: app.slogan ?? '', description: app.description ?? '',
+      category: app.category ?? '', platforms: app.platforms ?? '', iconUrl: app.iconUrl ?? '',
+      videoUrl: app.videoUrl ?? '',
+      backgroundUrl: app.backgroundUrl ?? '',
+      modrinthId: app.modrinthId ?? '', curseforgeId: app.curseforgeId ?? '',
+      highlighted: !!app.highlighted, legacy: !!app.legacy,
+      publishedAt: app.publishedAt ? String(app.publishedAt).substring(0, 10) : today(),
+      visibility: (app.visibility ?? 'PRIVATE') as Visibility,
+    });
+    this.screenshots.clear();
+    (app.images ?? []).forEach(image => this.screenshots.push(screenshotGroup(image)));
+  }
+
+  // plans
+
+  protected planLabel(plan: ReviewDetail) {
+    return planText(plan.review);
+  }
+
+  protected releaseLabel(release: Changelogs) {
+    return `${release.version} (${release.channel}) · ${formatMoment(release.releaseAt)}`;
+  }
+
+  protected setPlan(patch: Partial<{ when: 'now' | 'plan'; kind: 'release' | 'at' }>) {
+    this.planForm.patchValue(patch);
+    if (patch.when === 'plan' && this.planForm.controls.releaseId.value == null && this.upcoming().length) {
+      this.planForm.controls.releaseId.setValue(this.upcoming()[0].id ?? null);
+    }
+    if (patch.when === 'plan' && !this.upcoming().length) this.planForm.controls.kind.setValue('at');
+    this.form.markAsDirty();
+  }
+
+  protected planAtAhead() {
+    return isAhead(this.planValue().at);
+  }
+
+  /** the author edits their plan, an owner any plan */
+  protected canChangePlan(plan: ReviewDetail) {
+    return plan.review.author === this.currentUser.user()?.username || this.currentUser.isOwner();
+  }
+
+  /** The planned version into the form; submitting it replaces the plan once approved. */
+  protected async editPlan(plan: ReviewDetail) {
+    if (this.form.dirty) {
+      const ok = await this.confirm.ask({
+        title: 'Edit the planned change?',
+        message: 'The form gets the planned listing; what you changed here so far is replaced.',
+        confirmLabel: 'Edit the plan',
+      });
+      if (!ok) return;
+    }
+    const stored = this.stored();
+    if (!stored || !plan.payload) return;
+    this.fill({...stored, ...plan.payload} as AppResponse);
+    this.takePlan({...plan.payload, replacesPlan: plan.review.id});
+    this.form.markAsDirty();
+    this.toast.info('The form shows the planned listing. Submit it to change the plan.');
+  }
+
+  protected async cancelPlan(plan: ReviewDetail) {
+    const ok = await this.confirm.ask({
+      title: 'Call off the planned change?',
+      message: `The change planned ${this.planLabel(plan)} does not go live. The listing stays as it is.`,
+      confirmLabel: 'Call it off', danger: true,
+    });
+    if (!ok) return;
+    this.reviews.cancelPlan(plan.review.id).subscribe(() => {
+      if (this.replacesPlan() === plan.review.id) this.replacesPlan.set(null);
+      this.toast.success('The planned change is called off.');
+      const app = this.stored();
+      if (app?.id) this.loadPlans(app.id);
+    });
+  }
+
+  /** What the request carries for the plan; null when it is not complete yet. */
+  private planRequest(): Pick<App, 'planAt' | 'planReleaseId' | 'replacesPlan'> | null {
+    if (!this.planned()) return {planAt: null, planReleaseId: null, replacesPlan: null};
+    const plan = this.planValue();
+    if (plan.kind === 'release') {
+      if (plan.releaseId == null) {
+        this.toast.error('Choose the release the change goes live with, or a moment.');
+        return null;
+      }
+      return {planReleaseId: plan.releaseId, planAt: null, replacesPlan: this.replacesPlan()};
+    }
+    if (!isAhead(plan.at)) {
+      this.toast.error('A plan needs a moment that lies ahead.');
+      return null;
+    }
+    return {planAt: localInputToIso(plan.at), planReleaseId: null, replacesPlan: this.replacesPlan()};
   }
 
   /** After submitting or withdrawing: the open review as it is now. */
@@ -385,9 +521,12 @@ export class AppEditor extends EditorPage<ListingFormValue> {
       return;
     }
 
+    const plan = this.planRequest();
+    if (!plan) return;
     const {images, ...value} = this.form.getRawValue();
     const request: App = {
       ...value,
+      ...plan,
       id: this.stored()?.id ?? 0,
       slug: value.slug.trim(),
       images: images.map(image => ({url: image.url, text: image.text.trim() || null})),
@@ -409,7 +548,9 @@ export class AppEditor extends EditorPage<ListingFormValue> {
             this.toast.success(`${request.name} is created as a private draft and submitted for review.`);
             this.router.navigate(['/apps', request.slug]);
           } else {
-            this.toast.success('The store listing is submitted for review. It changes once an owner approves it.');
+            this.toast.success(plan.planReleaseId != null || plan.planAt
+              ? 'The planned change is submitted for review. Once approved it waits and goes live as planned.'
+              : 'The store listing is submitted for review. It changes once an owner approves it.');
             this.reloadReview();
           }
           return;

@@ -118,3 +118,40 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* an approved change that goes live later, across both columns like the review banner */
+.plan-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+}
+
+.plan-banner > lucide-icon {
+  color: var(--warn);
+  margin-top: 1px;
+}
+
+.plan-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.plan-text p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.plan-kind {
+  margin-top: 10px;
+}

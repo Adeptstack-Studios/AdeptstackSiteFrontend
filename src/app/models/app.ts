@@ -36,4 +36,11 @@ export class App {
   feature3Desc?: string;
   publishedAt?: Date;
   visible?: boolean;
+
+  /** a plan for a live listing, only in a request: live at this moment (ISO) … */
+  planAt?: string | null;
+  /** … or with this release of the app */
+  planReleaseId?: number | null;
+  /** the planned change this one replaces once approved */
+  replacesPlan?: number | null;
 }
